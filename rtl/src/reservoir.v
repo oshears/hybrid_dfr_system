@@ -13,8 +13,12 @@ DATA_WIDTH = 32
 
 wire [(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 : 0] node_outputs;
 
-assign node_outputs[DATA_WIDTH - 1 : 0] = din;
-assign dout = node_outputs[(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 : (VIRTUAL_NODES) * (DATA_WIDTH)];
+wire dout_i = node_outputs[(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 : (VIRTUAL_NODES) * (DATA_WIDTH)];
+assign dout = dout_i;
+
+wire sum_i = din + dout_i;
+
+// assign node_outputs[DATA_WIDTH - 1 : 0] = din;
 
 genvar i;
 generate
@@ -32,5 +36,12 @@ generate
     );
 end 
 endgenerate
+
+mackey_glass_block mackey_glass_block
+(
+    .din(sum_i),
+    .dout(node_outputs[DATA_WIDTH - 1 : 0])
+);
+
 
 endmodule;

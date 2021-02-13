@@ -14,6 +14,7 @@ add_files {
     ../rtl/tb/reservoir_tb.v
     ../rtl/src/reservoir.v 
     ../rtl/src/register.v 
+    ../rtl/src/mackey_glass_block.v 
     }
 
 
