@@ -22,7 +22,7 @@ wire sum_i = din + dout_i;
 
 genvar i;
 generate
-    for (i=0; i<VIRTUAL_NODES; i=i+1) begin : virtual_node_inst
+    for (i = 0; i < VIRTUAL_NODES; i = i + 1) begin : virtual_node_inst
     register 
     #(
         .DATA_WIDTH(DATA_WIDTH)
