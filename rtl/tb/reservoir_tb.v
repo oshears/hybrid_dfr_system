@@ -2,16 +2,22 @@
 
 module reservoir_tb;
 
+localparam VIRTUAL_NODES = 10;
+localparam DATA_WIDTH = 32;
+
 reg clk = 0;
 reg rst = 0;
-reg din = 0;
-wire dout;
+reg [DATA_WIDTH - 1 : 0] din = 0;
+wire [DATA_WIDTH - 1 : 0] dout;
+
+integer i = 0;
 
 reservoir 
 #(
-    .VIRTUAL_NODES(10),
+    .VIRTUAL_NODES(VIRTUAL_NODES),
+    .DATA_WIDTH(DATA_WIDTH)
 )
-reservoir
+uut
 (
     .clk(clk),
     .rst(rst),
@@ -32,7 +38,7 @@ initial begin
     
     for(i = 0; i < 100; i = i + 1) begin
         din = i;
-        #1;
+        #2;
     end
 
     $finish;

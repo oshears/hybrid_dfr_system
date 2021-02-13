@@ -1,7 +1,8 @@
 `timescale 1ns / 1ps
+
 module register
 # (
-DATA_WIDTH = 32,
+DATA_WIDTH = 32
 )
 (
     input clk,
@@ -12,8 +13,10 @@ DATA_WIDTH = 32,
 
 always @(posedge clk, posedge rst)
 begin
-    if(rst)
+    if (rst)
         dout <= 0;
     else
         dout <= din;
 end
+
+endmodule;
