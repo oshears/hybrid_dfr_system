@@ -36,8 +36,8 @@ initial begin
     rst = 0;
     #100;
     
-    for(i = 32'h0; i < 32'hFFFF_FFFF; i = i + 32'h028F_5C29) begin
-        din = i;
+    for(i = 0; i < 100; i = i + 1) begin
+        din = din + 32'h028F_5C29;
         #2;
     end
 
