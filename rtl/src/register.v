@@ -19,4 +19,4 @@ begin
         dout <= din;
 end
 
-endmodule;
+endmodule

@@ -48,4 +48,4 @@ mackey_glass_block mackey_glass_block
 );
 
 
-endmodule;
+endmodule

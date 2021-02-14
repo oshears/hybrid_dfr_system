@@ -19,4 +19,4 @@ begin
         dout <= dout + 1;
 end
 
-endmodule;
+endmodule
