@@ -1,5 +1,6 @@
 # Vivado Files
 reservoir_project
+dfr_core_project
 *.jou
 *.log
 *.wdb

@@ -1,8 +1,7 @@
 `timescale 1ns / 1ps
 
-module reservoir_history
+module ram
 # (
-MEM_SIZE = 2**20, //1048576
 ADDR_WIDTH = 20,
 DATA_WIDTH = 32
 )
@@ -14,14 +13,14 @@ DATA_WIDTH = 32
     output reg [DATA_WIDTH-1:0] dout
 );
 
-reg [DATA_WIDTH - 1 : 0] mem [MEM_SIZE - 1:0];
+reg [DATA_WIDTH - 1 : 0] mem [2**ADDR_WIDTH - 1:0];
 
 always @(posedge clk)
 begin
     if (wen)
-        mem <= din;
+        mem[addr] <= din;
 
-    dout <= mem[addr];
+    dout = mem[addr];
 end
 
-endmodule;
+endmodule
