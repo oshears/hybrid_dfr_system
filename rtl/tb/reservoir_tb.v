@@ -37,8 +37,8 @@ initial begin
     #100;
     
     for(i = 0; i < 100; i = i + 1) begin
+        @(posedge clk)
         din = din + 32'h028F_5C29;
-        #2;
     end
 
     $finish;

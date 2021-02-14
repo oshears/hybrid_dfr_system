@@ -13,7 +13,11 @@ DATA_WIDTH = 32
 
 wire [(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 : 0] node_outputs;
 
-wire [DATA_WIDTH - 1 : 0] dout_i = node_outputs[(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 : (VIRTUAL_NODES) * (DATA_WIDTH)];
+//wire [DATA_WIDTH - 1 : 0] dout_i = {node_outputs[(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 - (DATA_WIDTH - 12): (VIRTUAL_NODES) * (DATA_WIDTH)],12'h0};
+wire [DATA_WIDTH - 1 : 0] dout_i;
+assign dout_i[DATA_WIDTH - 1 : DATA_WIDTH - 1 - 11] = node_outputs[(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 - (DATA_WIDTH - 12): (VIRTUAL_NODES) * (DATA_WIDTH)];
+assign dout_i[DATA_WIDTH - 1 - 11 - 1 : 0] = 0;
+
 assign dout = dout_i;
 
 wire [DATA_WIDTH - 1 : 0] sum_i = din + dout_i;

@@ -46,6 +46,9 @@ parameter DATA_WIDTH = 32
     leds
 );
 
+wire rst;
+assign rst = ~S_AXI_ARESETN;
+
 /*
 XADC #(// Initializing the XADC Control Registers
     .INIT_40(16'hB903), // Multiplexer Input on VP/VN Channel, 256 sample averaging and settling (acquisition) time 
@@ -84,6 +87,50 @@ XADC_INST (// Connect up instance IO. See UG480 for port descriptions
     .OT()
 );
 */
+
+wire [31:0] reservoir_history_addr;
+wire [31:0] reservoir_data_out;
+
+reservoir 
+#(
+    .VIRTUAL_NODES(10),
+    .DATA_WIDTH(32)
+)
+reservoir
+(
+    .clk(S_AXI_ACLK),
+    .rst(rst),
+    .din(din),
+    .dout(reservoir_data_out)
+);
+
+counter
+#(
+    .DATA_WIDTH(20)
+)
+sample_counter
+(
+    .clk(S_AXI_ACLK),
+    .en(1'b1),
+    .rst(rst),
+    .dout(reservoir_history_addr)
+);
+
+reservoir_history
+# (
+    .MEM_SIZE(2**20), //1048576
+    .ADDR_WIDTH(20),
+    .DATA_WIDTH(32)
+)
+reservoir_history
+(
+    .clk(S_AXI_ACLK),
+    .wen(1'b1),
+    .addr(reservoir_history_addr),
+    .din(reservoir_data_out),
+    .dout()
+);
+
 
 
 endmodule;
