@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module dfr_core_tb;
+module dfr_core_top_tb;
 // Inputs
 reg S_AXI_ACLK;
 
@@ -27,7 +27,7 @@ integer j = 0;
 
 reg [31:0] reservoir_data_in = 0;
 
-dfr_core
+dfr_core_top
 #(
     .C_S_AXI_ACLK_FREQ_HZ(100000000),
     .C_S_AXI_DATA_WIDTH(32),

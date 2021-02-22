@@ -17,14 +17,14 @@ add_files {
     ../rtl/src/reservoir.v 
     ../rtl/src/mackey_glass_block.v 
     ../rtl/src/axi_cfg_regs.v 
-    ../rtl/src/dfr_core.v 
-    ../rtl/tb/dfr_core_tb.v
+    ../rtl/src/dfr_core_top.v 
+    ../rtl/tb/dfr_core_top_tb.v
     }
 
 
-move_files -fileset sim_1 [get_files  ../rtl/tb/dfr_core_tb.v]
+move_files -fileset sim_1 [get_files  ../rtl/tb/dfr_core_top_tb.v]
 
-set_property top dfr_core_tb [get_filesets sim_1]
+set_property top dfr_core_top_tb [get_filesets sim_1]
 set_property top_lib xil_defaultlib [get_filesets sim_1]
 
 update_compile_order -fileset sources_1
@@ -35,7 +35,7 @@ set_property -name {xsim.simulate.runtime} -value {all} -objects [get_filesets s
 
 launch_simulation
 
-add_wave {{/dfr_core_tb/uut}} 
+add_wave {{/dfr_core_top_tb/uut}} 
 # add_wave {{/reservoir_tb/uut/\virtual_node_inst[0].reservoir_node /dout}}
 # add_wave {{/reservoir_tb/uut/\virtual_node_inst[1].reservoir_node /dout}}
 # add_wave {{/reservoir_tb/uut/\virtual_node_inst[2].reservoir_node /dout}}

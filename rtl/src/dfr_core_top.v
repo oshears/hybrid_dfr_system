@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module dfr_core
+module dfr_core_top
 #(
     parameter C_S_AXI_ACLK_FREQ_HZ = 100000000,
     parameter C_S_AXI_DATA_WIDTH = 32,

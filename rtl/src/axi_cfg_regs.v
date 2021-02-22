@@ -58,6 +58,10 @@ output reg S_AXI_BVALID;
 output [31:0] debug;
 
 
+reg [31:0] num_train_samples;
+reg [31:0] num_test_samples;
+reg [31:0] num_init_samples;
+
 reg [31:0] debug_reg = 0;
 reg  debug_reg_addr_valid = 0;
 
