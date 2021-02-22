@@ -8,8 +8,12 @@ reg clk = 0;
 reg rst = 0;
 reg [DATA_WIDTH - 1 : 0] a = 0;
 reg [DATA_WIDTH - 1 : 0] b = 0;
+reg start = 0;
 wire [DATA_WIDTH - 1 : 0] dout;
 wire busy;
+
+integer i = 0;
+integer expect = 0;
 
 mac 
 #(
@@ -36,12 +40,22 @@ initial begin
     #10;
     rst = 0;
     #100;
+
+    for (i = 0; i < 10; i = i + 1) begin
+        @(posedge clk);
+        a = i;
+        b = i;
+        start = 1;
+        @(posedge clk);
+        start = 0;
+        @(negedge busy);
+
+        expect = expect + (i * i);
+        if (dout != expect)
+            $display("Error: Expected: %h Actual: %h",expect,dout);
+
+    end
     
-    a = 5;
-    b = 3;
-    start = 1;
-    #1;
-    @(negedge busy);
 
     $finish;
 end

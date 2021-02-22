@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module counter
+module mac
 # (
 DATA_WIDTH = 32
 )
@@ -17,9 +17,8 @@ DATA_WIDTH = 32
 reg [1:0] current_state = 0;
 reg [1:0] next_state = 0;
 
-reg [DATA_WIDTH - 1 : 0] a_i;
-reg [DATA_WIDTH - 1 : 0] b_i;
-reg [DATA_WIDTH - 1 : 0] product;
+reg [DATA_WIDTH - 1 : 0] a_i = 0;
+reg [DATA_WIDTH - 1 : 0] b_i = 0;
 reg [DATA_WIDTH - 1 : 0] multi_iter; 
 reg [DATA_WIDTH - 1 : 0] multi_iter_rst; 
 reg multi_en;
@@ -33,7 +32,7 @@ always @ (posedge clk or posedge rst) begin
         current_state <= next_state;
 end
 
-always @ (current_state)
+always @ (current_state,start,clk)
 begin
     
     busy = 0;
@@ -51,13 +50,11 @@ begin
         end
         busy_state:
         begin
-            if (multi_iter == b)
+            busy = 1;
+            multi_en = 1;
+            multi_iter_rst = 0;
+            if (multi_iter == b_i)
                 next_state = done_state;
-            else
-                busy = 1;
-                multi_en = 1;
-                multi_iter_rst = 0;
-                
         end
         default:
         begin
