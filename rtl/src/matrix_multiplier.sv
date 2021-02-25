@@ -15,12 +15,12 @@ module matrix_multiplier
     // RAM 
     input [DATA_WIDTH - 1 : 0] x_data,
     input [DATA_WIDTH - 1 : 0] y_data,
-    output reg [ADDR_WIDTH - 1 : 0] x_addr,
-    output reg [ADDR_WIDTH - 1 : 0] y_addr,
-    output reg [ADDR_WIDTH - 1 : 0] z_addr,
-    output reg [ADDR_WIDTH - 1 : 0] z_data,
-    output reg z_wen
-    output reg busy,
+    output reg [ADDR_WIDTH - 1 : 0] x_addr  = 0,
+    output reg [ADDR_WIDTH - 1 : 0] y_addr  = 0,
+    output reg [ADDR_WIDTH - 1 : 0] z_addr  = 0,
+    output reg [DATA_WIDTH - 1 : 0] z_data  = 0,
+    output reg z_wen = 0,
+    output reg busy = 0
 );
 
 // explicit regs
@@ -59,9 +59,14 @@ localparam done = 0, x_row_loop = 1, y_col_loop = 2, x_addr_loop = 3, x_col_y_ro
 
 always @ (posedge clk or posedge rst) begin
     if (rst)
-        current_state <= done_state;
+        current_state <= done;
     else
-        current_state <= next_state;
+        current_state <= done;
+end
+
+always @(current_state,start) begin
+    busy = 0;
+    z_wen = 0;
 end
 
 always @(posedge clk, posedge x_addr_cnt_rst) begin

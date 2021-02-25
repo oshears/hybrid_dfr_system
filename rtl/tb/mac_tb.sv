@@ -13,7 +13,7 @@ wire [DATA_WIDTH - 1 : 0] dout;
 wire busy;
 
 integer i = 0;
-integer expect = 0;
+integer expect_data = 0;
 
 mac 
 #(
@@ -50,9 +50,9 @@ initial begin
         start = 0;
         @(negedge busy);
 
-        expect = expect + (i * i);
-        if (dout != expect)
-            $display("Error: Expected: %h Actual: %h",expect,dout);
+        expect_data = expect_data + (i * i);
+        if (dout != expect_data)
+            $display("Error: Expected: %h Actual: %h",expect_data,dout);
 
     end
     

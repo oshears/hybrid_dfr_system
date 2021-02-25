@@ -2,6 +2,7 @@
 reservoir_project
 dfr_core_project
 mac_project
+matrix_multiply_project
 *.jou
 *.log
 *.wdb
