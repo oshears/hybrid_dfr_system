@@ -72,7 +72,7 @@ initial begin
         for (j = 0; j < X_COLS_Y_ROWS; j = j + 1) begin
             WAIT(1);
             ram_addr = i;
-            ram_data_in = i;
+            ram_data_in = i + 1;
             ram_wen = 1'b1;
             ram_sel = 2'b0;
             WAIT(1);
@@ -87,7 +87,7 @@ initial begin
         for (j = 0; j < Y_COLS; j = j + 1) begin
             WAIT(1);
             ram_addr = i;
-            ram_data_in = i;
+            ram_data_in = i + 1;
             ram_wen = 1'b1;
             ram_sel = 2'b1;
             WAIT(1);
@@ -97,6 +97,10 @@ initial begin
         end
     end
 
+    start = 1;
+    WAIT(1);
+    start = 0;
+    @(negedge busy);
 
     $finish;
 end

@@ -61,12 +61,142 @@ always @ (posedge clk or posedge rst) begin
     if (rst)
         current_state <= done;
     else
-        current_state <= done;
+        current_state <= next_state;
 end
 
-always @(current_state,start) begin
+always @(
+    current_state,
+    start,
+    z_sum,
+    multi_iter,
+    x_row,
+    y_col,
+    x_col_y_row ) begin
+
     busy = 0;
     z_wen = 0;
+    x_addr_cnt_en = 0;
+    x_addr_cnt_rst = 0;
+    y_addr_cnt_en = 0;
+    y_addr_cnt_rst = 0;
+    z_addr_cnt_en = 0;
+    z_addr_cnt_rst = 0;
+    z_sum_reg_en = 0;
+    z_sum_reg_rst = 0;
+    multi_iter_en = 0;
+    multi_iter_rst = 0;
+    x_row_en = 0;
+    x_row_rst = 0;
+    y_col_en = 0;
+    y_col_rst = 0;
+    x_col_y_row_en = 0;
+    x_col_y_row_rst = 0;
+
+    case (current_state)
+        done:
+        begin
+            if (start) begin
+                busy = 1;
+                next_state = x_row_loop;
+
+                x_addr_cnt_rst = 1;
+                y_addr_cnt_rst = 1;
+                z_addr_cnt_rst = 1;
+                z_sum_reg_rst = 1;
+                multi_iter_rst = 1;
+                x_row_rst = 1;
+                y_col_rst = 1;
+                x_col_y_row_rst = 1;
+            end
+        end
+        x_row_loop:
+        begin
+            busy = 1;
+            x_row_en = 1;
+            y_col_rst = 1;
+
+            if (x_row == X_ROWS) begin
+                next_state = done;
+            end
+        end
+        y_col_loop:
+        begin
+            busy = 1;
+            y_col_en = 1;
+            z_sum_reg_rst = 1;
+            x_addr_cnt_rst = 1;
+            multi_iter_rst = 1;
+            x_col_y_row_rst = 1;
+            next_state = x_addr_loop;
+
+            if (y_col == Y_COLS) begin
+                next_state = x_row_loop;
+            end
+        end
+        x_addr_loop:
+        begin
+            busy = 1;
+            x_addr_cnt_en = 1;
+
+            if (multi_iter == x_row) begin
+                next_state = x_col_y_row_loop; 
+            end
+        end
+        x_col_y_row_loop:
+        begin
+            busy = 1;
+            x_col_y_row_en = 1;
+            y_addr_cnt_rst = 1;
+            multi_iter_rst = 1;
+            next_state = y_addr_loop;
+
+            if (x_col_y_row == X_COLS_Y_ROWS) begin
+                z_wen = 1;
+                z_addr_cnt_en = 1;
+            end
+        end
+        y_addr_loop:
+        begin
+            busy = 1;
+            y_addr_cnt_en = 1;
+            if(multi_iter == x_col_y_row) begin
+                next_state = z_sum_loop;
+                multi_iter_rst = 1;
+                y_addr_cnt_en = 2'b10;
+            end
+        end
+        z_sum_loop:
+        begin
+            busy = 1;
+            multi_iter_en = 1;
+            z_sum_reg_en = 1;
+            if (multi_iter == x_data) begin
+                x_addr_cnt_en = 2'b10;
+                next_state = x_col_y_row_loop;
+            end
+        end
+        default:
+        begin
+            busy = 0;
+            z_wen = 0;
+            x_addr_cnt_en = 0;
+            x_addr_cnt_rst = 0;
+            y_addr_cnt_en = 0;
+            y_addr_cnt_rst = 0;
+            z_addr_cnt_en = 0;
+            z_addr_cnt_rst = 0;
+            z_sum_reg_en = 0;
+            z_sum_reg_rst = 0;
+            multi_iter_en = 0;
+            multi_iter_rst = 0;
+            x_row_en = 0;
+            x_row_rst = 0;
+            y_col_en = 0;
+            y_col_rst = 0;
+            x_col_y_row_en = 0;
+            x_col_y_row_rst = 0;
+        end
+    endcase
 end
 
 always @(posedge clk, posedge x_addr_cnt_rst) begin
