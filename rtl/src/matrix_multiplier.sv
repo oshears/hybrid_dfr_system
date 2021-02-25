@@ -24,7 +24,7 @@ module matrix_multiplier
 );
 
 // explicit regs
-reg [DATA_WIDTH - 1 : 0] z_sum = 0;
+// reg [DATA_WIDTH - 1 : 0] z_sum = 0;
 reg [DATA_WIDTH - 1 : 0] multi_iter = 0;
 
 // explicit counters
@@ -67,7 +67,7 @@ end
 always @(
     current_state,
     start,
-    z_sum,
+    z_data,
     multi_iter,
     x_row,
     y_col,
@@ -112,8 +112,8 @@ always @(
         x_row_loop:
         begin
             busy = 1;
-            x_row_en = 1;
             y_col_rst = 1;
+            next_state = y_col_loop;
 
             if (x_row == X_ROWS) begin
                 next_state = done;
@@ -122,7 +122,6 @@ always @(
         y_col_loop:
         begin
             busy = 1;
-            y_col_en = 1;
             z_sum_reg_rst = 1;
             x_addr_cnt_rst = 1;
             multi_iter_rst = 1;
@@ -131,48 +130,59 @@ always @(
 
             if (y_col == Y_COLS) begin
                 next_state = x_row_loop;
+                x_row_en = 1;
             end
         end
         x_addr_loop:
         begin
             busy = 1;
-            x_addr_cnt_en = 1;
-
             if (multi_iter == x_row) begin
                 next_state = x_col_y_row_loop; 
+            end
+            else begin
+                x_addr_cnt_en = 1;
+                multi_iter_en = 1;
             end
         end
         x_col_y_row_loop:
         begin
             busy = 1;
-            x_col_y_row_en = 1;
-            y_addr_cnt_rst = 1;
-            multi_iter_rst = 1;
-            next_state = y_addr_loop;
-
             if (x_col_y_row == X_COLS_Y_ROWS) begin
                 z_wen = 1;
                 z_addr_cnt_en = 1;
+                y_col_en = 1;
+                next_state = y_col_loop;
+            end
+            else begin
+                y_addr_cnt_rst = 1;
+                multi_iter_rst = 1;
+                next_state = y_addr_loop;
             end
         end
         y_addr_loop:
         begin
             busy = 1;
-            y_addr_cnt_en = 1;
             if(multi_iter == x_col_y_row) begin
                 next_state = z_sum_loop;
                 multi_iter_rst = 1;
                 y_addr_cnt_en = 2'b10;
             end
+            else begin
+                y_addr_cnt_en = 1;
+                multi_iter_en = 1;
+            end
         end
         z_sum_loop:
         begin
             busy = 1;
-            multi_iter_en = 1;
-            z_sum_reg_en = 1;
             if (multi_iter == x_data) begin
                 x_addr_cnt_en = 2'b10;
+                x_col_y_row_en = 1;
                 next_state = x_col_y_row_loop;
+            end
+            else begin
+                multi_iter_en = 1;
+                z_sum_reg_en = 1;
             end
         end
         default:
@@ -254,9 +264,9 @@ end
 
 always @(posedge clk, posedge z_sum_reg_rst) begin
     if (z_sum_reg_rst)
-        z_sum <= 0;
+        z_data <= 0;
     else if(z_sum_reg_en) 
-        z_sum = z_sum + y_data;
+        z_data = z_data + y_data;
 end
 
 endmodule

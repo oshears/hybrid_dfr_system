@@ -68,33 +68,29 @@ initial begin
     // Initialize Rams
 
     // X RAM
-    for (i = 0; i < X_ROWS; i = i + 1) begin
-        for (j = 0; j < X_COLS_Y_ROWS; j = j + 1) begin
-            WAIT(1);
-            ram_addr = i;
-            ram_data_in = i + 1;
-            ram_wen = 1'b1;
-            ram_sel = 2'b0;
-            WAIT(1);
-            ram_addr = 0;
-            ram_data_in = 0;
-            ram_wen = 1'b0;
-        end
+    for (i = 0; i < X_ROWS * X_COLS_Y_ROWS; i = i + 1) begin
+        WAIT(1);
+        ram_addr = i;
+        ram_data_in = i + 1;
+        ram_wen = 1'b1;
+        ram_sel = 2'b0;
+        WAIT(1);
+        ram_addr = 0;
+        ram_data_in = 0;
+        ram_wen = 1'b0;
     end
 
     // Y RAM
-    for (i = 0; i < X_COLS_Y_ROWS; i = i + 1) begin
-        for (j = 0; j < Y_COLS; j = j + 1) begin
-            WAIT(1);
-            ram_addr = i;
-            ram_data_in = i + 1;
-            ram_wen = 1'b1;
-            ram_sel = 2'b1;
-            WAIT(1);
-            ram_addr = 0;
-            ram_data_in = 0;
-            ram_wen = 1'b0;
-        end
+    for (i = 0; i < X_COLS_Y_ROWS * Y_COLS; i = i + 1) begin
+        WAIT(1);
+        ram_addr = i;
+        ram_data_in = i + 1;
+        ram_wen = 1'b1;
+        ram_sel = 2'b1;
+        WAIT(1);
+        ram_addr = 0;
+        ram_data_in = 0;
+        ram_wen = 1'b0;
     end
 
     start = 1;

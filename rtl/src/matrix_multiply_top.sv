@@ -113,7 +113,7 @@ z_ram
     .clk(clk),
     .wen(z_wen),
     .addr(z_addr),
-    .din(z_data_out),
+    .din(z_data_in),
     .dout(z_data_out)
 );
 
