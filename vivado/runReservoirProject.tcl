@@ -11,14 +11,14 @@ create_project reservoir_project ./reservoir_project -part xc7z020clg484-1 -forc
 set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
 
 add_files {
-    ../rtl/tb/reservoir_tb.v
-    ../rtl/src/reservoir.v 
-    ../rtl/src/register.v 
-    ../rtl/src/mackey_glass_block.v 
+    ../rtl/tb/reservoir_tb.sv
+    ../rtl/src/reservoir.sv 
+    ../rtl/src/register.sv 
+    ../rtl/src/mackey_glass_block.sv 
     }
 
 
-move_files -fileset sim_1 [get_files  ../rtl/tb/reservoir_tb.v]
+move_files -fileset sim_1 [get_files  ../rtl/tb/reservoir_tb.sv]
 
 set_property top reservoir_tb [get_filesets sim_1]
 set_property top_lib xil_defaultlib [get_filesets sim_1]

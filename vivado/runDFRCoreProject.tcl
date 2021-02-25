@@ -11,18 +11,18 @@ create_project dfr_core_project ./dfr_core_project -part xc7z020clg484-1 -force
 set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
 
 add_files {
-    ../rtl/src/register.v 
-    ../rtl/src/ram.v 
-    ../rtl/src/counter.v 
-    ../rtl/src/reservoir.v 
-    ../rtl/src/mackey_glass_block.v 
-    ../rtl/src/axi_cfg_regs.v 
-    ../rtl/src/dfr_core_top.v 
-    ../rtl/tb/dfr_core_top_tb.v
+    ../rtl/src/register.sv 
+    ../rtl/src/ram.sv 
+    ../rtl/src/counter.sv 
+    ../rtl/src/reservoir.sv 
+    ../rtl/src/mackey_glass_block.sv 
+    ../rtl/src/axi_cfg_regs.sv 
+    ../rtl/src/dfr_core_top.sv 
+    ../rtl/tb/dfr_core_top_tb.sv
     }
 
 
-move_files -fileset sim_1 [get_files  ../rtl/tb/dfr_core_top_tb.v]
+move_files -fileset sim_1 [get_files  ../rtl/tb/dfr_core_top_tb.sv]
 
 set_property top dfr_core_top_tb [get_filesets sim_1]
 set_property top_lib xil_defaultlib [get_filesets sim_1]
