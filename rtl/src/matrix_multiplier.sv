@@ -71,7 +71,8 @@ always @(
     multi_iter,
     x_row,
     y_col,
-    x_col_y_row ) begin
+    x_col_y_row,
+    x_data ) begin
 
     busy = 0;
     z_wen = 0;
@@ -97,8 +98,6 @@ always @(
         begin
             if (start) begin
                 busy = 1;
-                next_state = x_row_loop;
-
                 x_addr_cnt_rst = 1;
                 y_addr_cnt_rst = 1;
                 z_addr_cnt_rst = 1;
@@ -107,30 +106,34 @@ always @(
                 x_row_rst = 1;
                 y_col_rst = 1;
                 x_col_y_row_rst = 1;
+
+                next_state = x_row_loop;
             end
         end
         x_row_loop:
         begin
             busy = 1;
-            y_col_rst = 1;
-            next_state = y_col_loop;
-
             if (x_row == X_ROWS) begin
                 next_state = done;
+            end
+            else begin
+                y_col_rst = 1;
+                next_state = y_col_loop;
             end
         end
         y_col_loop:
         begin
             busy = 1;
-            z_sum_reg_rst = 1;
-            x_addr_cnt_rst = 1;
-            multi_iter_rst = 1;
-            x_col_y_row_rst = 1;
-            next_state = x_addr_loop;
-
             if (y_col == Y_COLS) begin
-                next_state = x_row_loop;
                 x_row_en = 1;
+                next_state = x_row_loop;
+            end
+            else begin
+                z_sum_reg_rst = 1;
+                x_addr_cnt_rst = 1;
+                multi_iter_rst = 1;
+                x_col_y_row_rst = 1;
+                next_state = x_addr_loop;
             end
         end
         x_addr_loop:
@@ -140,7 +143,7 @@ always @(
                 next_state = x_col_y_row_loop; 
             end
             else begin
-                x_addr_cnt_en = 1;
+                x_addr_cnt_en = 2'b01;
                 multi_iter_en = 1;
             end
         end
@@ -162,14 +165,15 @@ always @(
         y_addr_loop:
         begin
             busy = 1;
-            if(multi_iter == x_col_y_row) begin
-                next_state = z_sum_loop;
+            if (multi_iter == x_col_y_row) begin
                 multi_iter_rst = 1;
                 y_addr_cnt_en = 2'b10;
+
+                next_state = z_sum_loop;
             end
             else begin
-                y_addr_cnt_en = 1;
                 multi_iter_en = 1;
+                y_addr_cnt_en = 2'b01;
             end
         end
         z_sum_loop:
@@ -213,60 +217,60 @@ always @(posedge clk, posedge x_addr_cnt_rst) begin
     if (x_addr_cnt_rst)
         x_addr <= 0;
     else if(x_addr_cnt_en == 2'b01) 
-        x_addr = x_addr + X_COLS_Y_ROWS;
+        x_addr <= x_addr + X_COLS_Y_ROWS;
     else if (x_addr_cnt_en == 2'b10)
-        x_addr = x_addr + 1;
+        x_addr <= x_addr + 1;
 end
 
 always @(posedge clk, posedge y_addr_cnt_rst) begin
     if (y_addr_cnt_rst)
         y_addr <= 0;
     else if(y_addr_cnt_en == 2'b01)
-        y_addr = y_addr + Y_COLS;
+        y_addr <= y_addr + Y_COLS;
     else if(y_addr_cnt_en == 2'b10) 
-        y_addr = y_addr + y_col;
+        y_addr <= y_addr + y_col;
 end
 
 always @(posedge clk, posedge z_addr_cnt_rst) begin
     if (z_addr_cnt_rst)
         z_addr <= 0;
     else if(z_addr_cnt_en) 
-        z_addr = z_addr + 1;
+        z_addr <= z_addr + 1;
 end
 
 always @(posedge clk, posedge multi_iter_rst) begin
     if (multi_iter_rst)
         multi_iter <= 0;
     else if(multi_iter_en) 
-        multi_iter = multi_iter + 1;
+        multi_iter <= multi_iter + 1;
 end
 
 always @(posedge clk, posedge x_row_rst) begin
     if (x_row_rst)
         x_row <= 0;
     else if(x_row_en) 
-        x_row = x_row + 1;
+        x_row <= x_row + 1;
 end
 
 always @(posedge clk, posedge y_col_rst) begin
     if (y_col_rst)
         y_col <= 0;
     else if(y_col_en) 
-        y_col = y_col + 1;
+        y_col <= y_col + 1;
 end
 
 always @(posedge clk, posedge x_col_y_row_rst) begin
     if (x_col_y_row_rst)
         x_col_y_row <= 0;
     else if(x_col_y_row_en) 
-        x_col_y_row = x_col_y_row + 1;
+        x_col_y_row <= x_col_y_row + 1;
 end
 
 always @(posedge clk, posedge z_sum_reg_rst) begin
     if (z_sum_reg_rst)
         z_data <= 0;
     else if(z_sum_reg_en) 
-        z_data = z_data + y_data;
+        z_data <= z_data + y_data;
 end
 
 endmodule

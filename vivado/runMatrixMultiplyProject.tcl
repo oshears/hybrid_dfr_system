@@ -31,3 +31,5 @@ set_property -name {xsim.simulate.log_all_signals} -value {true} -objects [get_f
 set_property -name {xsim.simulate.runtime} -value {all} -objects [get_filesets sim_1]
 
 launch_simulation
+
+# open_wave_config /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/matrix_multiply_project/matrix_multiply_top_tb_behav.wcfg

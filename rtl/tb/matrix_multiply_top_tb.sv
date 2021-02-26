@@ -96,7 +96,8 @@ initial begin
     start = 1;
     WAIT(1);
     start = 0;
-    @(negedge busy);
+    WAIT(70);
+    // @(negedge busy);
 
     $finish;
 end
