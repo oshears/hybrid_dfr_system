@@ -10,13 +10,13 @@ module dfr_core_controller
     input clk,
     input rst,
     input start,
-    input busy,
-    input reservoir_done,
-    input matrix_multiply_done,
+    input reservoir_busy,
+    input matrix_multiply_busy,
 
-    output matrix_multiply_start,
-    output reservoir_en, 
-    output dfr_done
+    output reg busy,
+    output reg matrix_multiply_start,
+    output reg reservoir_en, 
+    output reg dfr_done
 );
 
 localparam done = 0, reservoir_stage = 1, matrix_multiply_stage = 2;
@@ -34,8 +34,8 @@ end
 always @(
     current_state,
     start,
-    reservoir_done,
-    matrix_multiply_done
+    matrix_multiply_busy,
+    reservoir_busy
 ) begin
 
     matrix_multiply_start = 0;
@@ -53,7 +53,7 @@ always @(
         reservoir_stage:
         begin
             busy = 1;
-            if (reservoir_done) begin
+            if (~reservoir_busy) begin
                 matrix_multiply_start = 1;
                 next_state = matrix_multiply_stage;
             end
@@ -63,7 +63,7 @@ always @(
         matrix_multiply_stage:
         begin
             busy = 1;
-            if (matrix_multiply_done) begin
+            if (~matrix_multiply_busy) begin
                 next_state = done;
             end
         end

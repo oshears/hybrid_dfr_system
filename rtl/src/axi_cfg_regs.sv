@@ -23,6 +23,11 @@ parameter C_S_AXI_ADDR_WIDTH = 9
     input S_AXI_RREADY, 
     input S_AXI_BREADY, 
 
+    output [15:0] mem_addr,
+    output mem_wen,
+    output [C_S_AXI_DATA_WIDTH - 1:0] mem_data_in,
+    input [C_S_AXI_DATA_WIDTH - 1:0] mem_data_out,
+
     output reg S_AXI_AWREADY, 
     output reg S_AXI_ARREADY, 
     output reg S_AXI_WREADY,  
@@ -45,6 +50,8 @@ reg  debug_reg_addr_valid = 0;
 
 reg [31:0] ctrl_reg;
 reg ctrl_reg_addr_valid = 0;
+
+reg mem_reg_addr_valid = 0;
 
 reg [2:0] current_state = 0;
 reg [2:0] next_state = 0;
@@ -134,7 +141,7 @@ always @ (current_state, combined_S_AXI_AWVALID_S_AXI_ARVALID, S_AXI_ARVALID, S_
 end
 
 // send data to AXI RDATA
-always @(send_read_data_to_AXI, local_address, local_address_valid, debug_reg, ctrl_reg)
+always @(send_read_data_to_AXI, local_address, local_address_valid, debug_reg, ctrl_reg, mem_data_out)
 begin
     S_AXI_RDATA = 32'b0;
 
@@ -146,7 +153,7 @@ begin
             4:
                 S_AXI_RDATA = debug_reg;
             default:
-                S_AXI_RDATA = 32'b0;
+                S_AXI_RDATA = mem_data_out;
         endcase;     
     end
 end
@@ -162,9 +169,9 @@ begin
         begin
             case (combined_S_AXI_AWVALID_S_AXI_ARVALID)
                 2'b10:
-                    local_address = S_AXI_AWADDR[7:0];
+                    local_address = S_AXI_AWADDR[15:0];
                 2'b01:     
-                    local_address = S_AXI_ARADDR[7:0];
+                    local_address = S_AXI_ARADDR[15:0];
             endcase
         end
     end
@@ -175,6 +182,7 @@ always @(local_address,write_enable_registers)
 begin
     ctrl_reg_addr_valid = 0;
     debug_reg_addr_valid = 0;
+    mem_reg_addr_valid = 0;
     local_address_valid = 1;
 
     if (write_enable_registers)
@@ -185,7 +193,10 @@ begin
             4:
                 debug_reg_addr_valid = 1;
             default:
-                local_address_valid = 0;
+            begin
+                mem_reg_addr_valid = 1;
+                local_address_valid = 1;
+            end
         endcase
     end
 end
@@ -198,7 +209,7 @@ begin
     else
     begin
         if(ctrl_reg_addr_valid)
-            ctrl_reg = S_AXI_WDATA;
+            ctrl_reg = {S_AXI_WDATA[31:2],busy,S_AXI_WDATA[0]};
     end
 end
 
@@ -221,5 +232,10 @@ begin
             debug_reg = S_AXI_WDATA;
     end
 end
+
+// mem access
+assign mem_wen = write_enable_registers && mem_reg_addr_valid;
+assign mem_data_in = S_AXI_WDATA;
+assign mem_addr = local_address;
 
 endmodule

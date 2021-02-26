@@ -9,52 +9,29 @@ module dfr_core_top
     parameter RESERVOIR_HISTORY_ADDR_WIDTH = 20
 )
 (
-    // axi_cfg_regs
-    S_AXI_ACLK,     
-    S_AXI_ARESETN,  
-    S_AXI_AWADDR,   
-    S_AXI_AWVALID,  
-    S_AXI_AWREADY,  
-    S_AXI_ARADDR,   
-    S_AXI_ARVALID,  
-    S_AXI_ARREADY,  
-    S_AXI_WDATA,    
-    S_AXI_WSTRB,    
-    S_AXI_WVALID,   
-    S_AXI_WREADY,   
-    S_AXI_RDATA,    
-    S_AXI_RRESP,    
-    S_AXI_RVALID,   
-    S_AXI_RREADY,   
-    S_AXI_BRESP,    
-    S_AXI_BVALID,   
-    S_AXI_BREADY,   
+    input S_AXI_ACLK,   
+    input S_AXI_ARESETN,
+    input [C_S_AXI_ADDR_WIDTH - 1:0] S_AXI_AWADDR, 
+    input S_AXI_AWVALID,
+    input [C_S_AXI_ADDR_WIDTH - 1:0] S_AXI_ARADDR,
+    input S_AXI_ARVALID,
+    input [C_S_AXI_DATA_WIDTH - 1:0] S_AXI_WDATA,  
+    input [(C_S_AXI_DATA_WIDTH/8)-1:0] S_AXI_WSTRB,  
+    input S_AXI_WVALID, 
+    input S_AXI_RREADY, 
+    input S_AXI_BREADY, 
 
-    reservoir_data_in
+    output S_AXI_AWREADY, 
+    output S_AXI_ARREADY, 
+    output S_AXI_WREADY,  
+    output [C_S_AXI_DATA_WIDTH - 1:0] S_AXI_RDATA,
+    output [1:0] S_AXI_RRESP,
+    output S_AXI_RVALID,  
+    output [1:0] S_AXI_BRESP,
+    output S_AXI_BVALID  
 );
 
-input S_AXI_ACLK;   
-input S_AXI_ARESETN;
-input [C_S_AXI_ADDR_WIDTH - 1:0] S_AXI_AWADDR; 
-input S_AXI_AWVALID;
-input [C_S_AXI_ADDR_WIDTH - 1:0] S_AXI_ARADDR; 
-input S_AXI_ARVALID;
-input [C_S_AXI_DATA_WIDTH - 1:0] S_AXI_WDATA;  
-input [(C_S_AXI_DATA_WIDTH/8)-1:0] S_AXI_WSTRB;  
-input S_AXI_WVALID; 
-input S_AXI_RREADY; 
-input S_AXI_BREADY; 
 
-input [RESERVOIR_DATA_WIDTH - 1 : 0] reservoir_data_in;
-
-output S_AXI_AWREADY; 
-output S_AXI_ARREADY; 
-output S_AXI_WREADY;  
-output [C_S_AXI_DATA_WIDTH - 1:0] S_AXI_RDATA;
-output [1:0] S_AXI_RRESP;
-output S_AXI_RVALID;  
-output [1:0] S_AXI_BRESP;
-output S_AXI_BVALID;  
 
 
 wire rst;
@@ -64,6 +41,25 @@ assign rst = ~S_AXI_ARESETN;
 
 wire [31:0] debug;
 wire [31:0] ctrl;
+wire [2:0] mem_sel;
+
+wire  [15:0] mem_addr;
+wire  mem_wen;
+wire  [C_S_AXI_DATA_WIDTH - 1:0] mem_data_in;
+wire  [C_S_AXI_DATA_WIDTH - 1:0] mem_data_out;
+
+wire [13:0] input_mem_addr;
+wire [RESERVOIR_DATA_WIDTH - 1:0] input_mem_din;
+wire [RESERVOIR_DATA_WIDTH - 1:0] input_mem_dout;
+wire input_mem_wen;
+wire [RESERVOIR_DATA_WIDTH - 1:0] mem_data_out; 
+
+assign mem_sel = ctrl[4:2];
+
+assign input_mem_addr = mem_addr[13:0];
+assign input_mem_din = mem_data_in;
+assign input_mem_wen = mem_wen;
+assign mem_data_out = input_mem_dout;
 
 /*
 XADC #(// Initializing the XADC Control Registers
@@ -107,6 +103,7 @@ XADC_INST (// Connect up instance IO. See UG480 for port descriptions
 wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_history_addr;
 wire [RESERVOIR_DATA_WIDTH - 1 : 0] reservoir_data_out;
 
+
 axi_cfg_regs 
 #(
     C_S_AXI_ACLK_FREQ_HZ,
@@ -122,6 +119,11 @@ axi_cfg_regs
     .debug(debug),
     // Control Register
     .ctrl(ctrl),
+    // Mem Registers
+    .mem_addr(mem_addr),
+    .mem_wen(mem_wen),
+    .mem_data_in(mem_data_in),
+    .mem_data_out(mem_data_out),
     //AXI Signals
     .S_AXI_ACLK(S_AXI_ACLK),     
     .S_AXI_ARESETN(S_AXI_ARESETN),  
@@ -172,25 +174,39 @@ sample_counter
 
 ram
 # (
+    .ADDR_WIDTH(14),
+    .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
+)
+input_mem
+(
+    .clk(S_AXI_ACLK),
+    .wen(input_mem_wen),
+    .addr(input_mem_addr),
+    .din(input_mem_din),
+    .dout(input_mem_dout)
+);
+
+ram
+# (
     .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
     .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
 )
-reservoir_history
+reservoir_output_mem
 (
     .clk(S_AXI_ACLK),
-    .wen(1'b1),
-    .addr(reservoir_history_addr),
+    .wen(reservoir_output_mem_wen),
+    .addr(reservoir_output_mem_addr),
     .din(reservoir_data_out),
-    .dout()
+    .dout(reservoir_output_mem_data_out)
 );
 
 dfr_core_controller
 # (
     .ADDR_WIDTH(14),
-    .DATA_WIDTH(32),
-    .X_ROWS(100),
-    .Y_COLS(100),
-    .X_COLS_Y_ROWS(100)
+    .DATA_WIDTH(RESERVOIR_DATA_WIDTH),
+    .X_ROWS(100), // Num Training Samples?
+    .Y_COLS(100), // Num Weights?
+    .X_COLS_Y_ROWS(100) // Num Time Steps (Virtual Nodes) per Sample?
 )
 dfr_core_controller
 (
@@ -198,8 +214,8 @@ dfr_core_controller
     .rst(rst),
     .start(ctrl[0]),
     .busy(busy),
-    .reservoir_done(reservoir_done),
-    .matrix_multiply_done(matrix_multiply_done),
+    .reservoir_busy(reservoir_busy),
+    .matrix_multiply_busy(matrix_multiply_busy),
     .matrix_multiply_start(matrix_multiply_start),
     .reservoir_en(reservoir_en), 
     .dfr_done(dfr_done)
@@ -207,11 +223,11 @@ dfr_core_controller
 
 matrix_multiply_top
 # (
-    .ADDR_WIDTH(ADDR_WIDTH),
-    .DATA_WIDTH(DATA_WIDTH),
-    .X_ROWS(X_ROWS),
-    .Y_COLS(Y_COLS),
-    .X_COLS_Y_ROWS(X_COLS_Y_ROWS)
+    .ADDR_WIDTH(14),
+    .DATA_WIDTH(RESERVOIR_DATA_WIDTH),
+    .X_ROWS(100),
+    .Y_COLS(100),
+    .X_COLS_Y_ROWS(100)
 )
 uut
 (
@@ -222,9 +238,8 @@ uut
     .ram_wen(ram_wen),
     .ram_sel(ram_sel),
     .ram_data_in(ram_data_in),
-    .busy(busy),
+    .busy(matrix_multiply_busy),
     .ram_data_out(ram_data_out)
 );
-
 
 endmodule
