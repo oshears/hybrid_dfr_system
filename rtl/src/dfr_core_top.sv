@@ -63,7 +63,7 @@ wire rst;
 assign rst = ~S_AXI_ARESETN;
 
 wire [31:0] debug;
-
+wire [31:0] ctrl;
 
 /*
 XADC #(// Initializing the XADC Control Registers
@@ -120,6 +120,8 @@ axi_cfg_regs
     .rst(RESET),
     // Debug Register Output
     .debug(debug),
+    // Control Register
+    .ctrl(ctrl),
     //AXI Signals
     .S_AXI_ACLK(S_AXI_ACLK),     
     .S_AXI_ARESETN(S_AXI_ARESETN),  
@@ -182,6 +184,47 @@ reservoir_history
     .dout()
 );
 
+dfr_core_controller
+# (
+    .ADDR_WIDTH(14),
+    .DATA_WIDTH(32),
+    .X_ROWS(100),
+    .Y_COLS(100),
+    .X_COLS_Y_ROWS(100)
+)
+dfr_core_controller
+(
+    .clk(clk),
+    .rst(rst),
+    .start(ctrl[0]),
+    .busy(busy),
+    .reservoir_done(reservoir_done),
+    .matrix_multiply_done(matrix_multiply_done),
+    .matrix_multiply_start(matrix_multiply_start),
+    .reservoir_en(reservoir_en), 
+    .dfr_done(dfr_done)
+);
+
+matrix_multiply_top
+# (
+    .ADDR_WIDTH(ADDR_WIDTH),
+    .DATA_WIDTH(DATA_WIDTH),
+    .X_ROWS(X_ROWS),
+    .Y_COLS(Y_COLS),
+    .X_COLS_Y_ROWS(X_COLS_Y_ROWS)
+)
+uut
+(
+    .clk(S_AXI_ACLK),
+    .rst(rst),
+    .start(start),
+    .ram_addr(ram_addr),
+    .ram_wen(ram_wen),
+    .ram_sel(ram_sel),
+    .ram_data_in(ram_data_in),
+    .busy(busy),
+    .ram_data_out(ram_data_out)
+);
 
 
 endmodule

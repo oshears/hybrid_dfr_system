@@ -6,57 +6,35 @@ parameter C_S_AXI_DATA_WIDTH = 32,
 parameter C_S_AXI_ADDR_WIDTH = 9 
 )
 (
-    clk, 
-    rst,
-    S_AXI_ACLK,     
-    S_AXI_ARESETN,  
-    S_AXI_AWADDR,   
-    S_AXI_AWVALID,  
-    S_AXI_AWREADY,  
-    S_AXI_ARADDR,   
-    S_AXI_ARVALID,  
-    S_AXI_ARREADY,  
-    S_AXI_WDATA,    
-    S_AXI_WSTRB,    
-    S_AXI_WVALID,   
-    S_AXI_WREADY,   
-    S_AXI_RDATA,    
-    S_AXI_RRESP,    
-    S_AXI_RVALID,   
-    S_AXI_RREADY,   
-    S_AXI_BRESP,    
-    S_AXI_BVALID,   
-    S_AXI_BREADY,
-    debug
+    input clk,
+    input rst,
+
+    input busy,
+
+    input S_AXI_ACLK,
+    input S_AXI_ARESETN,
+    input [C_S_AXI_ADDR_WIDTH - 1:0] S_AXI_AWADDR, 
+    input S_AXI_AWVALID,
+    input [C_S_AXI_ADDR_WIDTH - 1:0] S_AXI_ARADDR, 
+    input S_AXI_ARVALID,
+    input [C_S_AXI_DATA_WIDTH - 1:0] S_AXI_WDATA,  
+    input [(C_S_AXI_DATA_WIDTH/8 - 1):0] S_AXI_WSTRB,  
+    input S_AXI_WVALID, 
+    input S_AXI_RREADY, 
+    input S_AXI_BREADY, 
+
+    output reg S_AXI_AWREADY, 
+    output reg S_AXI_ARREADY, 
+    output reg S_AXI_WREADY,  
+    output reg [C_S_AXI_DATA_WIDTH - 1:0] S_AXI_RDATA,
+    output reg [1:0] S_AXI_RRESP,
+    output reg S_AXI_RVALID,  
+    output reg [1:0] S_AXI_BRESP,
+    output reg S_AXI_BVALID,  
+
+    output [31:0] debug,
+    output [31:0] ctrl
 );
-
-
-input clk;
-input rst;
-
-input S_AXI_ACLK;   
-input S_AXI_ARESETN;
-input [C_S_AXI_ADDR_WIDTH - 1:0] S_AXI_AWADDR; 
-input S_AXI_AWVALID;
-input [C_S_AXI_ADDR_WIDTH - 1:0] S_AXI_ARADDR; 
-input S_AXI_ARVALID;
-input [C_S_AXI_DATA_WIDTH - 1:0] S_AXI_WDATA;  
-input [(C_S_AXI_DATA_WIDTH/8 - 1):0] S_AXI_WSTRB;  
-input S_AXI_WVALID; 
-input S_AXI_RREADY; 
-input S_AXI_BREADY; 
-
-output reg S_AXI_AWREADY; 
-output reg S_AXI_ARREADY; 
-output reg S_AXI_WREADY;  
-output reg [C_S_AXI_DATA_WIDTH - 1:0] S_AXI_RDATA;
-output reg [1:0] S_AXI_RRESP;
-output reg S_AXI_RVALID;  
-output reg [1:0] S_AXI_BRESP;
-output reg S_AXI_BVALID;  
-
-output [31:0] debug;
-
 
 reg [31:0] num_train_samples;
 reg [31:0] num_test_samples;
@@ -64,6 +42,9 @@ reg [31:0] num_init_samples;
 
 reg [31:0] debug_reg = 0;
 reg  debug_reg_addr_valid = 0;
+
+reg [31:0] ctrl_reg;
+reg ctrl_reg_addr_valid = 0;
 
 reg [2:0] current_state = 0;
 reg [2:0] next_state = 0;
@@ -153,7 +134,7 @@ always @ (current_state, combined_S_AXI_AWVALID_S_AXI_ARVALID, S_AXI_ARVALID, S_
 end
 
 // send data to AXI RDATA
-always @(send_read_data_to_AXI, local_address, local_address_valid, debug_reg)
+always @(send_read_data_to_AXI, local_address, local_address_valid, debug_reg, ctrl_reg)
 begin
     S_AXI_RDATA = 32'b0;
 
@@ -161,6 +142,8 @@ begin
     begin
         case(local_address)
             0:
+                S_AXI_RDATA = ctrl_reg;
+            4:
                 S_AXI_RDATA = debug_reg;
             default:
                 S_AXI_RDATA = 32'b0;
@@ -190,6 +173,7 @@ end
 // write data address analysis
 always @(local_address,write_enable_registers)
 begin
+    ctrl_reg_addr_valid = 0;
     debug_reg_addr_valid = 0;
     local_address_valid = 1;
 
@@ -197,10 +181,24 @@ begin
     begin
         case (local_address)
             0:
+                ctrl_reg_addr_valid = 1;
+            4:
                 debug_reg_addr_valid = 1;
             default:
                 local_address_valid = 0;
         endcase
+    end
+end
+
+// ctrl_reg
+always @(posedge S_AXI_ACLK, posedge Local_Reset)
+begin
+    if (Local_Reset)
+        ctrl_reg = 0;
+    else
+    begin
+        if(ctrl_reg_addr_valid)
+            ctrl_reg = S_AXI_WDATA;
     end
 end
 
