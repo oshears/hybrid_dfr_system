@@ -166,9 +166,12 @@ always @(
         begin
             busy = 1;
             if (multi_iter == x_col_y_row) begin
-                multi_iter_rst = 1;
+                multi_iter_en = 1;
                 y_addr_cnt_en = 2'b10;
-
+            end
+            // Need One Delay for RAM Data to Arrive
+            else if(multi_iter == x_col_y_row + 1) begin
+                multi_iter_rst = 1;
                 next_state = z_sum_loop;
             end
             else begin
