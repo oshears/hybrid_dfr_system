@@ -2,11 +2,11 @@
 
 module matrix_multiply_top_tb;
 
-localparam ADDR_WIDTH = 4;
+localparam ADDR_WIDTH = 8;
 localparam DATA_WIDTH = 32;
-localparam X_ROWS = 2;
-localparam Y_COLS = 2;
-localparam X_COLS_Y_ROWS = 2;
+localparam X_ROWS = 5;
+localparam Y_COLS = 3;
+localparam X_COLS_Y_ROWS = 4;
 
 
 integer i = 0;
@@ -68,12 +68,12 @@ initial begin
     // Initialize Rams
 
     // X RAM
+    ram_sel = 2'b0;
     for (i = 0; i < X_ROWS * X_COLS_Y_ROWS; i = i + 1) begin
         WAIT(1);
         ram_addr = i;
         ram_data_in = i + 1;
         ram_wen = 1'b1;
-        ram_sel = 2'b0;
         WAIT(1);
         ram_addr = 0;
         ram_data_in = 0;
@@ -81,12 +81,12 @@ initial begin
     end
 
     // Y RAM
+    ram_sel = 2'b1;
     for (i = 0; i < X_COLS_Y_ROWS * Y_COLS; i = i + 1) begin
         WAIT(1);
         ram_addr = i;
         ram_data_in = i + 1;
         ram_wen = 1'b1;
-        ram_sel = 2'b1;
         WAIT(1);
         ram_addr = 0;
         ram_data_in = 0;
@@ -96,8 +96,15 @@ initial begin
     start = 1;
     WAIT(1);
     start = 0;
-    WAIT(70);
-    // @(negedge busy);
+    while(busy) WAIT(2);
+
+    // Z RAM
+    ram_sel = 2'b10;
+    for (i = 0; i < X_COLS_Y_ROWS * Y_COLS; i = i + 1) begin
+        ram_addr = i;
+        WAIT(2);
+        $display("Z[%d] = %d",i,ram_data_out);
+    end
 
     $finish;
 end
