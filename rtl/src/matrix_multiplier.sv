@@ -213,7 +213,7 @@ always @(
     endcase
 end
 
-always @(posedge clk, posedge x_addr_cnt_rst) begin
+always @(posedge clk) begin
     if (x_addr_cnt_rst)
         x_addr <= 0;
     else if(x_addr_cnt_en == 2'b01) 
@@ -222,7 +222,7 @@ always @(posedge clk, posedge x_addr_cnt_rst) begin
         x_addr <= x_addr + 1;
 end
 
-always @(posedge clk, posedge y_addr_cnt_rst) begin
+always @(posedge clk) begin
     if (y_addr_cnt_rst)
         y_addr <= 0;
     else if(y_addr_cnt_en == 2'b01)
@@ -231,42 +231,42 @@ always @(posedge clk, posedge y_addr_cnt_rst) begin
         y_addr <= y_addr + y_col;
 end
 
-always @(posedge clk, posedge z_addr_cnt_rst) begin
+always @(posedge clk) begin
     if (z_addr_cnt_rst)
         z_addr <= 0;
     else if(z_addr_cnt_en) 
         z_addr <= z_addr + 1;
 end
 
-always @(posedge clk, posedge multi_iter_rst) begin
+always @(posedge clk) begin
     if (multi_iter_rst)
         multi_iter <= 0;
     else if(multi_iter_en) 
         multi_iter <= multi_iter + 1;
 end
 
-always @(posedge clk, posedge x_row_rst) begin
+always @(posedge clk) begin
     if (x_row_rst)
         x_row <= 0;
     else if(x_row_en) 
         x_row <= x_row + 1;
 end
 
-always @(posedge clk, posedge y_col_rst) begin
+always @(posedge clk) begin
     if (y_col_rst)
         y_col <= 0;
     else if(y_col_en) 
         y_col <= y_col + 1;
 end
 
-always @(posedge clk, posedge x_col_y_row_rst) begin
+always @(posedge clk) begin
     if (x_col_y_row_rst)
         x_col_y_row <= 0;
     else if(x_col_y_row_en) 
         x_col_y_row <= x_col_y_row + 1;
 end
 
-always @(posedge clk, posedge z_sum_reg_rst) begin
+always @(posedge clk) begin
     if (z_sum_reg_rst)
         z_data <= 0;
     else if(z_sum_reg_en) 
