@@ -28,7 +28,9 @@ module dfr_core_top
     output [1:0] S_AXI_RRESP,
     output S_AXI_RVALID,  
     output [1:0] S_AXI_BRESP,
-    output S_AXI_BVALID  
+    output S_AXI_BVALID,
+
+    output busy
 );
 
 
@@ -58,8 +60,6 @@ wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_output_mem_addr;
 
 wire [RESERVOIR_DATA_WIDTH - 1:0] reservoir_output_mem_data_in;
 
-wire busy;
-
 wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_history_addr;
 wire [RESERVOIR_DATA_WIDTH - 1 : 0] reservoir_data_out;
 wire reservoir_history_en;
@@ -79,23 +79,26 @@ wire [RESERVOIR_DATA_WIDTH - 1 : 0] dfr_output_mem_data_in;
 wire [RESERVOIR_DATA_WIDTH - 1 : 0] dfr_output_mem_data_out;
 wire dfr_output_mem_wen;
 
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] matrix_multiply_output_weight_addr;
+
 wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] dfr_output_cntr;
 wire [RESERVOIR_DATA_WIDTH - 1 : 0] dfr_output_data;
 wire dfr_output_wen;
 
-assign ctrl[1] = busy;
+wire reservoir_rst;
+wire reservoir_rst_i;
 
 assign mem_sel = ctrl[7:4];
 
-assign input_mem_addr = (mem_sel == 4'h0 && ~busy) ? mem_addr[13:0] : 14'h0;
+assign input_mem_addr = (mem_sel == 4'h0 && ~busy) ? mem_addr[13:0] : reservoir_history_addr;
 assign input_mem_din =  (mem_sel == 4'h0 && ~busy) ? mem_data_in : 32'h0;
 assign input_mem_wen =  (mem_sel == 4'h0 && ~busy) ? mem_wen : 1'h0;
 
-assign reservoir_output_mem_addr =    (mem_sel == 4'h1 && ~busy) ? mem_addr[13:0] : reservoir_history_addr;
+assign reservoir_output_mem_addr =    (mem_sel == 4'h1 && ~busy) ? mem_addr[13:0] : ( (reservoir_en) : reservoir_history_addr : matrix_multiply_reservoir_history_addr);
 assign reservoir_output_mem_data_in = (mem_sel == 4'h1 && ~busy) ? mem_data_in : reservoir_data_out;
 assign reservoir_output_mem_wen =     (mem_sel == 4'h1 && ~busy) ? mem_wen : reservoir_history_en;
 
-assign output_weight_mem_addr =    (mem_sel == 4'h2 && ~busy) ? mem_addr[13:0] : 14'h0;
+assign output_weight_mem_addr =    (mem_sel == 4'h2 && ~busy) ? mem_addr[13:0] : matrix_multiply_output_weight_addr;
 assign output_weight_mem_data_in = (mem_sel == 4'h2 && ~busy) ? mem_data_in : 32'h0;
 assign output_weight_mem_wen =     (mem_sel == 4'h2 && ~busy) ? mem_wen : 1'h0;
 
@@ -168,6 +171,7 @@ axi_cfg_regs
     .debug(debug),
     // Control Register
     .ctrl(ctrl),
+    .busy(busy),
     // Mem Registers
     .mem_addr(mem_addr),
     .mem_wen(mem_wen),
@@ -196,8 +200,33 @@ axi_cfg_regs
 );
 
 
-assign reservoir_busy = (reservoir_history_addr < 100);
 
+
+dfr_core_controller
+# (
+    .ADDR_WIDTH(14),
+    .DATA_WIDTH(RESERVOIR_DATA_WIDTH),
+    .X_ROWS(100), // Num Training Samples?
+    .Y_COLS(100), // Num Weights?
+    .X_COLS_Y_ROWS(100) // Num Time Steps (Virtual Nodes) per Sample?
+)
+dfr_core_controller
+(
+    .clk(S_AXI_ACLK),
+    .rst(rst),
+    .start(ctrl[0]),
+    .busy(busy),
+    .reservoir_busy(reservoir_busy),
+    .reservoir_history_en(reservoir_history_en),
+    .matrix_multiply_busy(matrix_multiply_busy),
+    .matrix_multiply_start(matrix_multiply_start),
+    .reservoir_en(reservoir_en), 
+    .dfr_done(dfr_done),
+    .reservoir_rst(reservoir_rst_i),
+    .matrix_multiply_rst(matrix_multiply_rst_i)
+);
+
+assign reservoir_busy = (reservoir_history_addr < 100) ? 1'b1 : 1'b0;
 reservoir 
 #(
     .VIRTUAL_NODES(VIRTUAL_NODES),
@@ -206,11 +235,13 @@ reservoir
 reservoir
 (
     .clk(S_AXI_ACLK),
-    .rst(rst),
-    .din(reservoir_data_in),
+    .rst(reservoir_rst),
+    .din(input_mem_dout),
     .dout(reservoir_data_out),
     .en(reservoir_en)
 );
+
+assign reservoir_rst = rst || reservoir_rst_i;
 
 counter
 #(
@@ -220,7 +251,7 @@ sample_counter
 (
     .clk(S_AXI_ACLK),
     .en(1'b1),
-    .rst(rst),
+    .rst(reservoir_rst),
     .dout(reservoir_history_addr)
 );
 
@@ -252,49 +283,6 @@ reservoir_output_mem
     .dout(reservoir_output_mem_data_out)
 );
 
-dfr_core_controller
-# (
-    .ADDR_WIDTH(14),
-    .DATA_WIDTH(RESERVOIR_DATA_WIDTH),
-    .X_ROWS(100), // Num Training Samples?
-    .Y_COLS(100), // Num Weights?
-    .X_COLS_Y_ROWS(100) // Num Time Steps (Virtual Nodes) per Sample?
-)
-dfr_core_controller
-(
-    .clk(clk),
-    .rst(rst),
-    .start(ctrl[0]),
-    .busy(busy),
-    .reservoir_busy(reservoir_busy),
-    .reservoir_history_en(reservoir_history_en),
-    .matrix_multiply_busy(matrix_multiply_busy),
-    .matrix_multiply_start(matrix_multiply_start),
-    .reservoir_en(reservoir_en), 
-    .dfr_done(dfr_done)
-);
-
-matrix_multiply_top
-# (
-    .ADDR_WIDTH(14),
-    .DATA_WIDTH(RESERVOIR_DATA_WIDTH),
-    .X_ROWS(100),
-    .Y_COLS(100),
-    .X_COLS_Y_ROWS(100)
-)
-matrix_multiply_top
-(
-    .clk(S_AXI_ACLK),
-    .rst(rst),
-    .start(start),
-    .ram_addr(ram_addr),
-    .ram_wen(ram_wen),
-    .ram_sel(ram_sel),
-    .ram_data_in(ram_data_in),
-    .busy(matrix_multiply_busy),
-    .ram_data_out(ram_data_out)
-);
-
 ram
 # (
     .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
@@ -323,5 +311,35 @@ dfr_output_mem
     .din(dfr_output_mem_data_in),
     .dout(dfr_output_mem_data_out)
 );
+
+wire matrix_multiply_busy;
+wire matrix_multiply_start;
+wire matrix_multiply_rst;
+wire matrix_multiply_rst_i;
+assign matrix_multiply_rst = rst or matrix_multiply_rst_i;
+
+matrix_multiplier
+# (
+    .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
+    .DATA_WIDTH(RESERVOIR_DATA_WIDTH),
+    .X_ROWS(1),
+    .Y_COLS(100),
+    .X_COLS_Y_ROWS(100)
+)
+matrix_multiplier
+(
+    .clk(S_AXI_ACLK),
+    .rst(matrix_multiply_rst),
+    .start(matrix_multiply_start),
+    .busy(matrix_multiply_busy),
+    .x_data(output_weight_mem_data_out),
+    .y_data(reservoir_output_mem_data_out),
+    .x_addr(matrix_multiply_output_weight_addr),
+    .y_addr(matrix_multiply_reservoir_history_addr),
+    .z_addr(dfr_output_cntr),
+    .z_data(dfr_output_mem_data_in),
+    .z_wen(dfr_output_mem_wen)
+);
+
 
 endmodule

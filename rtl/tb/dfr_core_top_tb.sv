@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 module dfr_core_top_tb;
+
 // Inputs
 reg S_AXI_ACLK = 0;
 reg S_AXI_ARESETN = 0;
@@ -12,6 +13,9 @@ reg [3:0] S_AXI_WSTRB = 0;
 reg S_AXI_WVALID = 0;
 reg S_AXI_RREADY = 0;
 reg S_AXI_BREADY = 0;
+
+reg busy = 0;
+
 wire S_AXI_AWREADY; 
 wire S_AXI_ARREADY; 
 wire S_AXI_WREADY;  
@@ -23,6 +27,10 @@ wire S_AXI_BVALID;
 
 integer i = 0;
 integer j = 0;
+
+reg [31:0] addr = 0;
+reg [31:0] read_data = 0;
+reg [31:0] write_data = 0;
 
 dfr_core_top
 #(
@@ -54,7 +62,8 @@ uut
     .S_AXI_RREADY(S_AXI_RREADY),   
     .S_AXI_BRESP(S_AXI_BRESP),    
     .S_AXI_BVALID(S_AXI_BVALID),   
-    .S_AXI_BREADY(S_AXI_BREADY)   
+    .S_AXI_BREADY(S_AXI_BREADY),
+    .busy(busy)
 );
 
 initial begin
@@ -120,13 +129,13 @@ initial begin
     /* Write Reg Tests */
     for (i = 0; i < 4; i = i + 4)
     begin
-        AXI_WRITE(i,32'hDEAD_BEEF);
+        AXI_WRITE(i,32'hDEAD_BEEE);
     end
 
     /* Read Reg Tests */
     for (i = 0; i < 4; i = i + 4)
     begin
-        AXI_READ(i,32'hDEAD_BEEF,32'h0000_0002);
+        AXI_READ(i,32'hDEAD_BEEE,32'h0000_0003);
     end
 
     // Test Write to Input Mem
@@ -136,7 +145,7 @@ initial begin
     AXI_READ(32'h0,32'h0000_0000);
 
     // Test Write to Input Mem
-    for(i = 0; i < 2**4; i = i + 1) begin
+    for(i = 0; i < 100; i = i + 1) begin
         AXI_WRITE(32'h01_00 + i, i);
         AXI_READ( 32'h01_00 + i, i);
     end
@@ -175,6 +184,13 @@ initial begin
     //     @(posedge S_AXI_ACLK);
     //     // reservoir_data_in = reservoir_data_in + 32'h028F_5C29;
     // end
+
+    // Test DFR
+    AXI_WRITE(32'h0,32'h0000_0001);
+    AXI_READ(32'h0,32'h0000_0000);
+    while (busy) begin
+        WAIT(1);
+    end
 
     $finish;
 
