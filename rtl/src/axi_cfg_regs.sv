@@ -38,12 +38,20 @@ parameter C_S_AXI_ADDR_WIDTH = 9
     output reg S_AXI_BVALID,  
 
     output [31:0] debug,
-    output [31:0] ctrl
+    output [31:0] ctrl,
+    output [31:0] num_init_samples,
+    output [31:0] num_train_samples,
+    output [31:0] num_test_samples
 );
 
-reg [31:0] num_train_samples;
-reg [31:0] num_test_samples;
-reg [31:0] num_init_samples;
+reg num_train_samples_reg_valid = 0;
+reg [31:0] num_train_samples_reg;
+
+reg num_test_samples_reg_valid = 0;
+reg [31:0] num_test_samples_reg;
+
+reg num_init_samples_reg_valid = 0;
+reg [31:0] num_init_samples_reg;
 
 reg [31:0] debug_reg = 0;
 reg  debug_reg_addr_valid = 0;
@@ -142,17 +150,32 @@ always @ (current_state, combined_S_AXI_AWVALID_S_AXI_ARVALID, S_AXI_ARVALID, S_
 end
 
 // send data to AXI RDATA
-always @(send_read_data_to_AXI, local_address, local_address_valid, debug_reg, ctrl_reg, mem_data_out)
+always @(send_read_data_to_AXI, 
+        local_address, 
+        local_address_valid, 
+        debug_reg, 
+        ctrl_reg, 
+        mem_data_out,
+        num_train_samples_reg,
+        num_test_samples_reg,
+        num_init_samples_reg
+        )
 begin
     S_AXI_RDATA = 32'b0;
 
     if (local_address_valid == 1 && send_read_data_to_AXI == 1)
     begin
         case(local_address)
-            0:
+            16'h0000:
                 S_AXI_RDATA = ctrl_reg;
-            4:
+            16'h0004:
                 S_AXI_RDATA = debug_reg;
+            16'h0008:
+                S_AXI_RDATA = num_init_samples_reg;
+            16'h000C:
+                S_AXI_RDATA = num_train_samples_reg;
+            16'h0010:
+                S_AXI_RDATA = num_test_samples_reg;
             default:
                 S_AXI_RDATA = mem_data_out;
         endcase;     
@@ -181,18 +204,29 @@ end
 // write data address analysis
 always @(local_address,write_enable_registers)
 begin
+    
     ctrl_reg_addr_valid = 0;
     debug_reg_addr_valid = 0;
-    //mem_reg_addr_valid = 0;
+    num_init_samples_reg_valid = 0;
+    num_train_samples_reg_valid = 0;
+    num_test_samples_reg_valid = 0;
+
+
     local_address_valid = 1;
 
     if (write_enable_registers)
     begin
         case (local_address)
-            0:
+            16'h0000:
                 ctrl_reg_addr_valid = 1;
-            4:
+            16'h0004:
                 debug_reg_addr_valid = 1;
+            16'h0008:
+                num_init_samples_reg_valid = 1;
+            16'h000C:
+                num_train_samples_reg_valid = 1;
+            16'h0010:
+                num_test_samples_reg_valid = 1;
             default:
             begin
                 //mem_reg_addr_valid = 1;
@@ -240,9 +274,47 @@ begin
     end
 end
 
+always @(posedge S_AXI_ACLK, posedge Local_Reset)
+begin
+    if (Local_Reset)
+        num_init_samples_reg = 0;
+    else
+    begin
+        if(num_init_samples_reg_valid)
+            num_init_samples_reg = S_AXI_WDATA;
+    end
+end
+
+always @(posedge S_AXI_ACLK, posedge Local_Reset)
+begin
+    if (Local_Reset)
+        num_train_samples_reg = 0;
+    else
+    begin
+        if(num_train_samples_reg_valid)
+            num_train_samples_reg = S_AXI_WDATA;
+    end
+end
+
+always @(posedge S_AXI_ACLK, posedge Local_Reset)
+begin
+    if (Local_Reset)
+        num_test_samples_reg = 0;
+    else
+    begin
+        if(num_test_samples_reg_valid)
+            num_test_samples_reg = S_AXI_WDATA;
+    end
+end
+
+
 // mem access
 assign mem_wen = write_enable_registers && (local_address[15:8] > 0);
 assign mem_data_in = S_AXI_WDATA;
 assign mem_addr = {ctrl_reg[15:8],local_address[7:0]};
+
+assign num_init_samples = num_init_samples_reg;
+assign num_train_samples = num_train_samples_reg;
+assign num_test_samples = num_test_samples_reg;
 
 endmodule

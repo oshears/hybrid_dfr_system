@@ -93,6 +93,10 @@ wire matrix_multiply_start;
 wire matrix_multiply_rst;
 wire matrix_multiply_rst_i;
 
+wire reservoir_init_busy;
+wire reservoir_busy;
+wire sample_cntr_rst;
+
 assign mem_sel = ctrl[7:4];
 
 assign input_mem_addr = (mem_sel == 4'h0 && ~busy) ? mem_addr[13:0] : reservoir_history_addr;
@@ -218,16 +222,20 @@ dfr_core_controller
     .start(ctrl[0]),
     .busy(busy),
     .reservoir_busy(reservoir_busy),
+    .reservoir_init_busy(reservoir_init_busy),
     .reservoir_history_en(reservoir_history_en),
     .matrix_multiply_busy(matrix_multiply_busy),
     .matrix_multiply_start(matrix_multiply_start),
     .reservoir_en(reservoir_en), 
     .dfr_done(dfr_done),
     .reservoir_rst(reservoir_rst_i),
-    .matrix_multiply_rst(matrix_multiply_rst_i)
+    .matrix_multiply_rst(matrix_multiply_rst_i),
+    .sample_cntr_rst(sample_cntr_rst)
 );
 
-assign reservoir_busy = (reservoir_history_addr < 100) ? 1'b1 : 1'b0;
+assign reservoir_init_busy = (reservoir_history_addr < num_init_samples) ? 1'b1 : 1'b0;
+assign reservoir_busy = (reservoir_history_addr < num_test_samples) ? 1'b1 : 1'b0;
+
 reservoir 
 #(
     .VIRTUAL_NODES(VIRTUAL_NODES),
@@ -252,7 +260,7 @@ sample_counter
 (
     .clk(S_AXI_ACLK),
     .en(1'b1),
-    .rst(reservoir_rst),
+    .rst(sample_cntr_rst),
     .dout(reservoir_history_addr)
 );
 
