@@ -88,6 +88,11 @@ wire dfr_output_wen;
 wire reservoir_rst;
 wire reservoir_rst_i;
 
+wire matrix_multiply_busy;
+wire matrix_multiply_start;
+wire matrix_multiply_rst;
+wire matrix_multiply_rst_i;
+
 assign mem_sel = ctrl[7:4];
 
 assign input_mem_addr = (mem_sel == 4'h0 && ~busy) ? mem_addr[13:0] : reservoir_history_addr;
@@ -99,10 +104,6 @@ assign reservoir_output_mem_data_in = (mem_sel == 4'h1 && ~busy) ? mem_data_in :
 assign reservoir_output_mem_wen =     (mem_sel == 4'h1 && ~busy) ? mem_wen : reservoir_history_en;
 
 assign output_weight_mem_addr =    (mem_sel == 4'h2 && ~busy) ? mem_addr[13:0] : matrix_multiply_output_weight_addr;
-assign output_weight_mem_data_in = (mem_sel == 4'h2 && ~busy) ? mem_data_in : 32'h0;
-assign output_weight_mem_wen =     (mem_sel == 4'h2 && ~busy) ? mem_wen : 1'h0;
-
-assign output_weight_mem_addr =    (mem_sel == 4'h2 && ~busy) ? mem_addr[13:0] : 14'h0;
 assign output_weight_mem_data_in = (mem_sel == 4'h2 && ~busy) ? mem_data_in : 32'h0;
 assign output_weight_mem_wen =     (mem_sel == 4'h2 && ~busy) ? mem_wen : 1'h0;
 
@@ -312,11 +313,8 @@ dfr_output_mem
     .dout(dfr_output_mem_data_out)
 );
 
-wire matrix_multiply_busy;
-wire matrix_multiply_start;
-wire matrix_multiply_rst;
-wire matrix_multiply_rst_i;
-assign matrix_multiply_rst = rst or matrix_multiply_rst_i;
+
+assign matrix_multiply_rst = rst || matrix_multiply_rst_i;
 
 matrix_multiplier
 # (

@@ -192,6 +192,15 @@ initial begin
         WAIT(1);
     end
 
+    //Select DFR Output Mem
+    AXI_WRITE(32'h0,32'h0000_0030);
+    AXI_READ(32'h0,32'h0000_0030);
+
+    // Read DFR Output Mem
+    for(i = 0; i < 2**4; i = i + 1) begin
+        AXI_READ( 32'h01_00 + i, i);
+    end
+
     $finish;
 
 end
