@@ -130,9 +130,25 @@ initial begin
     end
 
     // Test Write to Input Mem
-    for(i = 0; i < 100; i = i + 1) begin
-        AXI_WRITE(8,i+1);
-        AXI_READ(8,i+1);
+
+    //Select Input Mem
+    AXI_WRITE(32'h0,32'h0000_0000);
+    AXI_READ(32'h0,32'h0000_0000);
+
+    // Test Write to Input Mem
+    for(i = 0; i < 2**4; i = i + 1) begin
+        AXI_WRITE(32'h01_00 + i, i);
+        AXI_READ( 32'h01_00 + i, i);
+    end
+
+    //Select Reservoir Output Mem
+    AXI_WRITE(32'h0,32'h0000_0010);
+    AXI_READ(32'h0,32'h0000_0010);
+
+    // Test Write to Reservoir Output Mem
+    for(i = 0; i < 2**4; i = i + 1) begin
+        AXI_WRITE(32'h01_00 + i, i);
+        AXI_READ( 32'h01_00 + i, i);
     end
 
     // for(i = 0; i < 100; i = i + 1) begin

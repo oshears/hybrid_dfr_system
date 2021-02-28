@@ -182,7 +182,7 @@ always @(local_address,write_enable_registers)
 begin
     ctrl_reg_addr_valid = 0;
     debug_reg_addr_valid = 0;
-    mem_reg_addr_valid = 0;
+    //mem_reg_addr_valid = 0;
     local_address_valid = 1;
 
     if (write_enable_registers)
@@ -194,7 +194,7 @@ begin
                 debug_reg_addr_valid = 1;
             default:
             begin
-                mem_reg_addr_valid = 1;
+                //mem_reg_addr_valid = 1;
                 local_address_valid = 1;
             end
         endcase
@@ -208,6 +208,10 @@ begin
         ctrl_reg = 0;
     else
     begin
+        // BIT 0: Start Bit
+        // BIT 1: Busy Bit
+        // BIT [7:4]: MEM_SEL Bits
+        // BIT [15:8]: Upper 8 MEM BITS
         if(ctrl_reg_addr_valid)
             ctrl_reg = {S_AXI_WDATA[31:2],busy,S_AXI_WDATA[0]};
     end
@@ -234,8 +238,8 @@ begin
 end
 
 // mem access
-assign mem_wen = write_enable_registers && mem_reg_addr_valid;
+assign mem_wen = write_enable_registers && (local_address[15:8] > 0);
 assign mem_data_in = S_AXI_WDATA;
-assign mem_addr = local_address;
+assign mem_addr = {ctrl_reg[15:8],local_address[7:0]};
 
 endmodule

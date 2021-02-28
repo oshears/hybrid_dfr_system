@@ -6,7 +6,7 @@ module dfr_core_top
     parameter C_S_AXI_ADDR_WIDTH = 9,
     parameter VIRTUAL_NODES = 10,
     parameter RESERVOIR_DATA_WIDTH = 32,
-    parameter RESERVOIR_HISTORY_ADDR_WIDTH = 20
+    parameter RESERVOIR_HISTORY_ADDR_WIDTH = 14
 )
 (
     input S_AXI_ACLK,   
@@ -41,25 +41,75 @@ assign rst = ~S_AXI_ARESETN;
 
 wire [31:0] debug;
 wire [31:0] ctrl;
-wire [2:0] mem_sel;
+wire [3:0] mem_sel;
 
 wire  [15:0] mem_addr;
 wire  mem_wen;
 wire  [C_S_AXI_DATA_WIDTH - 1:0] mem_data_in;
 wire  [C_S_AXI_DATA_WIDTH - 1:0] mem_data_out;
+wire [RESERVOIR_DATA_WIDTH - 1:0] mem_data_out; 
 
-wire [13:0] input_mem_addr;
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] input_mem_addr;
 wire [RESERVOIR_DATA_WIDTH - 1:0] input_mem_din;
 wire [RESERVOIR_DATA_WIDTH - 1:0] input_mem_dout;
 wire input_mem_wen;
-wire [RESERVOIR_DATA_WIDTH - 1:0] mem_data_out; 
 
-assign mem_sel = ctrl[4:2];
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_output_mem_addr;
 
-assign input_mem_addr = mem_addr[13:0];
-assign input_mem_din = mem_data_in;
-assign input_mem_wen = mem_wen;
-assign mem_data_out = input_mem_dout;
+wire RESERVOIR_DATA_WIDTH - 1:0] reservoir_output_mem_data_in;
+
+wire busy;
+
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_history_addr;
+wire [RESERVOIR_DATA_WIDTH - 1 : 0] reservoir_data_out;
+wire reservoir_history_en;
+
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_output_mem_addr;
+wire [RESERVOIR_DATA_WIDTH - 1 : 0] reservoir_output_mem_data_in;
+wire [RESERVOIR_DATA_WIDTH - 1 : 0] reservoir_output_mem_data_out;
+wire reservoir_output_mem_wen;
+
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] output_weight_mem_addr;
+wire [RESERVOIR_DATA_WIDTH - 1 : 0] output_weight_mem_data_in;
+wire [RESERVOIR_DATA_WIDTH - 1 : 0] output_weight_mem_data_out;
+wire output_weight_mem_wen;
+
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] dfr_output_mem_addr;
+wire [RESERVOIR_DATA_WIDTH - 1 : 0] dfr_output_mem_data_in;
+wire [RESERVOIR_DATA_WIDTH - 1 : 0] dfr_output_mem_data_out;
+wire dfr_output_mem_wen;
+
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] dfr_output_cntr;
+wire [RESERVOIR_DATA_WIDTH - 1 : 0] dfr_output_data;
+wire dfr_output_wen;
+
+assign mem_sel = ctrl[7:4];
+
+assign input_mem_addr = (mem_sel == 4'h0 && ~busy) ? mem_addr[13:0] : 14'h0;
+assign input_mem_din =  (mem_sel == 4'h0 && ~busy) ? mem_data_in : 32'h0;
+assign input_mem_wen =  (mem_sel == 4'h0 && ~busy) ? mem_wen : 1'h0;
+
+assign reservoir_output_mem_addr =    (mem_sel == 4'h1 && ~busy) ? mem_addr[13:0] : reservoir_history_addr;
+assign reservoir_output_mem_data_in = (mem_sel == 4'h1 && ~busy) ? mem_data_in : reservoir_data_out;
+assign reservoir_output_mem_wen =     (mem_sel == 4'h1 && ~busy) ? mem_wen : reservoir_history_en;
+
+assign output_weight_mem_addr =    (mem_sel == 4'h2 && ~busy) ? mem_addr[13:0] : 14'h0;
+assign output_weight_mem_data_in = (mem_sel == 4'h2 && ~busy) ? mem_data_in : 32'h0;
+assign output_weight_mem_wen =     (mem_sel == 4'h2 && ~busy) ? mem_wen : 1'h0;
+
+assign output_weight_mem_addr =    (mem_sel == 4'h2 && ~busy) ? mem_addr[13:0] : 14'h0;
+assign output_weight_mem_data_in = (mem_sel == 4'h2 && ~busy) ? mem_data_in : 32'h0;
+assign output_weight_mem_wen =     (mem_sel == 4'h2 && ~busy) ? mem_wen : 1'h0;
+
+assign dfr_output_mem_addr =        (mem_sel == 4'h3 && ~busy) ? mem_addr[13:0] : dfr_output_cntr;
+assign dfr_output_mem_data_in =  (mem_sel == 4'h3 && ~busy) ? mem_data_in : dfr_output_data;
+assign dfr_output_mem_wen =      (mem_sel == 4'h3 && ~busy) ? mem_wen : dfr_output_wen;
+
+assign mem_data_out =   (mem_sel == 4'h0) ? input_mem_dout : (
+                        (mem_sel == 4'h1) ? reservoir_output_mem_data_out : (
+                        (mem_sel == 4'h2) ? output_weight_mem_data_out : (
+                        (mem_sel == 4'h3) ? dfr_output_mem_data_out : 32'h0)
+                        )));
 
 /*
 XADC #(// Initializing the XADC Control Registers
@@ -99,9 +149,6 @@ XADC_INST (// Connect up instance IO. See UG480 for port descriptions
     .OT()
 );
 */
-
-wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_history_addr;
-wire [RESERVOIR_DATA_WIDTH - 1 : 0] reservoir_data_out;
 
 
 axi_cfg_regs 
@@ -147,6 +194,8 @@ axi_cfg_regs
 );
 
 
+assign reservoir_busy = (reservoir_history_addr < 100);
+
 reservoir 
 #(
     .VIRTUAL_NODES(VIRTUAL_NODES),
@@ -157,7 +206,8 @@ reservoir
     .clk(S_AXI_ACLK),
     .rst(rst),
     .din(reservoir_data_in),
-    .dout(reservoir_data_out)
+    .dout(reservoir_data_out),
+    .en(reservoir_en)
 );
 
 counter
@@ -174,7 +224,7 @@ sample_counter
 
 ram
 # (
-    .ADDR_WIDTH(14),
+    .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
     .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
 )
 input_mem
@@ -196,7 +246,7 @@ reservoir_output_mem
     .clk(S_AXI_ACLK),
     .wen(reservoir_output_mem_wen),
     .addr(reservoir_output_mem_addr),
-    .din(reservoir_data_out),
+    .din(reservoir_output_mem_data_in),
     .dout(reservoir_output_mem_data_out)
 );
 
@@ -215,6 +265,7 @@ dfr_core_controller
     .start(ctrl[0]),
     .busy(busy),
     .reservoir_busy(reservoir_busy),
+    .reservoir_history_en(reservoir_history_en),
     .matrix_multiply_busy(matrix_multiply_busy),
     .matrix_multiply_start(matrix_multiply_start),
     .reservoir_en(reservoir_en), 
@@ -229,7 +280,7 @@ matrix_multiply_top
     .Y_COLS(100),
     .X_COLS_Y_ROWS(100)
 )
-uut
+matrix_multiply_top
 (
     .clk(S_AXI_ACLK),
     .rst(rst),
@@ -240,6 +291,35 @@ uut
     .ram_data_in(ram_data_in),
     .busy(matrix_multiply_busy),
     .ram_data_out(ram_data_out)
+);
+
+ram
+# (
+    .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
+    .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
+)
+output_weight_mem
+(
+    .clk(S_AXI_ACLK),
+    .wen(output_weight_mem_wen),
+    .addr(output_weight_mem_addr),
+    .din(output_weight_mem_data_in),
+    .dout(output_weight_mem_data_out)
+);
+
+
+ram
+# (
+    .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
+    .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
+)
+dfr_output_mem
+(
+    .clk(S_AXI_ACLK),
+    .wen(dfr_output_mem_wen),
+    .addr(dfr_output_mem_addr),
+    .din(dfr_output_mem_data_in),
+    .dout(dfr_output_mem_data_out)
 );
 
 endmodule

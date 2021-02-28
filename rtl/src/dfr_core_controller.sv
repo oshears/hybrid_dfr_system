@@ -16,6 +16,7 @@ module dfr_core_controller
     output reg busy,
     output reg matrix_multiply_start,
     output reg reservoir_en, 
+    output reg reservoir_history_en,
     output reg dfr_done
 );
 
@@ -57,8 +58,10 @@ always @(
                 matrix_multiply_start = 1;
                 next_state = matrix_multiply_stage;
             end
-            else 
+            else begin
                 reservoir_en = 1;
+                reservoir_history_en = 1;
+            end
         end
         matrix_multiply_stage:
         begin

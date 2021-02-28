@@ -7,6 +7,7 @@ DATA_WIDTH = 32
 (
     input clk,
     input rst,
+    input reservoir_en,
     input [DATA_WIDTH - 1 : 0] din,
     output [DATA_WIDTH - 1 : 0] dout
 );
@@ -35,6 +36,7 @@ generate
     (
         .clk(clk),
         .rst(rst),
+        .en(reservoir_en),
         .din(node_outputs[(i + 1) * DATA_WIDTH - 1 : i * DATA_WIDTH]),
         .dout(node_outputs[(i + 2) * DATA_WIDTH - 1 : (i + 1) * DATA_WIDTH])
     );
