@@ -56,7 +56,7 @@ wire input_mem_wen;
 
 wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_output_mem_addr;
 
-wire RESERVOIR_DATA_WIDTH - 1:0] reservoir_output_mem_data_in;
+wire [RESERVOIR_DATA_WIDTH - 1:0] reservoir_output_mem_data_in;
 
 wire busy;
 
@@ -83,6 +83,8 @@ wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] dfr_output_cntr;
 wire [RESERVOIR_DATA_WIDTH - 1 : 0] dfr_output_data;
 wire dfr_output_wen;
 
+assign ctrl[1] = busy;
+
 assign mem_sel = ctrl[7:4];
 
 assign input_mem_addr = (mem_sel == 4'h0 && ~busy) ? mem_addr[13:0] : 14'h0;
@@ -108,7 +110,7 @@ assign dfr_output_mem_wen =      (mem_sel == 4'h3 && ~busy) ? mem_wen : dfr_outp
 assign mem_data_out =   (mem_sel == 4'h0) ? input_mem_dout : (
                         (mem_sel == 4'h1) ? reservoir_output_mem_data_out : (
                         (mem_sel == 4'h2) ? output_weight_mem_data_out : (
-                        (mem_sel == 4'h3) ? dfr_output_mem_data_out : 32'h0)
+                        (mem_sel == 4'h3) ? dfr_output_mem_data_out : 32'h0
                         )));
 
 /*

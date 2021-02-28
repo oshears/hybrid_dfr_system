@@ -83,7 +83,7 @@ task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA );
     end
 endtask
 
-task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA );
+task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA, input [31:0] MASK_DATA = 32'h0);
     begin
         @(posedge S_AXI_ACLK);
         S_AXI_ARADDR = READ_ADDR;
@@ -92,7 +92,7 @@ task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA );
         @(posedge S_AXI_ACLK);
         S_AXI_ARVALID = 0;
         S_AXI_RREADY = 1'b1;
-        if (EXPECT_DATA == S_AXI_RDATA) 
+        if ((EXPECT_DATA | MASK_DATA) == (S_AXI_RDATA | MASK_DATA)) 
             $display("%t: Read Data: %h",$time,S_AXI_RDATA);
         else 
             $display("%t: ERROR: %h != %h",$time,S_AXI_RDATA,EXPECT_DATA);
@@ -126,7 +126,7 @@ initial begin
     /* Read Reg Tests */
     for (i = 0; i < 4; i = i + 4)
     begin
-        AXI_READ(i,32'hDEAD_BEEF);
+        AXI_READ(i,32'hDEAD_BEEF,32'h0000_0002);
     end
 
     // Test Write to Input Mem
@@ -146,6 +146,26 @@ initial begin
     AXI_READ(32'h0,32'h0000_0010);
 
     // Test Write to Reservoir Output Mem
+    for(i = 0; i < 2**4; i = i + 1) begin
+        AXI_WRITE(32'h01_00 + i, i);
+        AXI_READ( 32'h01_00 + i, i);
+    end
+
+    //Select Weight Mem
+    AXI_WRITE(32'h0,32'h0000_0020);
+    AXI_READ(32'h0,32'h0000_0020);
+
+    // Test Write to Weight Mem
+    for(i = 0; i < 2**4; i = i + 1) begin
+        AXI_WRITE(32'h01_00 + i, i);
+        AXI_READ( 32'h01_00 + i, i);
+    end
+
+    //Select DFR Output Mem
+    AXI_WRITE(32'h0,32'h0000_0030);
+    AXI_READ(32'h0,32'h0000_0030);
+
+    // Test Write to DFR Output Mem
     for(i = 0; i < 2**4; i = i + 1) begin
         AXI_WRITE(32'h01_00 + i, i);
         AXI_READ( 32'h01_00 + i, i);

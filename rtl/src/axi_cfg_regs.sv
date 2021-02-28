@@ -72,6 +72,7 @@ localparam reset = 0, idle = 1, read_transaction_in_progress = 2, write_transact
 assign Local_Reset = ~S_AXI_ARESETN;
 assign combined_S_AXI_AWVALID_S_AXI_ARVALID = {S_AXI_AWVALID, S_AXI_ARVALID};
 assign debug = debug_reg;
+assign ctrl = ctrl_reg;
 
 always @ (posedge S_AXI_ACLK or posedge Local_Reset) begin
     if (Local_Reset)
@@ -214,6 +215,8 @@ begin
         // BIT [15:8]: Upper 8 MEM BITS
         if(ctrl_reg_addr_valid)
             ctrl_reg = {S_AXI_WDATA[31:2],busy,S_AXI_WDATA[0]};
+        else
+            ctrl_reg[1] = 0;
     end
 end
 
