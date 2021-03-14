@@ -97,6 +97,8 @@ wire reservoir_init_busy;
 wire reservoir_busy;
 wire sample_cntr_rst;
 
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] matrix_multiply_reservoir_history_addr;
+
 assign mem_sel = ctrl[7:4];
 
 assign input_mem_addr = (mem_sel == 4'h0 && ~busy) ? mem_addr[13:0] : reservoir_history_addr;
