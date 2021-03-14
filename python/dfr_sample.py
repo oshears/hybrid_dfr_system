@@ -1,7 +1,9 @@
-import numpy
+import numpy as np
 
-RESERVOIR_SIZE = 100
-NUM_SAMPLES = 200
+RESERVOIR_NODES = 100
+STEPS_PER_SAMPLE = 100
+NUM_SAMPLES = 20
+
 
 def mackey_glass(din):
     dout = 0
@@ -372,24 +374,39 @@ def mackey_glass(din):
 
 def dfr(din):
 
-    reservoir_current = [0] * RESERVOIR_SIZE
-    reservoir_next = [0] * RESERVOIR_SIZE
+    # RESERVOIR_NODES x 1
+    reservoir_current = np.zeros(RESERVOIR_NODES, dtype=int)
+    # RESERVOIR_NODES x 1
+    reservoir_next = np.zeros(RESERVOIR_NODES, dtype=int)
+    # RESERVOIR_NODES x (NUM_SAMPLES x STEPS_PER_SAMPLE
+    reservoir_history = np.zeros((RESERVOIR_NODES, (NUM_SAMPLES * STEPS_PER_SAMPLE)), dtype=int)
+    # RESERVOIR_NODES (STEPS_PER_SAMPLE) x NUM_SAMPLES
+    reservoir_loops = np.array((RESERVOIR_NODES,NUM_SAMPLES),dtype=int)
     
-    weights = np.ones((100,1))
+    
 
     for i in range(len(din)):
-        a_in = din[i] + resevoir_current[RESERVOIR_SIZE - 1]
+        a_in = din[i] + reservoir_current[RESERVOIR_NODES - 1]
         reservoir_next[0] = mackey_glass(a_in)
-        reservoir_next[0] = resevoir_current[1:RESERVOIR_SIZE - 1]
-        resevoir_current = reservoir_next
+        # print(f"mg({din[i]} + {reservoir_current[RESERVOIR_NODES - 1]}) = {mackey_glass(a_in)}")
+        reservoir_next[1:RESERVOIR_NODES] = reservoir_current[0:RESERVOIR_NODES - 1]
+        reservoir_current = reservoir_next
 
+        reservoir_history[:,i] = reservoir_current
 
-
-
+    # end of every NUM_SAMPLES
+    history_samples = STEPS_PER_SAMPLE * np.arange(1,NUM_SAMPLES+1) - 1
+    # RESERVOIR_NODES (STEPS_PER_SAMPLE) x NUM_SAMPLES
+    reservoir_loops = reservoir_history[:,history_samples]
+    # 1 x STEPS_PER_SAMPLE
+    weights = np.ones((1,STEPS_PER_SAMPLE),dtype=int)
+    # 1 x NUM_SAMPLES
+    dout = weights.dot(reservoir_loops)
 
     return dout
 
 
-din = list(range(NUM_SAMPLES))
+din = list(range(0, 0xFFFF_FFFF, int(0xFFFF_FFFF / (NUM_SAMPLES * STEPS_PER_SAMPLE)) ))
+din = din[0:NUM_SAMPLES * STEPS_PER_SAMPLE]
 dout = dfr(din)
 print(dout)
