@@ -12,12 +12,15 @@ DATA_WIDTH = 32
     output [DATA_WIDTH - 1 : 0] dout
 );
 
-wire [(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 : 0] node_outputs;
+// wire [(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 : 0] node_outputs;
+wire [DATA_WIDTH - 1 : 0] node_outputs [VIRTUAL_NODES : 0];
 
 //wire [DATA_WIDTH - 1 : 0] dout_i = {node_outputs[(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 - (DATA_WIDTH - 12): (VIRTUAL_NODES) * (DATA_WIDTH)],12'h0};
 wire [DATA_WIDTH - 1 : 0] dout_i;
-assign dout_i[DATA_WIDTH - 1 : DATA_WIDTH - 1 - 11] = node_outputs[(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 - (DATA_WIDTH - 12): (VIRTUAL_NODES) * (DATA_WIDTH)];
-assign dout_i[DATA_WIDTH - 1 - 11 - 1 : 0] = 0;
+// assign dout_i[DATA_WIDTH - 1 : DATA_WIDTH - 1 - 11] = node_outputs[((VIRTUAL_NODES + 1)*DATA_WIDTH - 1) - (DATA_WIDTH - 12): (VIRTUAL_NODES) * (DATA_WIDTH)];
+// assign dout_i[(DATA_WIDTH - 1) - 11 - 1 : 0] = 0;
+assign dout_i[DATA_WIDTH - 1 : DATA_WIDTH - 1 - 11] = node_outputs[VIRTUAL_NODES][11:0];
+assign dout_i[(DATA_WIDTH - 1) - 11 - 1 : 0] = 0;
 
 assign dout = dout_i;
 
@@ -37,8 +40,10 @@ generate
         .clk(clk),
         .rst(rst),
         .en(en),
-        .din(node_outputs[(i + 1) * DATA_WIDTH - 1 : i * DATA_WIDTH]),
-        .dout(node_outputs[(i + 2) * DATA_WIDTH - 1 : (i + 1) * DATA_WIDTH])
+        // .din(node_outputs[(i + 1) * DATA_WIDTH - 1 : i * DATA_WIDTH]),
+        // .dout(node_outputs[(i + 2) * DATA_WIDTH - 1 : (i + 1) * DATA_WIDTH])
+        .din(node_outputs[i]),
+        .dout(node_outputs[i+1])
     );
 end 
 endgenerate
@@ -46,7 +51,7 @@ endgenerate
 mackey_glass_block mackey_glass_block
 (
     .din(sum_i),
-    .dout(node_outputs[DATA_WIDTH - 1 : 0])
+    .dout(node_outputs[0])
 );
 
 

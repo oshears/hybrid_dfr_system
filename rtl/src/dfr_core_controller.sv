@@ -13,6 +13,7 @@ module dfr_core_controller
     input reservoir_busy,
     input reservoir_init_busy,
     input matrix_multiply_busy,
+    input reservoir_filled,
 
     output reg busy = 0,
     output reg matrix_multiply_start = 0,
@@ -40,7 +41,8 @@ always @(
     current_state,
     start,
     matrix_multiply_busy,
-    reservoir_busy
+    reservoir_busy,
+    reservoir_filled
 ) begin
 
     matrix_multiply_start = 0;
@@ -80,9 +82,12 @@ always @(
                 matrix_multiply_start = 1;
                 next_state = matrix_multiply_stage;
             end
-            else begin
+            else if(reservoir_filled) begin
                 reservoir_en = 1;
                 reservoir_history_en = 1;
+            end
+            else begin
+                reservoir_en = 1;
             end
         end
         matrix_multiply_stage:

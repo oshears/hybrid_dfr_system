@@ -6,7 +6,7 @@ module dfr_core_top
     parameter C_S_AXI_ADDR_WIDTH = 9,
     parameter VIRTUAL_NODES = 10,
     parameter RESERVOIR_DATA_WIDTH = 32,
-    parameter RESERVOIR_HISTORY_ADDR_WIDTH = 14
+    parameter RESERVOIR_HISTORY_ADDR_WIDTH = 16
 )
 (
     input S_AXI_ACLK,   
@@ -45,11 +45,11 @@ wire [31:0] debug;
 wire [31:0] ctrl;
 wire [3:0] mem_sel;
 
-wire  [15:0] mem_addr;
+wire  [RESERVOIR_HISTORY_ADDR_WIDTH - 1:0] mem_addr;
+wire  [15:0] mem_addr_i;
 wire  mem_wen;
 wire  [C_S_AXI_DATA_WIDTH - 1:0] mem_data_in;
 wire  [C_S_AXI_DATA_WIDTH - 1:0] mem_data_out;
-wire [RESERVOIR_DATA_WIDTH - 1:0] mem_data_out; 
 
 wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] input_mem_addr;
 wire [RESERVOIR_DATA_WIDTH - 1:0] input_mem_din;
@@ -64,8 +64,6 @@ wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_history_addr;
 wire [RESERVOIR_DATA_WIDTH - 1 : 0] reservoir_data_out;
 wire reservoir_history_en;
 
-wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_output_mem_addr;
-wire [RESERVOIR_DATA_WIDTH - 1 : 0] reservoir_output_mem_data_in;
 wire [RESERVOIR_DATA_WIDTH - 1 : 0] reservoir_output_mem_data_out;
 wire reservoir_output_mem_wen;
 
@@ -97,23 +95,39 @@ wire reservoir_init_busy;
 wire reservoir_busy;
 wire sample_cntr_rst;
 
+
+wire [31:0] num_init_samples;
+wire [31:0] num_train_samples;
+wire [31:0] num_test_samples;
+wire [31:0] num_steps_per_sample;
+
+wire [31:0] num_init_steps;
+wire [31:0] num_train_steps;
+wire [31:0] num_test_steps;
+
 wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] matrix_multiply_reservoir_history_addr;
 
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] sample_cntr;
+
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_init_cntr;
+wire reservoir_filled;
+
+assign mem_addr = mem_addr_i[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0];
 assign mem_sel = ctrl[7:4];
 
-assign input_mem_addr = (mem_sel == 4'h0 && ~busy) ? mem_addr[13:0] : reservoir_history_addr;
+assign input_mem_addr = (mem_sel == 4'h0 && ~busy) ? mem_addr : sample_cntr;
 assign input_mem_din =  (mem_sel == 4'h0 && ~busy) ? mem_data_in : 32'h0;
 assign input_mem_wen =  (mem_sel == 4'h0 && ~busy) ? mem_wen : 1'h0;
 
-assign reservoir_output_mem_addr =    (mem_sel == 4'h1 && ~busy) ? mem_addr[13:0] : ( (reservoir_en) : reservoir_history_addr : matrix_multiply_reservoir_history_addr);
+assign reservoir_output_mem_addr =    (mem_sel == 4'h1 && ~busy) ? mem_addr : ( (reservoir_history_en) ? reservoir_history_addr : matrix_multiply_reservoir_history_addr);
 assign reservoir_output_mem_data_in = (mem_sel == 4'h1 && ~busy) ? mem_data_in : reservoir_data_out;
 assign reservoir_output_mem_wen =     (mem_sel == 4'h1 && ~busy) ? mem_wen : reservoir_history_en;
 
-assign output_weight_mem_addr =    (mem_sel == 4'h2 && ~busy) ? mem_addr[13:0] : matrix_multiply_output_weight_addr;
+assign output_weight_mem_addr =    (mem_sel == 4'h2 && ~busy) ? mem_addr : matrix_multiply_output_weight_addr;
 assign output_weight_mem_data_in = (mem_sel == 4'h2 && ~busy) ? mem_data_in : 32'h0;
 assign output_weight_mem_wen =     (mem_sel == 4'h2 && ~busy) ? mem_wen : 1'h0;
 
-assign dfr_output_mem_addr =        (mem_sel == 4'h3 && ~busy) ? mem_addr[13:0] : dfr_output_cntr;
+assign dfr_output_mem_addr =        (mem_sel == 4'h3 && ~busy) ? mem_addr : dfr_output_cntr;
 assign dfr_output_mem_data_in =  (mem_sel == 4'h3 && ~busy) ? mem_data_in : dfr_output_data;
 assign dfr_output_mem_wen =      (mem_sel == 4'h3 && ~busy) ? mem_wen : dfr_output_wen;
 
@@ -173,17 +187,24 @@ axi_cfg_regs
 (
     // System Signals
     .clk(S_AXI_ACLK),
-    .rst(RESET),
     // Debug Register Output
     .debug(debug),
     // Control Register
     .ctrl(ctrl),
     .busy(busy),
     // Mem Registers
-    .mem_addr(mem_addr),
+    .mem_addr(mem_addr_i),
     .mem_wen(mem_wen),
     .mem_data_in(mem_data_in),
     .mem_data_out(mem_data_out),
+    // Sample Data
+    .num_init_samples(num_init_samples),
+    .num_train_samples(num_train_samples),
+    .num_test_samples(num_test_samples),
+    .num_steps_per_sample(num_steps_per_sample),
+    .num_init_steps(num_init_steps),
+    .num_train_steps(num_train_steps),
+    .num_test_steps(num_test_steps),
     //AXI Signals
     .S_AXI_ACLK(S_AXI_ACLK),     
     .S_AXI_ARESETN(S_AXI_ARESETN),  
@@ -225,6 +246,7 @@ dfr_core_controller
     .busy(busy),
     .reservoir_busy(reservoir_busy),
     .reservoir_init_busy(reservoir_init_busy),
+    .reservoir_filled(reservoir_filled),
     .reservoir_history_en(reservoir_history_en),
     .matrix_multiply_busy(matrix_multiply_busy),
     .matrix_multiply_start(matrix_multiply_start),
@@ -235,8 +257,11 @@ dfr_core_controller
     .sample_cntr_rst(sample_cntr_rst)
 );
 
-assign reservoir_init_busy = (reservoir_history_addr < num_init_samples) ? 1'b1 : 1'b0;
-assign reservoir_busy = (reservoir_history_addr < num_test_samples) ? 1'b1 : 1'b0;
+assign reservoir_init_busy = (reservoir_init_cntr < num_init_steps) ? 1'b1 : 1'b0;
+assign reservoir_busy = (reservoir_history_addr < num_test_steps) ? 1'b1 : 1'b0;
+
+
+assign reservoir_filled = (sample_cntr > num_steps_per_sample) ? 1'b1 : 1'b0;
 
 reservoir 
 #(
@@ -261,9 +286,33 @@ counter
 sample_counter
 (
     .clk(S_AXI_ACLK),
-    .en(1'b1),
+    .en(reservoir_en),
+    .rst(sample_cntr_rst),
+    .dout(sample_cntr)
+);
+
+counter
+#(
+    .DATA_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH)
+)
+reservoir_history_counter
+(
+    .clk(S_AXI_ACLK),
+    .en(reservoir_history_en),
     .rst(sample_cntr_rst),
     .dout(reservoir_history_addr)
+);
+
+counter
+#(
+    .DATA_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH)
+)
+init_sample_counter
+(
+    .clk(S_AXI_ACLK),
+    .en(1'b1),
+    .rst(sample_cntr_rst),
+    .dout(reservoir_init_cntr)
 );
 
 ram
@@ -329,10 +378,7 @@ assign matrix_multiply_rst = rst || matrix_multiply_rst_i;
 matrix_multiplier
 # (
     .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
-    .DATA_WIDTH(RESERVOIR_DATA_WIDTH),
-    .X_ROWS(1),
-    .Y_COLS(100),
-    .X_COLS_Y_ROWS(100)
+    .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
 )
 matrix_multiplier
 (
@@ -345,8 +391,11 @@ matrix_multiplier
     .x_addr(matrix_multiply_output_weight_addr),
     .y_addr(matrix_multiply_reservoir_history_addr),
     .z_addr(dfr_output_cntr),
-    .z_data(dfr_output_mem_data_in),
-    .z_wen(dfr_output_mem_wen)
+    .z_data(dfr_output_data),
+    .z_wen(dfr_output_wen),
+    .x_rows(20'b1),
+    .y_cols(num_test_samples[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0]),
+    .x_cols_y_rows(num_test_steps[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0])
 );
 
 

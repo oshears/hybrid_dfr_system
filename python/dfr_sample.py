@@ -1,10 +1,5 @@
 import numpy as np
 
-RESERVOIR_NODES = 100
-STEPS_PER_SAMPLE = 100
-NUM_SAMPLES = 20
-
-
 def mackey_glass(din):
     dout = 0
     if (din <= 0x0000_0000):
@@ -371,6 +366,9 @@ def mackey_glass(din):
         dout = 0x0000_004E
     return dout
 
+RESERVOIR_NODES = 10
+STEPS_PER_SAMPLE = RESERVOIR_NODES
+NUM_SAMPLES = 5
 
 def dfr(din):
 
@@ -378,7 +376,7 @@ def dfr(din):
     reservoir_current = np.zeros(RESERVOIR_NODES, dtype=int)
     # RESERVOIR_NODES x 1
     reservoir_next = np.zeros(RESERVOIR_NODES, dtype=int)
-    # RESERVOIR_NODES x (NUM_SAMPLES x STEPS_PER_SAMPLE
+    # RESERVOIR_NODES x (NUM_SAMPLES x STEPS_PER_SAMPLE)
     reservoir_history = np.zeros((RESERVOIR_NODES, (NUM_SAMPLES * STEPS_PER_SAMPLE)), dtype=int)
     # RESERVOIR_NODES (STEPS_PER_SAMPLE) x NUM_SAMPLES
     reservoir_loops = np.array((RESERVOIR_NODES,NUM_SAMPLES),dtype=int)
@@ -386,18 +384,28 @@ def dfr(din):
     
 
     for i in range(len(din)):
+        
         a_in = din[i] + reservoir_current[RESERVOIR_NODES - 1]
-        reservoir_next[0] = mackey_glass(a_in)
-        # print(f"mg({din[i]} + {reservoir_current[RESERVOIR_NODES - 1]}) = {mackey_glass(a_in)}")
+        
+        reservoir_next[0] = mackey_glass(a_in) << 20
+
         reservoir_next[1:RESERVOIR_NODES] = reservoir_current[0:RESERVOIR_NODES - 1]
-        reservoir_current = reservoir_next
+        
+        reservoir_current = reservoir_next.copy()
 
         reservoir_history[:,i] = reservoir_current
 
-    # end of every NUM_SAMPLES
-    history_samples = STEPS_PER_SAMPLE * np.arange(1,NUM_SAMPLES+1) - 1
+        print(f"{a_in} => {hex(reservoir_next[0])}")
+        print(reservoir_current)
+
+    # extract the reservoir state after each sample is fully processed (i.e., every STEPS_PER_SAMPLE)
+    history_samples = STEPS_PER_SAMPLE * np.arange(1,NUM_SAMPLES) - 1
     # RESERVOIR_NODES (STEPS_PER_SAMPLE) x NUM_SAMPLES
     reservoir_loops = reservoir_history[:,history_samples]
+
+    # print(reservoir_history)
+    # print(reservoir_loops)
+
     # 1 x STEPS_PER_SAMPLE
     weights = np.ones((1,STEPS_PER_SAMPLE),dtype=int)
     # 1 x NUM_SAMPLES
@@ -406,7 +414,8 @@ def dfr(din):
     return dout
 
 
-din = list(range(0, 0xFFFF_FFFF, int(0xFFFF_FFFF / (NUM_SAMPLES * STEPS_PER_SAMPLE)) ))
+din = int(0xFFFF_FFFF / (NUM_SAMPLES * STEPS_PER_SAMPLE) ) * np.linspace(0, (NUM_SAMPLES * STEPS_PER_SAMPLE) - 1, (NUM_SAMPLES * STEPS_PER_SAMPLE) - 1,dtype=int)
 din = din[0:NUM_SAMPLES * STEPS_PER_SAMPLE]
+print(din)
 dout = dfr(din)
 print(dout)

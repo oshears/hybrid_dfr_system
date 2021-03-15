@@ -7,7 +7,6 @@ parameter C_S_AXI_ADDR_WIDTH = 9
 )
 (
     input clk,
-    input rst,
 
     input busy,
 
@@ -40,18 +39,34 @@ parameter C_S_AXI_ADDR_WIDTH = 9
     output [31:0] debug,
     output [31:0] ctrl,
     output [31:0] num_init_samples,
+    output [31:0] num_init_steps,
     output [31:0] num_train_samples,
-    output [31:0] num_test_samples
+    output [31:0] num_train_steps,
+    output [31:0] num_test_samples,
+    output [31:0] num_test_steps,
+    output [31:0] num_steps_per_sample
 );
 
 reg num_train_samples_reg_valid = 0;
-reg [31:0] num_train_samples_reg;
+reg [31:0] num_train_samples_reg = 0;
 
 reg num_test_samples_reg_valid = 0;
-reg [31:0] num_test_samples_reg;
+reg [31:0] num_test_samples_reg = 0;
 
 reg num_init_samples_reg_valid = 0;
-reg [31:0] num_init_samples_reg;
+reg [31:0] num_init_samples_reg = 0;
+
+reg num_init_steps_reg_valid = 0;
+reg [31:0] num_init_steps_reg = 0;
+
+reg num_train_steps_reg_valid = 0;
+reg [31:0] num_train_steps_reg = 0;
+
+reg num_test_steps_reg_valid = 0;
+reg [31:0] num_test_steps_reg = 0;
+
+reg num_steps_per_sample_reg_valid = 0;
+reg [31:0] num_steps_per_sample_reg = 0;
 
 reg [31:0] debug_reg = 0;
 reg  debug_reg_addr_valid = 0;
@@ -158,7 +173,11 @@ always @(send_read_data_to_AXI,
         mem_data_out,
         num_train_samples_reg,
         num_test_samples_reg,
-        num_init_samples_reg
+        num_init_samples_reg,
+        num_steps_per_sample_reg,
+        num_train_steps_reg,
+        num_test_steps_reg,
+        num_init_steps_reg
         )
 begin
     S_AXI_RDATA = 32'b0;
@@ -176,6 +195,14 @@ begin
                 S_AXI_RDATA = num_train_samples_reg;
             16'h0010:
                 S_AXI_RDATA = num_test_samples_reg;
+            16'h0014:
+                S_AXI_RDATA = num_steps_per_sample_reg;
+            16'h0018:
+                S_AXI_RDATA = num_train_steps_reg;
+            16'h001C:
+                S_AXI_RDATA = num_test_steps_reg;
+            16'h0020:
+                S_AXI_RDATA = num_init_steps_reg;
             default:
                 S_AXI_RDATA = mem_data_out;
         endcase;     
@@ -210,6 +237,10 @@ begin
     num_init_samples_reg_valid = 0;
     num_train_samples_reg_valid = 0;
     num_test_samples_reg_valid = 0;
+    num_steps_per_sample_reg_valid = 0;
+    num_init_steps_reg_valid = 0;
+    num_train_steps_reg_valid = 0;
+    num_test_steps_reg_valid = 0;
 
 
     local_address_valid = 1;
@@ -227,6 +258,14 @@ begin
                 num_train_samples_reg_valid = 1;
             16'h0010:
                 num_test_samples_reg_valid = 1;
+            16'h0014:
+                num_steps_per_sample_reg_valid = 1;
+            16'h0018:
+                num_init_steps_reg_valid = 1;
+            16'h001C:
+                num_train_steps_reg_valid = 1;
+            16'h0020:
+                num_test_steps_reg_valid = 1;
             default:
             begin
                 //mem_reg_addr_valid = 1;
@@ -307,6 +346,52 @@ begin
     end
 end
 
+always @(posedge S_AXI_ACLK, posedge Local_Reset)
+begin
+    if (Local_Reset)
+        num_steps_per_sample_reg = 0;
+    else
+    begin
+        if(num_steps_per_sample_reg_valid)
+            num_steps_per_sample_reg = S_AXI_WDATA;
+    end
+end
+
+
+always @(posedge S_AXI_ACLK, posedge Local_Reset)
+begin
+    if (Local_Reset)
+        num_init_steps_reg = 0;
+    else
+    begin
+        if(num_init_steps_reg_valid)
+            num_init_steps_reg = S_AXI_WDATA;
+    end
+end
+
+always @(posedge S_AXI_ACLK, posedge Local_Reset)
+begin
+    if (Local_Reset)
+        num_train_steps_reg = 0;
+    else
+    begin
+        if(num_train_steps_reg_valid)
+            num_train_steps_reg = S_AXI_WDATA;
+    end
+end
+
+always @(posedge S_AXI_ACLK, posedge Local_Reset)
+begin
+    if (Local_Reset)
+        num_test_samples_reg = 0;
+    else
+    begin
+        if(num_test_steps_reg_valid)
+            num_test_steps_reg = S_AXI_WDATA;
+    end
+end
+
+
 
 // mem access
 assign mem_wen = write_enable_registers && (local_address[15:8] > 0);
@@ -316,5 +401,9 @@ assign mem_addr = {ctrl_reg[15:8],local_address[7:0]};
 assign num_init_samples = num_init_samples_reg;
 assign num_train_samples = num_train_samples_reg;
 assign num_test_samples = num_test_samples_reg;
+assign num_steps_per_sample = num_steps_per_sample_reg;
+assign num_init_steps = num_init_steps_reg;
+assign num_train_steps = num_train_steps_reg;
+assign num_test_steps = num_test_steps_reg;
 
 endmodule

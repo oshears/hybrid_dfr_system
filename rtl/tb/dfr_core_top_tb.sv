@@ -1,15 +1,35 @@
 `timescale 1ns / 1ps
 module dfr_core_top_tb;
 
+localparam CTRL_REG = 16'h0000;
+localparam DEBUG_REG = 16'h0004;
+localparam NUM_INIT_SAMPLES_REG = 16'h0008;
+localparam NUM_TRAIN_SAMPLES_REG = 16'h000C;
+localparam NUM_TEST_SAMPLES_REG = 16'h0010;
+localparam NUM_STEPS_PER_SAMPLE_REG = 16'h0014;
+localparam NUM_INIT_STEPS_REG = 16'h0018;
+localparam NUM_TRAIN_STEPS_REG = 16'h001C;
+localparam NUM_TEST_STEPS_REG = 16'h0020;
+
+localparam C_S_AXI_ACLK_FREQ_HZ = 100000000;
+localparam C_S_AXI_DATA_WIDTH = 32;
+localparam C_S_AXI_ADDR_WIDTH = 16;
+localparam VIRTUAL_NODES = 10;
+localparam RESERVOIR_DATA_WIDTH = 32;
+localparam RESERVOIR_HISTORY_ADDR_WIDTH = 16;
+
+localparam NUM_TEST_SAMPLES = 5;
+localparam NUM_STEPS_PER_SAMPLE = 10;
+
 // Inputs
 reg S_AXI_ACLK = 0;
 reg S_AXI_ARESETN = 0;
-reg [31:0] S_AXI_AWADDR = 0;
+reg [C_S_AXI_ADDR_WIDTH - 1:0] S_AXI_AWADDR = 0;
 reg S_AXI_AWVALID = 0;
-reg [31:0] S_AXI_ARADDR = 0;
+reg [C_S_AXI_ADDR_WIDTH - 1:0] S_AXI_ARADDR = 0;
 reg S_AXI_ARVALID = 0;
-reg [31:0] S_AXI_WDATA = 0;
-reg [3:0] S_AXI_WSTRB = 0;
+reg [C_S_AXI_DATA_WIDTH - 1:0] S_AXI_WDATA = 0;
+reg [(C_S_AXI_DATA_WIDTH/8)-1:0] S_AXI_WSTRB = 0;
 reg S_AXI_WVALID = 0;
 reg S_AXI_RREADY = 0;
 reg S_AXI_BREADY = 0;
@@ -19,7 +39,7 @@ reg busy = 0;
 wire S_AXI_AWREADY; 
 wire S_AXI_ARREADY; 
 wire S_AXI_WREADY;  
-wire [31:0] S_AXI_RDATA;
+wire [C_S_AXI_DATA_WIDTH - 1:0] S_AXI_RDATA;
 wire [1:0] S_AXI_RRESP;
 wire S_AXI_RVALID;  
 wire [1:0] S_AXI_BRESP;
@@ -32,14 +52,16 @@ reg [31:0] addr = 0;
 reg [31:0] read_data = 0;
 reg [31:0] write_data = 0;
 
+
+
 dfr_core_top
 #(
-    .C_S_AXI_ACLK_FREQ_HZ(100000000),
-    .C_S_AXI_DATA_WIDTH(32),
-    .C_S_AXI_ADDR_WIDTH(16),
-    .VIRTUAL_NODES(10),
-    .RESERVOIR_DATA_WIDTH(32),
-    .RESERVOIR_HISTORY_ADDR_WIDTH(20)
+    .C_S_AXI_ACLK_FREQ_HZ(C_S_AXI_ACLK_FREQ_HZ),
+    .C_S_AXI_DATA_WIDTH(C_S_AXI_DATA_WIDTH),
+    .C_S_AXI_ADDR_WIDTH(C_S_AXI_ADDR_WIDTH),
+    .VIRTUAL_NODES(VIRTUAL_NODES),
+    .RESERVOIR_DATA_WIDTH(RESERVOIR_DATA_WIDTH),
+    .RESERVOIR_HISTORY_ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH)
 )
 uut
 (
@@ -141,8 +163,8 @@ initial begin
     // Test Write to Input Mem
 
     //Select Input Mem
-    AXI_WRITE(32'h0,32'h0000_0000);
-    AXI_READ(32'h0,32'h0000_0000);
+    AXI_WRITE(CTRL_REG,32'h0000_0000);
+    AXI_READ(CTRL_REG,32'h0000_0000);
 
     // Test Write to Input Mem
     for(i = 0; i < 100; i = i + 1) begin
@@ -151,8 +173,8 @@ initial begin
     end
 
     //Select Reservoir Output Mem
-    AXI_WRITE(32'h0,32'h0000_0010);
-    AXI_READ(32'h0,32'h0000_0010);
+    AXI_WRITE(CTRL_REG,32'h0000_0010);
+    AXI_READ(CTRL_REG,32'h0000_0010);
 
     // Test Write to Reservoir Output Mem
     for(i = 0; i < 2**4; i = i + 1) begin
@@ -161,8 +183,8 @@ initial begin
     end
 
     //Select Weight Mem
-    AXI_WRITE(32'h0,32'h0000_0020);
-    AXI_READ(32'h0,32'h0000_0020);
+    AXI_WRITE(CTRL_REG,32'h0000_0020);
+    AXI_READ(CTRL_REG,32'h0000_0020);
 
     // Test Write to Weight Mem
     for(i = 0; i < 2**4; i = i + 1) begin
@@ -171,8 +193,8 @@ initial begin
     end
 
     //Select DFR Output Mem
-    AXI_WRITE(32'h0,32'h0000_0030);
-    AXI_READ(32'h0,32'h0000_0030);
+    AXI_WRITE(CTRL_REG,32'h0000_0030);
+    AXI_READ(CTRL_REG,32'h0000_0030);
 
     // Test Write to DFR Output Mem
     for(i = 0; i < 2**4; i = i + 1) begin
@@ -185,19 +207,52 @@ initial begin
     //     // reservoir_data_in = reservoir_data_in + 32'h028F_5C29;
     // end
 
-    // Test DFR
-    AXI_WRITE(32'h0,32'h0000_0001);
-    AXI_READ(32'h0,32'h0000_0000);
+    ////// ========= Test DFR ============= /////////
+
+    // Configure Widths
+    AXI_WRITE(NUM_INIT_SAMPLES_REG,0);
+    AXI_WRITE(NUM_TRAIN_SAMPLES_REG,0);
+    AXI_WRITE(NUM_TEST_SAMPLES_REG,NUM_TEST_SAMPLES);
+    AXI_WRITE(NUM_INIT_STEPS_REG,0);
+    AXI_WRITE(NUM_TRAIN_STEPS_REG,0);
+    AXI_WRITE(NUM_TEST_STEPS_REG,NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE);
+    AXI_WRITE(NUM_STEPS_PER_SAMPLE_REG,NUM_STEPS_PER_SAMPLE);
+
+    // Configure Input Samples
+    //Select Input Mem
+    AXI_WRITE(CTRL_REG,32'h0000_0000);
+    AXI_READ(CTRL_REG,32'h0000_0000);
+
+    // Test Write to Input Mem
+    for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
+        AXI_WRITE(32'h01_00 + i, i*85899345);
+        AXI_READ( 32'h01_00 + i, i*85899345);
+    end
+
+    // Configure Weights
+    //Select Weight Mem
+    AXI_WRITE(CTRL_REG,32'h0000_0020);
+    AXI_READ(CTRL_REG,32'h0000_0020);
+
+    // Test Write to Weight Mem
+    for(i = 0; i < NUM_STEPS_PER_SAMPLE; i = i + 1) begin
+        AXI_WRITE(32'h01_00 + i, 1);
+        AXI_READ( 32'h01_00 + i, 1);
+    end
+
+    // Launch DFR
+    AXI_WRITE(CTRL_REG,32'h0000_0001);
+    // Wait until finished
     while (busy) begin
-        WAIT(1);
+       WAIT(1);
     end
 
     //Select DFR Output Mem
-    AXI_WRITE(32'h0,32'h0000_0030);
-    AXI_READ(32'h0,32'h0000_0030);
+    AXI_WRITE(CTRL_REG,32'h0000_0030);
+    AXI_READ(CTRL_REG,32'h0000_0030);
 
     // Read DFR Output Mem
-    for(i = 0; i < 2**4; i = i + 1) begin
+    for(i = 0; i < NUM_TEST_SAMPLES; i = i + 1) begin
         AXI_READ( 32'h01_00 + i, i);
     end
 

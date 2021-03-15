@@ -3,18 +3,20 @@
 module matrix_multiplier
 # (
     ADDR_WIDTH = 32,
-    DATA_WIDTH = 32,
-    X_ROWS = 5,
-    Y_COLS = 5,
-    X_COLS_Y_ROWS = 5
+    DATA_WIDTH = 32
 )
 (
     input clk,
     input rst,
     input start,
-    // RAM 
+    // RAM Inputs
     input [DATA_WIDTH - 1 : 0] x_data,
     input [DATA_WIDTH - 1 : 0] y_data,
+    // CONFIG
+    input [ADDR_WIDTH - 1 : 0] x_rows,
+    input [ADDR_WIDTH - 1 : 0] y_cols,
+    input [ADDR_WIDTH - 1 : 0] x_cols_y_rows,
+    // RAM Outputs
     output reg [ADDR_WIDTH - 1 : 0] x_addr  = 0,
     output reg [ADDR_WIDTH - 1 : 0] y_addr  = 0,
     output reg [ADDR_WIDTH - 1 : 0] z_addr  = 0,
@@ -113,7 +115,7 @@ always @(
         x_row_loop:
         begin
             busy = 1;
-            if (x_row == X_ROWS) begin
+            if (x_row == x_rows) begin
                 next_state = done;
             end
             else begin
@@ -124,7 +126,7 @@ always @(
         y_col_loop:
         begin
             busy = 1;
-            if (y_col == Y_COLS) begin
+            if (y_col == y_cols) begin
                 x_row_en = 1;
                 next_state = x_row_loop;
             end
@@ -150,7 +152,7 @@ always @(
         x_col_y_row_loop:
         begin
             busy = 1;
-            if (x_col_y_row == X_COLS_Y_ROWS) begin
+            if (x_col_y_row == x_cols_y_rows) begin
                 z_wen = 1;
                 z_addr_cnt_en = 1;
                 y_col_en = 1;
@@ -220,7 +222,7 @@ always @(posedge clk) begin
     if (x_addr_cnt_rst)
         x_addr <= 0;
     else if(x_addr_cnt_en == 2'b01) 
-        x_addr <= x_addr + X_COLS_Y_ROWS;
+        x_addr <= x_addr + x_cols_y_rows;
     else if (x_addr_cnt_en == 2'b10)
         x_addr <= x_addr + 1;
 end
@@ -229,7 +231,7 @@ always @(posedge clk) begin
     if (y_addr_cnt_rst)
         y_addr <= 0;
     else if(y_addr_cnt_en == 2'b01)
-        y_addr <= y_addr + Y_COLS;
+        y_addr <= y_addr + y_cols;
     else if(y_addr_cnt_en == 2'b10) 
         y_addr <= y_addr + y_col;
 end
