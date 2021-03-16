@@ -397,18 +397,18 @@ def dfr(din):
 
         reservoir_history[:,i] = reservoir_current
 
-        print(f"Sample: {i}")
-        print(f"{hex(din[i])} + {hex(reservoir_current[RESERVOIR_NODES - 1])} ==> {hex(reservoir_next[0])}")
-        print(f"{din[i]} + {reservoir_current[RESERVOIR_NODES - 1]} ==> {reservoir_next[0]}")
-        # print(reservoir_current)
-        print("===============================")
+        # print(f"Sample: {i}")
+        # print(f"{hex(din[i])} + {hex(reservoir_current[RESERVOIR_NODES - 1])} ==> {hex(reservoir_next[0])}")
+        # print(f"{din[i]} + {reservoir_current[RESERVOIR_NODES - 1]} ==> {reservoir_next[0]}")
+        # # print(reservoir_current)
+        # print("===============================")
 
     # extract the reservoir state after each sample is fully processed (i.e., every STEPS_PER_SAMPLE)
     history_samples = STEPS_PER_SAMPLE * np.arange(1,NUM_SAMPLES+1) - 1
     # RESERVOIR_NODES (STEPS_PER_SAMPLE) x NUM_SAMPLES
     reservoir_loops = reservoir_history[:,history_samples]
 
-    print(reservoir_history)
+    # print(reservoir_history)
     #print(reservoir_loops)
 
     # 1 x STEPS_PER_SAMPLE
@@ -416,10 +416,12 @@ def dfr(din):
     # 1 x NUM_SAMPLES
     dout = weights.dot(reservoir_loops)
 
-    print(weights)
-    print(weights.shape)
-    print(reservoir_loops)
-    print(reservoir_loops.shape)
+    
+    # print(np.flip(reservoir_loops,0).T)
+    # print(np.flip(reservoir_loops,0).T.shape)
+    # print(weights.T)
+    # print(weights.T.shape)
+    # print(np.flip(reservoir_loops,0).T.dot(weights.T))
     
 
     return dout

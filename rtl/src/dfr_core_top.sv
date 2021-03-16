@@ -398,7 +398,7 @@ matrix_multiplier_v2
     .z_wen(dfr_output_wen),
     .x_rows(num_test_samples[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0]),
     .y_cols(one),
-    .x_cols_y_rows(num_test_steps[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0])
+    .x_cols_y_rows(VIRTUAL_NODES)
     // .x_data(output_weight_mem_data_out),
     // .y_data(reservoir_output_mem_data_out),
     // .x_addr(matrix_multiply_output_weight_addr),
