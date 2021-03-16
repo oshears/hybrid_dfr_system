@@ -42,7 +42,8 @@ always @(
     start,
     matrix_multiply_busy,
     reservoir_busy,
-    reservoir_filled
+    reservoir_filled,
+    reservoir_init_busy
 ) begin
 
     matrix_multiply_start = 0;

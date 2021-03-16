@@ -6,7 +6,7 @@ module dfr_core_top
     parameter C_S_AXI_ADDR_WIDTH = 16,
     parameter VIRTUAL_NODES = 10,
     parameter RESERVOIR_DATA_WIDTH = 32,
-    parameter RESERVOIR_HISTORY_ADDR_WIDTH = 16
+    parameter RESERVOIR_HISTORY_ADDR_WIDTH = 14
 )
 (
     input S_AXI_ACLK,   
@@ -348,14 +348,14 @@ reservoir_output_mem
 
 ram
 # (
-    .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
+    .ADDR_WIDTH(8),
     .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
 )
 output_weight_mem
 (
     .clk(S_AXI_ACLK),
     .wen(output_weight_mem_wen),
-    .addr(output_weight_mem_addr),
+    .addr(output_weight_mem_addr[7:0]),
     .din(output_weight_mem_data_in),
     .dout(output_weight_mem_data_out)
 );
@@ -398,7 +398,7 @@ matrix_multiplier_v2
     .z_wen(dfr_output_wen),
     .x_rows(num_test_samples[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0]),
     .y_cols({{(RESERVOIR_HISTORY_ADDR_WIDTH - 1){1'b0}},1'b1}),
-    .x_cols_y_rows(VIRTUAL_NODES)
+    .x_cols_y_rows(VIRTUAL_NODES[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0])
     // .x_data(output_weight_mem_data_out),
     // .y_data(reservoir_output_mem_data_out),
     // .x_addr(matrix_multiply_output_weight_addr),

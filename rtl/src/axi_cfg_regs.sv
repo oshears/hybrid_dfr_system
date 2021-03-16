@@ -383,7 +383,7 @@ end
 always @(posedge S_AXI_ACLK, posedge Local_Reset)
 begin
     if (Local_Reset)
-        num_test_samples_reg = 0;
+        num_test_steps_reg = 0;
     else
     begin
         if(num_test_steps_reg_valid)

@@ -74,7 +74,11 @@ always @(
     x_row,
     y_col,
     x_col_y_row,
-    x_data ) begin
+    x_data,
+    x_rows,
+    y_cols,
+    x_cols_y_rows
+     ) begin
 
     busy = 0;
     z_wen = 0;
