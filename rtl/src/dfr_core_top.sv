@@ -112,6 +112,9 @@ wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] sample_cntr;
 wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] reservoir_init_cntr;
 wire reservoir_filled;
 
+wire dfr_done;
+wire reservoir_en;
+
 assign mem_addr = mem_addr_i[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0];
 assign mem_sel = ctrl[7:4];
 
@@ -375,9 +378,6 @@ dfr_output_mem
 
 assign matrix_multiply_rst = rst || matrix_multiply_rst_i;
 
-reg [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] one = 1;
-
-
 matrix_multiplier_v2
 # (
     .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
@@ -397,7 +397,7 @@ matrix_multiplier_v2
     .z_data(dfr_output_data),
     .z_wen(dfr_output_wen),
     .x_rows(num_test_samples[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0]),
-    .y_cols(one),
+    .y_cols({{(RESERVOIR_HISTORY_ADDR_WIDTH - 1){1'b0}},1'b1}),
     .x_cols_y_rows(VIRTUAL_NODES)
     // .x_data(output_weight_mem_data_out),
     // .y_data(reservoir_output_mem_data_out),
