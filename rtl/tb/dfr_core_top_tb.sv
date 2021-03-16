@@ -114,7 +114,7 @@ task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA );
     end
 endtask
 
-task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA, input [31:0] MASK_DATA = 32'h0);
+task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [31:0] MASK_DATA = 32'h0, input COMPARE=0);
     begin
         @(posedge S_AXI_ACLK);
         S_AXI_ARADDR = READ_ADDR;
@@ -123,7 +123,7 @@ task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA, input [31:0] MA
         @(posedge S_AXI_ACLK);
         S_AXI_ARVALID = 0;
         S_AXI_RREADY = 1'b1;
-        if ((EXPECT_DATA | MASK_DATA) == (S_AXI_RDATA | MASK_DATA)) 
+        if (((EXPECT_DATA | MASK_DATA) == (S_AXI_RDATA | MASK_DATA)) || ~COMPARE) 
             $display("%t: Read Data: %h",$time,S_AXI_RDATA);
         else 
             $display("%t: ERROR: %h != %h",$time,S_AXI_RDATA,EXPECT_DATA);
@@ -221,18 +221,21 @@ initial begin
     // Configure Input Samples
     //Select Input Mem
     AXI_WRITE(CTRL_REG,32'h0000_0000);
-    AXI_READ(CTRL_REG,32'h0000_0000);
 
     // Test Write to Input Mem
     for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
-        AXI_WRITE(32'h01_00 + i, i*85899345);
-        AXI_READ( 32'h01_00 + i, i*85899345);
+        AXI_WRITE(32'h01_00 + i, i*335544);
+        AXI_READ( 32'h01_00 + i, i*335544);
+    end
+    // Clear Empty Spaces
+    for(i = NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE + NUM_STEPS_PER_SAMPLE; i = i + 1) begin
+        AXI_WRITE(32'h01_00 + i,0);
+        AXI_READ( 32'h01_00 + i,0);
     end
 
     // Configure Weights
     //Select Weight Mem
     AXI_WRITE(CTRL_REG,32'h0000_0020);
-    AXI_READ(CTRL_REG,32'h0000_0020);
 
     // Test Write to Weight Mem
     for(i = 0; i < NUM_STEPS_PER_SAMPLE; i = i + 1) begin
@@ -243,18 +246,31 @@ initial begin
     // Launch DFR
     AXI_WRITE(CTRL_REG,32'h0000_0001);
     // Wait until finished
-    while (busy) begin
-       WAIT(1);
-    end
+    // while (busy) begin
+    //    WAIT(1);
+    // end
+    @(negedge busy);
 
     //Select DFR Output Mem
     AXI_WRITE(CTRL_REG,32'h0000_0030);
-    AXI_READ(CTRL_REG,32'h0000_0030);
 
     // Read DFR Output Mem
     for(i = 0; i < NUM_TEST_SAMPLES; i = i + 1) begin
         AXI_READ( 32'h01_00 + i, i);
     end
+
+    /*
+    // DEBUG: Read Reservoir Output
+    $display("Reading reservoir output data");
+    //Select Reservoir Output Mem
+    AXI_WRITE(CTRL_REG,32'h0000_0010);
+
+    // Test Write to Reservoir Output Mem
+    for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
+        $display("Sample: %d");
+        AXI_READ( 32'h01_00 + i);
+    end
+    */
 
     $finish;
 

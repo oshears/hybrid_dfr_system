@@ -396,7 +396,8 @@ end
 // mem access
 assign mem_wen = write_enable_registers && (local_address[15:8] > 0);
 assign mem_data_in = S_AXI_WDATA;
-assign mem_addr = {ctrl_reg[15:8],local_address[7:0]};
+assign mem_addr[15:8] = ctrl_reg[15:8];
+assign mem_addr[7:0] = (combined_S_AXI_AWVALID_S_AXI_ARVALID[1]) ? S_AXI_AWADDR[7:0] : ( (combined_S_AXI_AWVALID_S_AXI_ARVALID[0]) ? S_AXI_ARADDR[7:0] : 8'h00);
 
 assign num_init_samples = num_init_samples_reg;
 assign num_train_samples = num_train_samples_reg;

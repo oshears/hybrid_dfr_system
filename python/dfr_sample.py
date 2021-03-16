@@ -364,6 +364,8 @@ def mackey_glass(din):
         dout = 0x0000_004E
     elif (din <= 0xFFFF_FFFF):
         dout = 0x0000_004E
+    else:
+        dout = 0
     return dout
 
 RESERVOIR_NODES = 10
@@ -395,11 +397,14 @@ def dfr(din):
 
         reservoir_history[:,i] = reservoir_current
 
-        print(f"{a_in} => {hex(reservoir_next[0])}")
-        print(reservoir_current)
+        # print(f"{din[i]} + {reservoir_current[RESERVOIR_NODES - 1]} ==> {reservoir_next[0]}")
+        print(f"Sample: {i}")
+        print(f"{hex(din[i])} + {hex(reservoir_current[RESERVOIR_NODES - 1])} ==> {hex(reservoir_next[0])}")
+        # print(reservoir_current)
+        print("===============================")
 
     # extract the reservoir state after each sample is fully processed (i.e., every STEPS_PER_SAMPLE)
-    history_samples = STEPS_PER_SAMPLE * np.arange(1,NUM_SAMPLES) - 1
+    history_samples = STEPS_PER_SAMPLE * np.arange(1,NUM_SAMPLES+1) - 1
     # RESERVOIR_NODES (STEPS_PER_SAMPLE) x NUM_SAMPLES
     reservoir_loops = reservoir_history[:,history_samples]
 
@@ -414,8 +419,8 @@ def dfr(din):
     return dout
 
 
-din = int(0xFFFF_FFFF / (NUM_SAMPLES * STEPS_PER_SAMPLE) ) * np.linspace(0, (NUM_SAMPLES * STEPS_PER_SAMPLE) - 1, (NUM_SAMPLES * STEPS_PER_SAMPLE) - 1,dtype=int)
-din = din[0:NUM_SAMPLES * STEPS_PER_SAMPLE]
+din = int(0x00FF_FFFF / (NUM_SAMPLES * STEPS_PER_SAMPLE) ) * np.linspace(0, (NUM_SAMPLES * STEPS_PER_SAMPLE), (NUM_SAMPLES * STEPS_PER_SAMPLE),dtype=int)
+din = din[0: NUM_SAMPLES * STEPS_PER_SAMPLE + 1]
 print(din)
 dout = dfr(din)
 print(dout)
