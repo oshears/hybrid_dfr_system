@@ -3,7 +3,7 @@ module dfr_core_top
 #(
     parameter C_S_AXI_ACLK_FREQ_HZ = 100000000,
     parameter C_S_AXI_DATA_WIDTH = 32,
-    parameter C_S_AXI_ADDR_WIDTH = 9,
+    parameter C_S_AXI_ADDR_WIDTH = 16,
     parameter VIRTUAL_NODES = 10,
     parameter RESERVOIR_DATA_WIDTH = 32,
     parameter RESERVOIR_HISTORY_ADDR_WIDTH = 16
@@ -375,27 +375,37 @@ dfr_output_mem
 
 assign matrix_multiply_rst = rst || matrix_multiply_rst_i;
 
-matrix_multiplier
+reg [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] one = 1;
+
+
+matrix_multiplier_v2
 # (
     .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
     .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
 )
-matrix_multiplier
+matrix_multiplier_v2
 (
     .clk(S_AXI_ACLK),
     .rst(matrix_multiply_rst),
     .start(matrix_multiply_start),
     .busy(matrix_multiply_busy),
-    .x_data(output_weight_mem_data_out),
-    .y_data(reservoir_output_mem_data_out),
-    .x_addr(matrix_multiply_output_weight_addr),
-    .y_addr(matrix_multiply_reservoir_history_addr),
+    .x_data(reservoir_output_mem_data_out),
+    .y_data(output_weight_mem_data_out),
+    .x_addr(matrix_multiply_reservoir_history_addr),
+    .y_addr(matrix_multiply_output_weight_addr),
     .z_addr(dfr_output_cntr),
     .z_data(dfr_output_data),
     .z_wen(dfr_output_wen),
-    .x_rows(20'b1),
-    .y_cols(num_test_samples[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0]),
+    .x_rows(num_test_samples[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0]),
+    .y_cols(one),
     .x_cols_y_rows(num_test_steps[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0])
+    // .x_data(output_weight_mem_data_out),
+    // .y_data(reservoir_output_mem_data_out),
+    // .x_addr(matrix_multiply_output_weight_addr),
+    // .y_addr(matrix_multiply_reservoir_history_addr),
+    // .x_rows(20'b1),
+    // .y_cols(num_test_samples[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0]),
+    // .x_cols_y_rows(num_test_steps[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0])
 );
 
 

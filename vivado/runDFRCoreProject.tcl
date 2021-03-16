@@ -18,6 +18,7 @@ add_files {
     ../rtl/src/mackey_glass_block.sv 
     ../rtl/src/axi_cfg_regs.sv 
     ../rtl/src/matrix_multiplier.sv 
+    ../rtl/src/matrix_multiplier_v2.sv 
     ../rtl/src/matrix_multiply_top.sv 
     ../rtl/src/dfr_core_controller.sv 
     ../rtl/src/dfr_core_top.sv 

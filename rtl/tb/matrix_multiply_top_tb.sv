@@ -100,7 +100,7 @@ initial begin
 
     // Z RAM
     ram_sel = 2'b10;
-    for (i = 0; i < X_COLS_Y_ROWS * Y_COLS; i = i + 1) begin
+    for (i = 0; i < X_ROWS * Y_COLS; i = i + 1) begin
         ram_addr = i;
         WAIT(2);
         $display("Z[%d] = %d",i,ram_data_out);

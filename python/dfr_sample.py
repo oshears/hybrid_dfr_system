@@ -397,9 +397,9 @@ def dfr(din):
 
         reservoir_history[:,i] = reservoir_current
 
-        # print(f"{din[i]} + {reservoir_current[RESERVOIR_NODES - 1]} ==> {reservoir_next[0]}")
         print(f"Sample: {i}")
         print(f"{hex(din[i])} + {hex(reservoir_current[RESERVOIR_NODES - 1])} ==> {hex(reservoir_next[0])}")
+        print(f"{din[i]} + {reservoir_current[RESERVOIR_NODES - 1]} ==> {reservoir_next[0]}")
         # print(reservoir_current)
         print("===============================")
 
@@ -408,13 +408,19 @@ def dfr(din):
     # RESERVOIR_NODES (STEPS_PER_SAMPLE) x NUM_SAMPLES
     reservoir_loops = reservoir_history[:,history_samples]
 
-    # print(reservoir_history)
-    # print(reservoir_loops)
+    print(reservoir_history)
+    #print(reservoir_loops)
 
     # 1 x STEPS_PER_SAMPLE
     weights = np.ones((1,STEPS_PER_SAMPLE),dtype=int)
     # 1 x NUM_SAMPLES
     dout = weights.dot(reservoir_loops)
+
+    print(weights)
+    print(weights.shape)
+    print(reservoir_loops)
+    print(reservoir_loops.shape)
+    
 
     return dout
 

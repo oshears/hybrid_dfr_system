@@ -14,6 +14,7 @@ add_files {
     ../rtl/tb/matrix_multiply_top_tb.sv
     ../rtl/src/matrix_multiply_top.sv 
     ../rtl/src/matrix_multiplier.sv 
+    ../rtl/src/matrix_multiplier_v2.sv 
     ../rtl/src/mac.sv 
     ../rtl/src/ram.sv 
     }

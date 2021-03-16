@@ -238,7 +238,7 @@ initial begin
     AXI_WRITE(CTRL_REG,32'h0000_0020);
 
     // Test Write to Weight Mem
-    for(i = 0; i < NUM_STEPS_PER_SAMPLE; i = i + 1) begin
+    for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
         AXI_WRITE(32'h01_00 + i, 1);
         AXI_READ( 32'h01_00 + i, 1);
     end

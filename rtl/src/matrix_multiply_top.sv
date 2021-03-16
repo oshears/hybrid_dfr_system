@@ -52,13 +52,10 @@ assign z_wen = (~busy && ram_sel == 2'b10) ? ram_wen : z_wen_i;
 
 assign ram_data_out = (ram_sel == 2'b10) ? z_data_out : ( (ram_sel == 2'b01) ? y_data_out : x_data_out );
 
-matrix_multiplier
+matrix_multiplier_v2
 # (
     .ADDR_WIDTH(ADDR_WIDTH),
-    .DATA_WIDTH(DATA_WIDTH),
-    .X_ROWS(X_ROWS),
-    .Y_COLS(Y_COLS),
-    .X_COLS_Y_ROWS(X_COLS_Y_ROWS)
+    .DATA_WIDTH(DATA_WIDTH)
 )
 matrix_multiplier
 (
@@ -72,7 +69,10 @@ matrix_multiplier
     .y_addr(y_addr_i),
     .z_addr(z_addr_i),
     .z_data(z_data_i),
-    .z_wen(z_wen_i)
+    .z_wen(z_wen_i),
+    .x_rows(X_ROWS[ADDR_WIDTH - 1:0]),
+    .y_cols(Y_COLS[ADDR_WIDTH - 1:0]),
+    .x_cols_y_rows(X_COLS_Y_ROWS[ADDR_WIDTH - 1:0])
 );
 
 ram 
