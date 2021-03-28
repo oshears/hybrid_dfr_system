@@ -54,5 +54,20 @@ mackey_glass_block mackey_glass_block
     .dout(node_outputs[0])
 );
 
+// asic_function_interface asic_function_interface 
+// (
+//     .clk(clk),
+//     .rst(rst),
+//     .start(),
+//     .aux0_p(),
+//     .aux0_n(),
+//     .xadc_data_valid(),
+//     .xadc_data_in(),
+//     .dac_cs_n(),
+//     .dac_ldac_n(),
+//     .dac_din(),
+//     .dac_sclk()
+// );
+
 
 endmodule

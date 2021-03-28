@@ -1,0 +1,12 @@
+// This analog stimulus file is used to inject analog signals (e.g., volts, temperature) for a simulation.
+// Units are as follows:
+//          Time:                           nanoseconds [ns]
+//          Voltage (All rails):     volts [V]
+//          Temperature:             degrees C [C]. Please note that the temperature transfer function is in terms of Kelvin
+
+TIME VP VN
+0 0.25 0
+20000 0.50 0
+40000 0.75 0
+60000 1.00 0
+80000 1.25 0

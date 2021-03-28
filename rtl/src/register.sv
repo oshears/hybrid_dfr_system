@@ -5,11 +5,11 @@ module register
 DATA_WIDTH = 32
 )
 (
-    input clk,
-    input rst,
-    input en,
-    input [DATA_WIDTH-1:0] din,
-    output reg [DATA_WIDTH-1:0] dout
+    input  wire clk,
+    input  wire rst,
+    input  wire en,
+    input  wire [DATA_WIDTH-1:0] din,
+    output reg  [DATA_WIDTH-1:0] dout
 );
 
 always @(posedge clk, posedge rst)
