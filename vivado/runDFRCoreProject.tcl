@@ -15,6 +15,7 @@ add_files {
     ../rtl/src/ram.sv 
     ../rtl/src/counter.sv 
     ../rtl/src/reservoir.sv 
+    ../rtl/src/reservoir_asic.sv 
     ../rtl/src/mackey_glass_block.sv 
     ../rtl/src/axi_cfg_regs.sv 
     ../rtl/src/matrix_multiplier_v2.sv 

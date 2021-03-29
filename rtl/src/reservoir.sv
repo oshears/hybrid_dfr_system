@@ -12,21 +12,15 @@ DATA_WIDTH = 32
     output [DATA_WIDTH - 1 : 0] dout
 );
 
-// wire [(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 : 0] node_outputs;
 wire [DATA_WIDTH - 1 : 0] node_outputs [VIRTUAL_NODES : 0];
 
-//wire [DATA_WIDTH - 1 : 0] dout_i = {node_outputs[(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 - (DATA_WIDTH - 12): (VIRTUAL_NODES) * (DATA_WIDTH)],12'h0};
 wire [DATA_WIDTH - 1 : 0] dout_i;
-// assign dout_i[DATA_WIDTH - 1 : DATA_WIDTH - 1 - 11] = node_outputs[((VIRTUAL_NODES + 1)*DATA_WIDTH - 1) - (DATA_WIDTH - 12): (VIRTUAL_NODES) * (DATA_WIDTH)];
-// assign dout_i[(DATA_WIDTH - 1) - 11 - 1 : 0] = 0;
 assign dout_i[DATA_WIDTH - 1 : DATA_WIDTH - 1 - 11] = node_outputs[VIRTUAL_NODES][11:0];
 assign dout_i[(DATA_WIDTH - 1) - 11 - 1 : 0] = 0;
 
 assign dout = dout_i;
 
 wire [DATA_WIDTH - 1 : 0] sum_i = din + dout_i;
-
-// assign node_outputs[DATA_WIDTH - 1 : 0] = din;
 
 genvar i;
 generate
@@ -40,8 +34,6 @@ generate
         .clk(clk),
         .rst(rst),
         .en(en),
-        // .din(node_outputs[(i + 1) * DATA_WIDTH - 1 : i * DATA_WIDTH]),
-        // .dout(node_outputs[(i + 2) * DATA_WIDTH - 1 : (i + 1) * DATA_WIDTH])
         .din(node_outputs[i]),
         .dout(node_outputs[i+1])
     );
@@ -53,21 +45,6 @@ mackey_glass_block mackey_glass_block
     .din(sum_i),
     .dout(node_outputs[0])
 );
-
-// asic_function_interface asic_function_interface 
-// (
-//     .clk(clk),
-//     .rst(rst),
-//     .start(),
-//     .aux0_p(),
-//     .aux0_n(),
-//     .xadc_data_valid(),
-//     .xadc_data_in(),
-//     .dac_cs_n(),
-//     .dac_ldac_n(),
-//     .dac_din(),
-//     .dac_sclk()
-// );
 
 
 endmodule
