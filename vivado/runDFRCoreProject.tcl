@@ -23,6 +23,7 @@ add_files {
     ../rtl/src/asic_function_interface.sv
     ../rtl/src/dfr_core_controller.sv 
     ../rtl/src/dfr_core_top.sv 
+    ../rtl/src/dfr_core_hybrid_top.sv 
     ../rtl/tb/dfr_core_top_tb.sv
     ../rtl/tb/asic_function_interface_tb.sv
     }

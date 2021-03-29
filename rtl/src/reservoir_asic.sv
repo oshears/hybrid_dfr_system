@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module reservoir
+module reservoir_asic
 # (
 VIRTUAL_NODES = 10,
 DATA_WIDTH = 32
@@ -15,16 +15,16 @@ DATA_WIDTH = 32
     output DAC_CS_N,
     output DAC_LDAC_N,
     output DAC_DIN,
-    output DAC_SCLK
+    output DAC_SCLK,
+
+    //XADC Interface
+    input VP_IN,
+    input VN_IN
 );
 
-// wire [(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 : 0] node_outputs;
 wire [DATA_WIDTH - 1 : 0] node_outputs [VIRTUAL_NODES : 0];
 
-//wire [DATA_WIDTH - 1 : 0] dout_i = {node_outputs[(VIRTUAL_NODES + 1) * DATA_WIDTH - 1 - (DATA_WIDTH - 12): (VIRTUAL_NODES) * (DATA_WIDTH)],12'h0};
 wire [DATA_WIDTH - 1 : 0] dout_i;
-// assign dout_i[DATA_WIDTH - 1 : DATA_WIDTH - 1 - 11] = node_outputs[((VIRTUAL_NODES + 1)*DATA_WIDTH - 1) - (DATA_WIDTH - 12): (VIRTUAL_NODES) * (DATA_WIDTH)];
-// assign dout_i[(DATA_WIDTH - 1) - 11 - 1 : 0] = 0;
 assign dout_i[DATA_WIDTH - 1 : DATA_WIDTH - 1 - 11] = node_outputs[VIRTUAL_NODES][11:0];
 assign dout_i[(DATA_WIDTH - 1) - 11 - 1 : 0] = 0;
 
@@ -32,22 +32,11 @@ assign dout = dout_i;
 
 wire [DATA_WIDTH - 1 : 0] sum_i = din + dout_i;
 
-// assign node_outputs[DATA_WIDTH - 1 : 0] = din;
-
 reg node_en = 0;
+reg asic_function_start = 0;
+wire xadc_data_valid;
+wire [15:0] xadc_data_out;
 
-reg clk(),
-reg rst(),
-reg start(),
-reg data_in(),
-reg vp_in(),
-reg vn_in(),
-reg xadc_data_valid(),
-reg xadc_data_out(),
-reg dac_cs_n(),
-reg dac_ldac_n(),
-reg dac_din(),
-reg dac_sclk()
 
 localparam RESERVOIR_UPDATE = 0, ASIC_FUNCTION = 1;
 reg [1:0] current_state = 0, next_state = 0;
@@ -64,19 +53,11 @@ generate
         .clk(clk),
         .rst(rst),
         .en(node_en),
-        // .din(node_outputs[(i + 1) * DATA_WIDTH - 1 : i * DATA_WIDTH]),
-        // .dout(node_outputs[(i + 2) * DATA_WIDTH - 1 : (i + 1) * DATA_WIDTH])
         .din(node_outputs[i]),
         .dout(node_outputs[i+1])
     );
 end 
 endgenerate
-
-mackey_glass_block mackey_glass_block
-(
-    .din(sum_i),
-    .dout(node_outputs[0])
-);
 
 always @(posedge clk, posedge rst) begin
     if (rst) begin
@@ -93,17 +74,25 @@ always @(
     en
 ) 
 begin
+    
+    node_en = 0;
+    asic_function_start = 0;
+    next_state = current_state;
 
     case(current_state)
         RESERVOIR_UPDATE:
         begin
             if (en) begin
-                next_state = 
+                next_state = ASIC_FUNCTION;
+                asic_function_start = 1;
             end
         end
         ASIC_FUNCTION:
         begin
-            
+            if (xadc_data_valid) begin
+                next_state = RESERVOIR_UPDATE;
+                node_en = 1;
+            end
         end
         default:
             next_state = RESERVOIR_UPDATE;
@@ -113,14 +102,14 @@ end
 
 asic_function_interface asic_function_interface 
 (
-    .clk(),
-    .rst(),
-    .start(),
-    .data_in(),
-    .vp_in(),
-    .vn_in(),
-    .xadc_data_valid(),
-    .xadc_data_out(),
+    .clk(clk),
+    .rst(rst),
+    .start(asic_function_start),
+    .data_in(sum_i),
+    .vp_in(VP_IN),
+    .vn_in(VN_IN),
+    .xadc_data_valid(xadc_data_valid),
+    .xadc_data_out(node_outputs[0]),
     .dac_cs_n(DAC_CS_N),
     .dac_ldac_n(DAC_LDAC_N),
     .dac_din(DAC_DIN),
