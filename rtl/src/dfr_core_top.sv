@@ -144,6 +144,7 @@ assign mem_data_out =   (mem_sel == 4'h0) ? input_mem_dout : (
                         (mem_sel == 4'h3) ? dfr_output_mem_data_out : 32'h0
                         )));
 
+
 axi_cfg_regs 
 #(
     C_S_AXI_ACLK_FREQ_HZ,
@@ -243,8 +244,8 @@ reservoir
     .rst(reservoir_rst),
     .din(input_mem_dout),
     .dout(reservoir_data_out),
-    .en(reservoir_en),
-    .reservoir_valid(reservoir_valid)
+    .reservoir_valid(reservoir_valid),
+    .en(reservoir_en)
 );
 
 assign reservoir_rst = rst || reservoir_rst_i;

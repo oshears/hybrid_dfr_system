@@ -25,6 +25,7 @@ add_files {
     ../rtl/src/dfr_core_top.sv 
     ../rtl/src/dfr_core_hybrid_top.sv 
     ../rtl/tb/dfr_core_top_tb.sv
+    ../rtl/tb/dfr_core_hybrid_top_tb.sv
     ../rtl/tb/asic_function_interface_tb.sv
     }
 
@@ -32,7 +33,7 @@ add_files {
 move_files -fileset sim_1 [get_files  ../rtl/tb/dfr_core_top_tb.sv]
 
 add_files -fileset sim_1 -norecurse ../rtl/tb/design.txt
-# import_files -norecurse /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/rtl/tb/design.txt
+import_files -norecurse /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/rtl/tb/design.txt
 
 set_property top dfr_core_top_tb [get_filesets sim_1]
 set_property top_lib xil_defaultlib [get_filesets sim_1]

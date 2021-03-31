@@ -64,7 +64,8 @@ always @(
     start,
     pmod_dac_busy,
     eoc_out,
-    drdy_out
+    drdy_out,
+    busy_out
 ) begin
     pmod_dac_start = 0;
 
@@ -88,7 +89,7 @@ always @(
     end
     DAC_PHASE:
     begin
-        if (~pmod_dac_busy) begin
+        if (~pmod_dac_busy && ~busy_out) begin
             convst_in = 1;
             next_state = XADC_CONVERT_PHASE;
         end
