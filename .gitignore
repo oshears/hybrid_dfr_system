@@ -28,3 +28,4 @@ test_linux_app_system
 /embedded_linux/neuromorphic_peta_linux
 /embedded_linux/demo_petalinux
 embedded_linux/avnet-digilent-zedboard-v2020.2-final.bsp
+misc/.~lock.xadc_timings.ods#

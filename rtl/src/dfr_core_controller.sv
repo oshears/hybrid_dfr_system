@@ -92,14 +92,12 @@ always @(
         RESERVOIR_STAGE:
         begin
             busy = 1;
+            if(reservoir_filled)
+                reservoir_history_en = 1;
+
             if (~reservoir_busy) begin
                 matrix_multiply_start = 1;
                 next_state = MATRIX_MULTIPLY_STAGE;
-            end
-            else if(reservoir_filled) begin
-                reservoir_en = 1;
-                reservoir_history_en = 1;
-                next_state = RESERVOIR_WAIT_STAGE;
             end
             else begin
                 reservoir_en = 1;
@@ -111,6 +109,7 @@ always @(
             busy = 1;
             if (reservoir_valid) begin
                 sample_cntr_en = 1;
+                
                 next_state = RESERVOIR_STAGE;
             end
         end

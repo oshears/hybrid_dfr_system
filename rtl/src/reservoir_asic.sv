@@ -38,6 +38,8 @@ reg asic_function_start = 0;
 wire xadc_data_valid;
 wire [15:0] xadc_data_out;
 
+wire [15:0] asic_function_output;
+assign node_outputs[0] = {4'b0000,asic_function_output[15:4]};
 
 localparam RESERVOIR_UPDATE = 0, ASIC_FUNCTION = 1;
 reg [1:0] current_state = 0, next_state = 0;
@@ -84,11 +86,13 @@ begin
     case(current_state)
         RESERVOIR_UPDATE:
         begin
-            reservoir_valid = 1;
+            
             if (en) begin
                 next_state = ASIC_FUNCTION;
                 asic_function_start = 1;
             end
+            else
+                reservoir_valid = 1;
         end
         ASIC_FUNCTION:
         begin
@@ -112,7 +116,7 @@ asic_function_interface asic_function_interface
     .vp_in(VP_IN),
     .vn_in(VN_IN),
     .xadc_data_valid(xadc_data_valid),
-    .xadc_data_out(node_outputs[0]),
+    .xadc_data_out(asic_function_output),
     .dac_cs_n(DAC_CS_N),
     .dac_ldac_n(DAC_LDAC_N),
     .dac_din(DAC_DIN),
