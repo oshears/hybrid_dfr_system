@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module dfr_core_top
+module dfr_core_hybrid_top
 #(
     parameter C_S_AXI_ACLK_FREQ_HZ = 100000000,
     parameter C_S_AXI_DATA_WIDTH = 32,
@@ -125,6 +125,8 @@ wire reservoir_filled;
 wire dfr_done;
 wire reservoir_en;
 
+wire reservoir_valid;
+
 assign mem_addr = mem_addr_i[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0];
 assign mem_sel = ctrl[7:4];
 
@@ -228,7 +230,8 @@ dfr_core_controller
     .dfr_done(dfr_done),
     .reservoir_rst(reservoir_rst_i),
     .matrix_multiply_rst(matrix_multiply_rst_i),
-    .sample_cntr_rst(sample_cntr_rst)
+    .sample_cntr_rst(sample_cntr_rst),
+    .reservoir_valid(reservoir_valid)
 );
 
 assign reservoir_init_busy = (reservoir_init_cntr < num_init_steps) ? 1'b1 : 1'b0;
@@ -248,6 +251,7 @@ reservoir_asic
     .rst(reservoir_rst),
     .din(input_mem_dout),
     .dout(reservoir_data_out),
+    .reservoir_valid(reservoir_valid),
     .en(reservoir_en),
     .DAC_CS_N(DAC_CS_N),
     .DAC_LDAC_N(DAC_LDAC_N),

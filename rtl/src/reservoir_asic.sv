@@ -10,6 +10,7 @@ DATA_WIDTH = 32
     input en,
     input [DATA_WIDTH - 1 : 0] din,
     output [DATA_WIDTH - 1 : 0] dout,
+    output reg reservoir_valid = 0,
 
     // DAC Interface
     output DAC_CS_N,
@@ -77,11 +78,13 @@ begin
     
     node_en = 0;
     asic_function_start = 0;
+    reservoir_valid = 0;
     next_state = current_state;
 
     case(current_state)
         RESERVOIR_UPDATE:
         begin
+            reservoir_valid = 1;
             if (en) begin
                 next_state = ASIC_FUNCTION;
                 asic_function_start = 1;

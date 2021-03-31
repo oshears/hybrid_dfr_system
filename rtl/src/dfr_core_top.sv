@@ -115,6 +115,10 @@ wire reservoir_filled;
 wire dfr_done;
 wire reservoir_en;
 
+wire reservoir_valid;
+
+wire sample_cntr_en;
+
 assign mem_addr = mem_addr_i[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0];
 assign mem_sel = ctrl[7:4];
 
@@ -139,46 +143,6 @@ assign mem_data_out =   (mem_sel == 4'h0) ? input_mem_dout : (
                         (mem_sel == 4'h2) ? output_weight_mem_data_out : (
                         (mem_sel == 4'h3) ? dfr_output_mem_data_out : 32'h0
                         )));
-
-/*
-XADC #(// Initializing the XADC Control Registers
-    .INIT_40(16'hB903), // Multiplexer Input on VP/VN Channel, 256 sample averaging and settling (acquisition) time 
-    .INIT_41(16'h20F0),// Continuous Seq Mode, Calibrate ADC and Supply Sensor
-    .INIT_42(16'h3F00),// Set DCLK divides
-    .INIT_49(16'h000F),// CHSEL2 - enable aux analog channels 0 - 3
-    .INIT_4B(16'h000F), // enable averaging
-    .INIT_4F(16'h000F), // enable settling time
-    .SIM_MONITOR_FILE("design.txt"),// Analog Stimulus file for simulation
-    .SIM_DEVICE("ZYNQ")
-)
-XADC_INST (// Connect up instance IO. See UG480 for port descriptions
-    .CONVST (1'b0),// not used
-    .CONVSTCLK  (1'b0), // not used
-    .DADDR  (DADDR),
-    .DCLK   (S_AXI_ACLK),
-    .DEN    (DEN),
-    .DI     (DI),
-    .DWE    (DWE),
-    .RESET  (RESET),
-    .BUSY   (BUSY),
-    .DO     (DO),
-    .DRDY   (DRDY),
-    .EOS    (EOS),
-    .VP     (VP),
-    .VN     (VN),
-    .VAUXP(16'b0),
-    .VAUXN(16'b0),
-    .ALM(),
-    .CHANNEL(),
-    .EOC(),
-    .JTAGBUSY(),
-    .JTAGLOCKED(),
-    .JTAGMODIFIED(),
-    .MUXADDR(XADC_MUXADDR_local),
-    .OT()
-);
-*/
-
 
 axi_cfg_regs 
 #(
@@ -257,14 +221,16 @@ dfr_core_controller
     .dfr_done(dfr_done),
     .reservoir_rst(reservoir_rst_i),
     .matrix_multiply_rst(matrix_multiply_rst_i),
-    .sample_cntr_rst(sample_cntr_rst)
+    .sample_cntr_rst(sample_cntr_rst),
+    .sample_cntr_en(sample_cntr_en),
+    .reservoir_valid(reservoir_valid)
 );
 
 assign reservoir_init_busy = (reservoir_init_cntr < num_init_steps) ? 1'b1 : 1'b0;
 assign reservoir_busy = (reservoir_history_addr < num_test_steps) ? 1'b1 : 1'b0;
 
 
-assign reservoir_filled = (sample_cntr > num_steps_per_sample) ? 1'b1 : 1'b0;
+assign reservoir_filled = (sample_cntr > num_steps_per_sample - 1) ? 1'b1 : 1'b0;
 
 reservoir 
 #(
@@ -277,7 +243,8 @@ reservoir
     .rst(reservoir_rst),
     .din(input_mem_dout),
     .dout(reservoir_data_out),
-    .en(reservoir_en)
+    .en(reservoir_en),
+    .reservoir_valid(reservoir_valid)
 );
 
 assign reservoir_rst = rst || reservoir_rst_i;
@@ -289,7 +256,7 @@ counter
 sample_counter
 (
     .clk(S_AXI_ACLK),
-    .en(reservoir_en),
+    .en(sample_cntr_en),
     .rst(sample_cntr_rst),
     .dout(sample_cntr)
 );

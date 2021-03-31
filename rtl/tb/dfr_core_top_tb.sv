@@ -94,7 +94,7 @@ forever #10 S_AXI_ACLK = ~S_AXI_ACLK;
 end 
 
 
-task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA );
+task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA, input DECIMAL=0);
     begin
         @(posedge S_AXI_ACLK);
         S_AXI_AWADDR = WRITE_ADDR;
@@ -110,11 +110,14 @@ task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA );
         @(posedge S_AXI_ACLK);
         S_AXI_AWADDR = 32'h0;
         S_AXI_WDATA = 32'h0;
-        $display("%t: Wrote Data: %h",$time,WRITE_DATA);
+        if (DECIMAL)
+            $display("%t: Wrote Data: %d",$time,WRITE_DATA);
+        else
+            $display("%t: Wrote Data: %h",$time,WRITE_DATA);
     end
 endtask
 
-task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [31:0] MASK_DATA = 32'h0, input COMPARE=0);
+task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [31:0] MASK_DATA = 32'h0, input COMPARE=0, input DECIMAL=0);
     begin
         @(posedge S_AXI_ACLK);
         S_AXI_ARADDR = READ_ADDR;
@@ -124,7 +127,10 @@ task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [
         S_AXI_ARVALID = 0;
         S_AXI_RREADY = 1'b1;
         if (((EXPECT_DATA | MASK_DATA) == (S_AXI_RDATA | MASK_DATA)) || ~COMPARE) 
-            $display("%t: Read Data: %h",$time,S_AXI_RDATA);
+            if (DECIMAL)
+                $display("%t: Read Data: %d",$time,S_AXI_RDATA);
+            else
+                $display("%t: Read Data: %h",$time,S_AXI_RDATA);
         else 
             $display("%t: ERROR: %h != %h",$time,S_AXI_RDATA,EXPECT_DATA);
         @(posedge S_AXI_ACLK);
@@ -224,13 +230,13 @@ initial begin
 
     // Test Write to Input Mem
     for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
-        AXI_WRITE(32'h01_00 + i, i*335544);
-        AXI_READ( 32'h01_00 + i, i*335544);
+        AXI_WRITE(32'h01_00 + i, i*335544,1);
+        // AXI_READ( 32'h01_00 + i, i*335544,1);
     end
     // Clear Empty Spaces
     for(i = NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE + NUM_STEPS_PER_SAMPLE; i = i + 1) begin
-        AXI_WRITE(32'h01_00 + i,0);
-        AXI_READ( 32'h01_00 + i,0);
+        AXI_WRITE(32'h01_00 + i,0,1);
+        // AXI_READ( 32'h01_00 + i,0,1);
     end
 
     // Configure Weights
@@ -239,8 +245,8 @@ initial begin
 
     // Test Write to Weight Mem
     for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
-        AXI_WRITE(32'h01_00 + i, 1);
-        AXI_READ( 32'h01_00 + i, 1);
+        AXI_WRITE(32'h01_00 + i, 1, 1);
+        // AXI_READ( 32'h01_00 + i, 1);
     end
 
     // Launch DFR
@@ -256,7 +262,7 @@ initial begin
 
     // Read DFR Output Mem
     for(i = 0; i < NUM_TEST_SAMPLES; i = i + 1) begin
-        AXI_READ( 32'h01_00 + i, i);
+        AXI_READ( .READ_ADDR(32'h01_00 + i), .DECIMAL(1));
     end
 
     /*
