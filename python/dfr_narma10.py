@@ -9,6 +9,7 @@
 ############################################################
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 ##	Reset the environment
 
@@ -75,7 +76,11 @@ def mackey_glass_asic(inData,inDataMax):
 seed = 50
 data, target = narma10_create(10000, seed)
 
-
+# print(data[0])
+# plt.plot(data[0])
+# # plt.plot(target)
+# plt.show()
+# input()
 
 ##	Reservoir Parameters
 
@@ -101,7 +106,7 @@ testLen     = 500
 ##  Define the masking (input weight, choose one of the followings)
 
 # Random Uniform [-1, 1]
-M = np.random.rand(Tp, 1) * 2 - 1
+# M = np.random.rand(Tp, 1) * 2 - 1
 
 # Random Uniform [0, 1]
 # M = rand(Tp, 1)
@@ -115,6 +120,7 @@ M = np.random.rand(Tp, 1) * 2 - 1
 
 # Constant
 # M = ones(Tp, 1) * 0.5
+M = np.ones((Tp, 1))
 
 # Linearly cover [-1, 1]
 # M = linspace(-1, 1, Tp)
@@ -144,8 +150,8 @@ inputTR = np.ndarray(shape=((initLen + trainLen) * Tp,1))
 
 for k in range(0,(initLen + trainLen)):
     uTR = data[0,k]
-    inputTR[k:k+Tp,:] = M * uTR
-
+    masked_input = M * uTR
+    inputTR[k*Tp:(k+1)*Tp] = masked_input.copy()
 
 ##  (Training) Initialize the reservoir layer
 
@@ -153,7 +159,7 @@ for k in range(0,(initLen + trainLen)):
 
 for k in range(0,(initLen * Tp)):
     # Compute the new input data for initialization
-    initJTR = (gamma * inputTR[k]) + (eta * nodeC[N-1,0])
+    initJTR = (gamma * inputTR[k,0]) + (eta * nodeC[N-1,0])
     
     # Activation
     nodeN[0,0]	= np.tanh(initJTR)   
@@ -170,7 +176,7 @@ for k in range(0,(trainLen * Tp)):
     t = initLen * Tp + k
     
     # Compute the new input data for training
-    trainJ = (gamma * inputTR[t]) + (eta * nodeC[N-1,0])
+    trainJ = (gamma * inputTR[t,0]) + (eta * nodeC[N-1,0])
     
     # Activation
     nodeN[0,0]	= np.tanh(trainJ)	
@@ -185,8 +191,7 @@ for k in range(0,(trainLen * Tp)):
 
 
 # Consider the data just once everytime it loops around
-nodeTR[:,0:trainLen] = nodeE[:, 100*np.arange(1,5501)-1]
-
+nodeTR[:,0:trainLen] = nodeE[:, 100*np.arange(1,trainLen + 1)-1]
 
 ##  Train output weights using ridge regression
 
@@ -200,22 +205,30 @@ Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen)
 nodeTR_T = nodeTR.T
 
 # Calculate output weights
-Wout = np.dot(Yt,nodeTR_T) / (np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))
+# Wout = np.dot(Yt,nodeTR_T) / (np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))
+Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))))
+# print(np.dot(Yt,nodeTR_T).shape)
+# print(np.dot(nodeTR,nodeTR_T).shape)
+# print(Wout.shape)
 
+print("Weights:")
+for i in range(N):
+    print(Wout[0,i])
 
 ##  Compute training error
 
 # Claculate the MSE through L2 norm
-mseTR = (((Yt - np.dot(Wout,nodeTR))**2).mean(axis=0))
+predicted_target = np.dot(Wout,nodeTR)
+mseTR = (((Yt - predicted_target)**2).mean(axis=1))
 
 # Calculate the NMSE
-nmseTR = 0
+# nmseTR = 0
 # nmseTR = (norm(Yt - (Wout * nodeTR)) / np.norm(Yt))^2
 
 print('--------------------------------------------------')
 print('Training Errors')
-print(f'training MSE     = {mseTR} \n')
-print(f'training NMSE    = {nmseTR} \n')
+print(f'training MSE     = {mseTR}')
+# print(f'training NMSE    = {nmseTR}')
 
 
 '''
