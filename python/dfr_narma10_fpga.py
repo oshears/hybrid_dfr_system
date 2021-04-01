@@ -30,15 +30,15 @@ import matplotlib.pyplot as plt
 # set(gca, 'ytick',[])
 
 # NARMA10
-def narma10_create(inLen,seedRan=-1):
+def narma10_create(inLen, seedRan=-1):
     # if (nargin > 1)
     #    rng(seedRan);
 
     # Compute the random uniform input matrix
-    inp = 0.5*np.random.rand(1, inLen);
+    inp = 0.5*np.random.rand(1, inLen)
 
     # Compute the target matrix
-    tar = np.zeros(shape=(1, inLen));
+    tar = np.zeros(shape=(1, inLen))
 
     for k in range(10,(inLen - 1)):
         tar[0,k+1] = 0.3 * tar[0,k] + 0.05 * tar[0,k] * np.sum(tar[0,k-9:k]) + 1.5 * inp[0,k] * inp[0,k - 9] + 0.1
@@ -101,6 +101,7 @@ eta         = 1 - gamma
 initLen     = 500   
 trainLen	= 5500
 testLen     = 500
+SCALE = 2**16
 
 
 ##  Define the masking (input weight, choose one of the followings)
@@ -110,6 +111,7 @@ testLen     = 500
 
 # Random Uniform [0, 1]
 # M = rand(Tp, 1)
+M = np.random.rand(Tp, 1) * SCALE
 
 # Random from group [-0.1, +0.1]
 # M = rand(Tp, 1) * 2 - 1
@@ -120,7 +122,7 @@ testLen     = 500
 
 # Constant
 # M = ones(Tp, 1) * 0.5
-M = np.ones((Tp, 1))
+# M = np.ones((Tp, 1)) * SCALE
 
 # Linearly cover [-1, 1]
 # M = linspace(-1, 1, Tp)
@@ -138,20 +140,25 @@ M = np.ones((Tp, 1))
 # nodeTR    = a snapshot of all node states at each full rotation through 
 #             the reservoir during training
 
-nodeC   = np.zeros(shape=(N, 1))
-nodeN   = np.zeros(shape=(N, 1))
-nodeE	= np.zeros(shape=(N , trainLen * Tp))
-nodeTR	= np.zeros(shape=(N , trainLen))
+nodeC   = np.zeros(shape=(N, 1),dtype=int)
+nodeN   = np.zeros(shape=(N, 1),dtype=int)
+nodeE	= np.zeros(shape=(N , trainLen * Tp),dtype=int)
+nodeTR	= np.zeros(shape=(N , trainLen),dtype=int)
 
 
 ##  (Training) Apply masking to training data
 
 inputTR = np.ndarray(shape=((initLen + trainLen) * Tp,1))
 
+fh = open("./data/dfr_narma10_data.txt","w")
 for k in range(0,(initLen + trainLen)):
     uTR = data[0,k]
-    masked_input = M * uTR
+    masked_input = (M * uTR).astype(int)
     inputTR[k*Tp:(k+1)*Tp] = masked_input.copy()
+    # print(masked_input) #(OK)
+    for i in range(Tp):
+        fh.write(str(masked_input[i,0])+"\n")
+fh.close()
 
 ##  (Training) Initialize the reservoir layer
 
@@ -159,10 +166,12 @@ for k in range(0,(initLen + trainLen)):
 
 for k in range(0,(initLen * Tp)):
     # Compute the new input data for initialization
-    initJTR = (gamma * inputTR[k,0]) + (eta * nodeC[N-1,0])
+    # initJTR = (gamma * inputTR[k,0]) + (eta * nodeC[N-1,0])
+    initJTR = (inputTR[k,0]) + (nodeC[N-1,0])
     
     # Activation
-    nodeN[0,0]	= np.tanh(initJTR)   
+    nodeN[0,0]	= (np.tanh(initJTR / SCALE) * SCALE).astype(int)   
+    # print(nodeN[0,0]) #OK
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -176,11 +185,13 @@ for k in range(0,(trainLen * Tp)):
     t = initLen * Tp + k
     
     # Compute the new input data for training
-    trainJ = (gamma * inputTR[t,0]) + (eta * nodeC[N-1,0])
+    # trainJ = (gamma * inputTR[t,0]) + (eta * nodeC[N-1,0])
+    trainJ = (inputTR[t,0]) + (nodeC[N-1,0])
     
     # Activation
-    nodeN[0,0]	= np.tanh(trainJ)	
+    nodeN[0,0]	= (np.tanh(trainJ / SCALE) * SCALE).astype(int)   
     #nodeN[1,0]	= mackey_glass_asic(trainJ)	
+    # print(nodeN[0,0]) #OK
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -192,43 +203,54 @@ for k in range(0,(trainLen * Tp)):
 
 # Consider the data just once everytime it loops around
 nodeTR[:,0:trainLen] = nodeE[:, 100*np.arange(1,trainLen + 1)-1]
-
+# print(nodeTR) #OK
 ##  Train output weights using ridge regression
 
 # Define the regularization coefficient
 regC = 1e-8
 
 # Call-out the target outputs
-Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen)
+Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen) * SCALE
 
 # Transpose nodeR for matrix claculation
+nodeTR = nodeTR
 nodeTR_T = nodeTR.T
 
 # Calculate output weights
 # Wout = np.dot(Yt,nodeTR_T) / (np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))
 Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))))
-# print(np.dot(Yt,nodeTR_T).shape)
-# print(np.dot(nodeTR,nodeTR_T).shape)
+Wout = Wout.astype(int)  
+# print(np.dot(Yt,nodeTR_T)) #OK
+# print(np.dot(nodeTR,nodeTR_T)) #OK
+# print(np.linalg.inv((np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))))
+# print(np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N))))))
 # print(Wout.shape)
 
-print("Weights:")
+fh = open("./data/dfr_narma10_weights.txt","w")
 for i in range(N):
-    print(Wout[0,i])
-
+    fh.write(str(Wout[0,i])+"\n")
+fh.close()
 ##  Compute training error
 
-# Claculate the MSE through L2 norm
+
 predicted_target = np.dot(Wout,nodeTR)
-mseTR = (((Yt - predicted_target)**2).mean(axis=1))
+#expected fpga outputs
+fh = open("./data/dfr_narma10_fpga_outputs.txt","w")
+for i in range(trainLen):
+    fh.write(str(predicted_target[0,i])+"\n")
+fh.close()
+predicted_target_scaled = predicted_target / SCALE
+
+# Calculate the MSE through L2 norm
+mseTR = (((Yt - predicted_target_scaled)**2).mean(axis=1))
 
 # Calculate the NMSE
-# nmseTR = 0
-# nmseTR = (norm(Yt - (Wout * nodeTR)) / np.norm(Yt))^2
+nmseTR = (np.linalg.norm(Yt - predicted_target_scaled) / np.linalg.norm(Yt))**2
 
 print('--------------------------------------------------')
 print('Training Errors')
 print(f'training MSE     = {mseTR}')
-# print(f'training NMSE    = {nmseTR}')
+print(f'training NMSE    = {nmseTR}')
 
 
 '''

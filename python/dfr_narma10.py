@@ -35,10 +35,10 @@ def narma10_create(inLen,seedRan=-1):
     #    rng(seedRan);
 
     # Compute the random uniform input matrix
-    inp = 0.5*np.random.rand(1, inLen);
+    inp = 0.5*np.random.rand(1, inLen)
 
     # Compute the target matrix
-    tar = np.zeros(shape=(1, inLen));
+    tar = np.zeros(shape=(1, inLen))
 
     for k in range(10,(inLen - 1)):
         tar[0,k+1] = 0.3 * tar[0,k] + 0.05 * tar[0,k] * np.sum(tar[0,k-9:k]) + 1.5 * inp[0,k] * inp[0,k - 9] + 0.1
