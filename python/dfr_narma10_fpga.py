@@ -222,7 +222,8 @@ Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen)
 # print(Yt)
 
 # Transpose nodeR for matrix claculation
-nodeTR = nodeTR / SCALE
+# nodeTR = nodeTR / SCALE
+nodeTR = np.round(nodeTR / SCALE, 4)
 nodeTR_T = nodeTR.T
 print(nodeTR) #OK
 
@@ -235,40 +236,47 @@ print(nodeTR) #OK
 # Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))))
 Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T))))
 # Wout = Wout.astype(int)  
+Wout = np.round(Wout, 4)
 print(Wout)
 # print(Wout.shape)
 
+Wout_int = Wout * (10 ** 4)
+Wout_int = Wout_int.astype(int)
+nodeTR_int = nodeTR * (10 ** 4)
+nodeTR_int = nodeTR_int.astype(int)
+
 fh = open("./data/dfr_narma10_weights.txt","w")
 for i in range(N):
-    fh.write(str(Wout[0,i])+"\n")
+    fh.write(str(Wout_int[0,i])+"\n")
 fh.close()
 ##  Compute training error
 
 
-predicted_target = np.dot(Wout,nodeTR)
+# predicted_target = np.dot(Wout,nodeTR)
+predicted_target_int = np.dot(Wout_int,nodeTR_int)
+predicted_target = predicted_target_int / (10 ** 8)
 #expected fpga outputs
 fh = open("./data/dfr_narma10_fpga_outputs.txt","w")
 for i in range(trainLen):
-    fh.write(str(predicted_target[0,i])+"\n")
+    fh.write(str(predicted_target_int[0,i])+"\n")
 fh.close()
-predicted_target_scaled = predicted_target
 
 # Calculate the MSE through L2 norm
-mseTR = (((Yt - predicted_target_scaled)**2).mean(axis=1))
+mseTR = (((Yt - predicted_target)**2).mean(axis=1))
 
 # Calculate the NMSE
-nmseTR = (np.linalg.norm(Yt - predicted_target_scaled) / np.linalg.norm(Yt))**2
+nmseTR = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
 
 print('--------------------------------------------------')
 print('Training Errors')
-print(f'training MSE     = {mseTR}')
+print(f'training MSE     = {mseTR[0]}')
 print(f'training NMSE    = {nmseTR}')
 
 x = np.linspace(0,Yt.size - 1,Yt.size)
-plt.plot(x,Yt[0],label="Yt")
-print(Yt[0])
-plt.plot(x,predicted_target_scaled[0],label="Predicted Target")
-print(predicted_target_scaled[0])
+plt.plot(x,Yt[0],'--',label="Yt")
+# print(Yt[0])
+plt.plot(x,predicted_target[0],label="Predicted Target")
+# print(predicted_target_scaled[0])
 plt.legend()
 plt.show()
 # input()
