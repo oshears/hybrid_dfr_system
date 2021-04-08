@@ -23,7 +23,9 @@ module dfr_core_controller
     output reg reservoir_en = 0, 
     output reg sample_cntr_rst = 0,
     output reg init_sample_cntr_rst = 0,
+    output reg init_sample_cntr_en = 0,
     output reg reservoir_history_en = 0,
+    output reg reservoir_history_rst = 0,
     output reg dfr_done = 0,
     output reg sample_cntr_en = 0
 );
@@ -60,6 +62,8 @@ always @(
     sample_cntr_rst = 0;
     sample_cntr_en = 0;
     init_sample_cntr_rst = 0;
+    init_sample_cntr_en = 0;
+    reservoir_history_rst = 0;
 
     case (current_state)
         DONE:
@@ -69,13 +73,14 @@ always @(
                 reservoir_rst = 1;
                 matrix_multiply_rst = 1;
                 init_sample_cntr_rst = 1;
+                reservoir_history_rst = 1;
+                sample_cntr_rst = 1;
             end
         end
         RESERVOIR_INIT_STAGE:
         begin
             busy = 1;
             if (~reservoir_init_busy) begin
-                sample_cntr_rst = 1;
                 next_state = RESERVOIR_STAGE;
             end
             else begin
@@ -88,6 +93,7 @@ always @(
             busy = 1;
             if (reservoir_valid) begin
                 sample_cntr_en = 1;
+                init_sample_cntr_en = 1;
                 next_state = RESERVOIR_INIT_STAGE;
             end
         end
@@ -111,7 +117,6 @@ always @(
             busy = 1;
             if (reservoir_valid) begin
                 sample_cntr_en = 1;
-                
                 next_state = RESERVOIR_STAGE;
             end
         end

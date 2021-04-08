@@ -177,14 +177,13 @@ for k in range(0,(initLen * Tp)):
     # nodeN[0,0]	= (mackey_glass_fpga(initJTR)) * ( (SCALE / 2) / MAX_MG_OUT)
     nodeN[0,0]	= (mackey_glass_fpga(initJTR)) * (2 ** 3)
     # print(nodeN[0,0]) #OK
-    print(nodeN[N - 1,0]) #OK
+    # print(nodeN[N - 1,0]) #OK
     # print(f" mg({inputTR[k,0]} + {nodeC[N-1,0]}) = {mackey_glass_fpga(initJTR)} => {nodeN[0,0]}") #OK
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
     nodeC       = nodeN.copy()
 
-    # input()
 
 ##	(Training) Run data through the reservoir
 
@@ -204,12 +203,15 @@ for k in range(0,(trainLen * Tp)):
     #nodeN[1,0]	= mackey_glass_asic(trainJ)	
     # print(nodeN[0,0]) #OK
     nodeN[1:N]  = nodeC[0:(N - 1)]
+    # print(nodeN[N - 1,0]) #OK
     
     # Update the current node state
     nodeC       = nodeN.copy()
     
     # Updete all node states
     nodeE[:, k] = nodeC[:,0]
+
+    # input()
 
 
 # Consider the data just once everytime it loops around
@@ -221,15 +223,18 @@ nodeTR[:,0:trainLen] = nodeE[:, N*np.arange(1,trainLen + 1)-1]
 # regC = 1e-8
 
 # Call-out the target outputs
-Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen)
+# Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen)
+Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen) * SCALE
 # Yt = Yt.astype(int)  
 # print(Yt)
 
 # Transpose nodeR for matrix claculation
 # nodeTR = nodeTR / SCALE
-nodeTR = np.round(nodeTR / SCALE, 4)
+# Higher Accuracy:
+# nodeTR = np.round(nodeTR / SCALE, 4)
+# nodeTR = np.round(nodeTR / SCALE, 4)
 nodeTR_T = nodeTR.T
-print(nodeTR) #OK
+# print(nodeTR) #OK
 
 # Calculate output weights
 # Wout = np.dot(Yt,nodeTR_T) / (np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))
@@ -241,13 +246,26 @@ print(nodeTR) #OK
 Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T))))
 # Wout = Wout.astype(int)  
 Wout = np.round(Wout, 4)
-print(Wout)
+# print(Wout)
 # print(Wout.shape)
 
-Wout_int = Wout * (10 ** 4)
+# High Accuracy:
+# Wout_int = Wout * (10 ** 4)
+# Wout_int = Wout_int.astype(int)
+# nodeTR_int = nodeTR * (10 ** 4)
+# nodeTR_int = nodeTR_int.astype(int)
+
+ROUND_FACTOR = 0
+Wout_int = Wout * (10 ** ROUND_FACTOR)
 Wout_int = Wout_int.astype(int)
-nodeTR_int = nodeTR * (10 ** 4)
+nodeTR_int = nodeTR * (10 ** ROUND_FACTOR)
 nodeTR_int = nodeTR_int.astype(int)
+
+# Lower Accuracy:
+# Wout_int = Wout 
+# Wout_int = Wout_int.astype(int)
+# nodeTR_int = nodeTR 
+# nodeTR_int = nodeTR_int.astype(int)
 
 fh = open("./data/dfr_narma10_weights.txt","w")
 for i in range(N):
@@ -258,7 +276,10 @@ fh.close()
 
 # predicted_target = np.dot(Wout,nodeTR)
 predicted_target_int = np.dot(Wout_int,nodeTR_int)
-predicted_target = predicted_target_int / (10 ** 8)
+print(Wout_int)
+print(nodeTR_int[:,0])
+print(predicted_target_int[0])
+predicted_target = predicted_target_int / (10 ** (ROUND_FACTOR * 2))
 #expected fpga outputs
 fh = open("./data/dfr_narma10_fpga_outputs.txt","w")
 for i in range(trainLen):

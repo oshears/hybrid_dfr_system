@@ -95,7 +95,10 @@ end
 
 
 task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA, input DECIMAL=0);
+    integer signed write_data_int; 
     begin
+        
+
         @(posedge S_AXI_ACLK);
         S_AXI_AWADDR = WRITE_ADDR;
         S_AXI_AWVALID = 1'b1;
@@ -110,15 +113,19 @@ task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA, input DECIMAL=
         @(posedge S_AXI_ACLK);
         S_AXI_AWADDR = 32'h0;
         S_AXI_WDATA = 32'h0;
+        write_data_int = WRITE_DATA;
         if (DECIMAL)
-            $display("%t: Wrote Data: %d",$time,WRITE_DATA);
+            $display("%t: Wrote Data: %d",$time,write_data_int);
         else
-            $display("%t: Wrote Data: %h",$time,WRITE_DATA);
+            $display("%t: Wrote Data: %h",$time,write_data_int);
     end
 endtask
 
 task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [31:0] MASK_DATA = 32'h0, input COMPARE=0, input DECIMAL=0);
+    integer signed read_data_int; 
     begin
+        
+
         @(posedge S_AXI_ACLK);
         S_AXI_ARADDR = READ_ADDR;
         S_AXI_ARVALID = 1'b1;
@@ -126,11 +133,12 @@ task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [
         @(posedge S_AXI_ACLK);
         S_AXI_ARVALID = 0;
         S_AXI_RREADY = 1'b1;
+        read_data_int = S_AXI_RDATA;
         if (((EXPECT_DATA | MASK_DATA) == (S_AXI_RDATA | MASK_DATA)) || ~COMPARE) 
             if (DECIMAL)
-                $display("%t: Read Data: %d",$time,S_AXI_RDATA);
+                $display("%t: Read Data: %d",$time,read_data_int);
             else
-                $display("%t: Read Data: %h",$time,S_AXI_RDATA);
+                $display("%t: Read Data: %h",$time,read_data_int);
         else 
             $display("%t: ERROR: %h != %h",$time,S_AXI_RDATA,EXPECT_DATA);
         @(posedge S_AXI_ACLK);
