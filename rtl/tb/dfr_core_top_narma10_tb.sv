@@ -215,12 +215,12 @@ initial begin
     //Select Weight Mem
     AXI_WRITE(CTRL_REG_ADDR,32'h0000_0020);
 
-    i = 0;
+    i = VIRTUAL_NODES - 1;
     while(!$feof(weights_file)) begin
         $fgets(line,weights_file);
         readInt = line.atoi();
         AXI_WRITE(32'h01_00 + i, readInt,1);
-        i++;
+        i--;
     end
 
     // Launch DFR
