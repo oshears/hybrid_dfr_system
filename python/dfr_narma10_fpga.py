@@ -174,14 +174,17 @@ for k in range(0,(initLen * Tp)):
     
     # Activation
     # nodeN[0,0]	= (np.tanh(initJTR / SCALE) * SCALE).astype(int)   
-    nodeN[0,0]	= (mackey_glass_fpga(initJTR)) * ( (SCALE / 2) / MAX_MG_OUT)
+    # nodeN[0,0]	= (mackey_glass_fpga(initJTR)) * ( (SCALE / 2) / MAX_MG_OUT)
+    nodeN[0,0]	= (mackey_glass_fpga(initJTR)) * (2 ** 3)
     # print(nodeN[0,0]) #OK
+    print(nodeN[N - 1,0]) #OK
     # print(f" mg({inputTR[k,0]} + {nodeC[N-1,0]}) = {mackey_glass_fpga(initJTR)} => {nodeN[0,0]}") #OK
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
     nodeC       = nodeN.copy()
 
+    # input()
 
 ##	(Training) Run data through the reservoir
 
@@ -195,7 +198,8 @@ for k in range(0,(trainLen * Tp)):
     
     # Activation
     # nodeN[0,0]	= (np.tanh(trainJ / SCALE) * SCALE).astype(int)   
-    nodeN[0,0]	= (mackey_glass_fpga(trainJ)) * ( (SCALE / 2) / MAX_MG_OUT)
+    # nodeN[0,0]	= (mackey_glass_fpga(trainJ)) * ( (SCALE / 2) / MAX_MG_OUT)
+    nodeN[0,0]	= (mackey_glass_fpga(trainJ)) * (2 ** 3)
     # print(f" mg({inputTR[t,0]} + {nodeC[N-1,0]}) = {mackey_glass_fpga(trainJ)} => {nodeN[0,0]}") #OK
     #nodeN[1,0]	= mackey_glass_asic(trainJ)	
     # print(nodeN[0,0]) #OK

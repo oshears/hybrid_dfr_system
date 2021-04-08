@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module mackey_glass_block
+module mackey_glass_block_32bit
 (
     input [32 - 1 : 0] din,
     output reg [32 - 1 : 0] dout

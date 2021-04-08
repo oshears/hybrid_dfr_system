@@ -19,8 +19,8 @@ localparam RESERVOIR_DATA_WIDTH = 32;
 localparam RESERVOIR_HISTORY_ADDR_WIDTH = 16;
 
 localparam NUM_STEPS_PER_SAMPLE = 100;
-localparam NUM_INIT_SAMPLES = 500;
-localparam NUM_TEST_SAMPLES = 5500;
+localparam NUM_INIT_SAMPLES = 100;
+localparam NUM_TEST_SAMPLES = 100;
 
 // Inputs
 reg S_AXI_ACLK = 0;
@@ -156,6 +156,7 @@ initial begin
     integer j = 0;
     string line;
     integer readInt;
+    reg [31:0] write_addr = 0;
 
     input_samples_file = $fopen("/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/python/data/dfr_narma10_data.txt","r");
     weights_file = $fopen("/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/python/data/dfr_narma10_weights.txt","r");
@@ -170,12 +171,14 @@ initial begin
     ////// ========= Test DFR ============= /////////
 
     // Configure Widths
-    AXI_WRITE(NUM_INIT_SAMPLES_REG_ADDR,0);
+    AXI_WRITE(NUM_INIT_SAMPLES_REG_ADDR,NUM_INIT_SAMPLES);
     AXI_WRITE(NUM_TRAIN_SAMPLES_REG_ADDR,0);
     AXI_WRITE(NUM_TEST_SAMPLES_REG_ADDR,NUM_TEST_SAMPLES);
-    AXI_WRITE(NUM_INIT_STEPS_REG_ADDR,0);
+
+    AXI_WRITE(NUM_INIT_STEPS_REG_ADDR,NUM_INIT_SAMPLES * NUM_STEPS_PER_SAMPLE);
     AXI_WRITE(NUM_TRAIN_STEPS_REG_ADDR,0);
     AXI_WRITE(NUM_TEST_STEPS_REG_ADDR,NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE);
+    
     AXI_WRITE(NUM_STEPS_PER_SAMPLE_REG_ADDR,NUM_STEPS_PER_SAMPLE);
 
     // Configure Input Samples
@@ -185,10 +188,19 @@ initial begin
 
 
     i = 0;
-    while(!$feof(input_samples_file)) begin
+    j = 0;
+    while(!$feof(input_samples_file) && j < 8'hFF) begin
         $fgets(line,input_samples_file);
         readInt = line.atoi();
-        AXI_WRITE(32'h01_00 + i, readInt,1);
+        if (i == 9'h100) begin
+            i = 0;
+            j++;
+            AXI_WRITE(CTRL_REG_ADDR,{16'h0,j[7:0],8'h0});
+            write_addr = 32'h01_00 + i;
+        end
+        else write_addr = 32'h01_00 + i;
+        AXI_WRITE(write_addr, readInt,1);
+        i++;
     end
 
     // Configure Weights
@@ -200,6 +212,7 @@ initial begin
         $fgets(line,weights_file);
         readInt = line.atoi();
         AXI_WRITE(32'h01_00 + i, readInt,1);
+        i++;
     end
 
     // Launch DFR

@@ -119,6 +119,8 @@ wire reservoir_valid;
 
 wire sample_cntr_en;
 
+wire init_sample_cntr_rst;
+
 assign mem_addr = mem_addr_i[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0];
 assign mem_sel = ctrl[7:4];
 
@@ -224,6 +226,7 @@ dfr_core_controller
     .matrix_multiply_rst(matrix_multiply_rst_i),
     .sample_cntr_rst(sample_cntr_rst),
     .sample_cntr_en(sample_cntr_en),
+    .init_sample_cntr_rst(init_sample_cntr_rst),
     .reservoir_valid(reservoir_valid)
 );
 
@@ -282,7 +285,7 @@ init_sample_counter
 (
     .clk(S_AXI_ACLK),
     .en(1'b1),
-    .rst(sample_cntr_rst),
+    .rst(init_sample_cntr_rst),
     .dout(reservoir_init_cntr)
 );
 

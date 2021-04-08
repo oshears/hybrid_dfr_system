@@ -16,7 +16,8 @@ add_files {
     ../rtl/src/counter.sv 
     ../rtl/src/reservoir.sv 
     ../rtl/src/reservoir_asic.sv 
-    ../rtl/src/mackey_glass_block.sv 
+    ../rtl/src/mackey_glass_block_16bit.sv 
+    ../rtl/src/mackey_glass_block_32bit.sv 
     ../rtl/src/axi_cfg_regs.sv 
     ../rtl/src/matrix_multiplier_v2.sv 
     ../rtl/src/pmod_dac_block.sv
@@ -32,6 +33,9 @@ add_files {
 
 
 move_files -fileset sim_1 [get_files  ../rtl/tb/dfr_core_top_tb.sv]
+move_files -fileset sim_1 [get_files  ../rtl/tb/dfr_core_hybrid_top_tb.sv]
+move_files -fileset sim_1 [get_files  ../rtl/tb/dfr_core_top_narma10_tb.sv]
+move_files -fileset sim_1 [get_files  ../rtl/tb/asic_function_interface_tb.sv]
 
 add_files -fileset sim_1 -norecurse ../rtl/tb/design.txt
 add_files -fileset sim_1 -norecurse ../rtl/tb/xadc_inputs_asic_function.txt
