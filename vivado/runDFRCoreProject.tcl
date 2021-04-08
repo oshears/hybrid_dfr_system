@@ -26,6 +26,7 @@ add_files {
     ../rtl/src/dfr_core_hybrid_top.sv 
     ../rtl/tb/dfr_core_top_tb.sv
     ../rtl/tb/dfr_core_hybrid_top_tb.sv
+    ../rtl/tb/dfr_core_top_narma10_tb.sv
     ../rtl/tb/asic_function_interface_tb.sv
     }
 

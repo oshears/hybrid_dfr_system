@@ -46,17 +46,16 @@ def narma10_create(inLen, seedRan=-1):
     return (inp, tar)
 
 # ASIC Mackey-Glass Activation Function
-def mackey_glass_fpga(inData):
+def mackey_glass_asic(inData,inDataMax):
 
     # Open ASIC Activation Function File
-    # fh = open("mackey_glass_asic.csv",mode="r")
-    fh = open("mackey_glass_fpga_16bit_hw.csv",mode="r")
+    fh = open("mackey_glass_asic.csv",mode="r")
     
     # Read All Lines
     lines = fh.readlines()
 
     # Scale Input Data
-    # scaledInData = (inData / inDataMax) * 1.8
+    scaledInData = (inData / inDataMax) * 1.8
 
     for line in lines:
         # Parse Data
@@ -66,7 +65,7 @@ def mackey_glass_fpga(inData):
         outVal = float(vals[1])
 
         # If Data is Equal to/Less Than inVal, return outVal
-        if inData <= inVal:
+        if scaledInData <= inVal:
             return outVal
 
     return 0
@@ -74,10 +73,8 @@ def mackey_glass_fpga(inData):
 ##	Import dataset
 
 # 10th order nonlinear auto-regressive moving average (NARMA10)
-seed = 9
-# 5, 9
-np.random.seed(seed)
-data, target = narma10_create(2000, seed)
+seed = 50
+data, target = narma10_create(10000, seed)
 
 # print(data[0])
 # plt.plot(data[0])
@@ -101,11 +98,11 @@ N           = Tp
 theta       = Tp / N
 # gamma       = 0.99
 # eta         = 1 - gamma
-initLen     = 100   
-trainLen	= 1000
-testLen     = 100
+initLen     = 500   
+trainLen	= 5500
+testLen     = 500
 SCALE = 2**16
-MAX_MG_OUT = 3072
+
 
 ##  Define the masking (input weight, choose one of the followings)
 
@@ -173,10 +170,8 @@ for k in range(0,(initLen * Tp)):
     initJTR = (inputTR[k,0]) + (nodeC[N-1,0])
     
     # Activation
-    # nodeN[0,0]	= (np.tanh(initJTR / SCALE) * SCALE).astype(int)   
-    nodeN[0,0]	= (mackey_glass_fpga(initJTR)) * ( (SCALE / 2) / MAX_MG_OUT)
+    nodeN[0,0]	= (np.tanh(initJTR / SCALE) * SCALE).astype(int)   
     # print(nodeN[0,0]) #OK
-    # print(f" mg({inputTR[k,0]} + {nodeC[N-1,0]}) = {mackey_glass_fpga(initJTR)} => {nodeN[0,0]}") #OK
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -194,9 +189,7 @@ for k in range(0,(trainLen * Tp)):
     trainJ = (inputTR[t,0]) + (nodeC[N-1,0])
     
     # Activation
-    # nodeN[0,0]	= (np.tanh(trainJ / SCALE) * SCALE).astype(int)   
-    nodeN[0,0]	= (mackey_glass_fpga(trainJ)) * ( (SCALE / 2) / MAX_MG_OUT)
-    # print(f" mg({inputTR[t,0]} + {nodeC[N-1,0]}) = {mackey_glass_fpga(trainJ)} => {nodeN[0,0]}") #OK
+    nodeN[0,0]	= (np.tanh(trainJ / SCALE) * SCALE).astype(int)   
     #nodeN[1,0]	= mackey_glass_asic(trainJ)	
     # print(nodeN[0,0]) #OK
     nodeN[1:N]  = nodeC[0:(N - 1)]
@@ -209,33 +202,28 @@ for k in range(0,(trainLen * Tp)):
 
 
 # Consider the data just once everytime it loops around
-nodeTR[:,0:trainLen] = nodeE[:, N*np.arange(1,trainLen + 1)-1]
+nodeTR[:,0:trainLen] = nodeE[:, 100*np.arange(1,trainLen + 1)-1]
 # print(nodeTR) #OK
 ##  Train output weights using ridge regression
 
 # Define the regularization coefficient
-# regC = 1e-8
+regC = 1e-8
 
 # Call-out the target outputs
-Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen)
-# Yt = Yt.astype(int)  
-# print(Yt)
+Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen) * SCALE
 
 # Transpose nodeR for matrix claculation
-nodeTR = nodeTR / SCALE
+nodeTR = nodeTR
 nodeTR_T = nodeTR.T
-print(nodeTR) #OK
 
 # Calculate output weights
 # Wout = np.dot(Yt,nodeTR_T) / (np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))
+Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))))
+Wout = Wout.astype(int)  
 # print(np.dot(Yt,nodeTR_T)) #OK
 # print(np.dot(nodeTR,nodeTR_T)) #OK
-# print(np.linalg.inv((np.dot(nodeTR,nodeTR_T))))
+# print(np.linalg.inv((np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))))
 # print(np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N))))))
-# Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T) + (regC * np.eye(N)))))
-Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T))))
-# Wout = Wout.astype(int)  
-print(Wout)
 # print(Wout.shape)
 
 fh = open("./data/dfr_narma10_weights.txt","w")
@@ -251,7 +239,7 @@ fh = open("./data/dfr_narma10_fpga_outputs.txt","w")
 for i in range(trainLen):
     fh.write(str(predicted_target[0,i])+"\n")
 fh.close()
-predicted_target_scaled = predicted_target
+predicted_target_scaled = predicted_target / SCALE
 
 # Calculate the MSE through L2 norm
 mseTR = (((Yt - predicted_target_scaled)**2).mean(axis=1))
@@ -263,15 +251,6 @@ print('--------------------------------------------------')
 print('Training Errors')
 print(f'training MSE     = {mseTR}')
 print(f'training NMSE    = {nmseTR}')
-
-x = np.linspace(0,Yt.size - 1,Yt.size)
-plt.plot(x,Yt[0],label="Yt")
-print(Yt[0])
-plt.plot(x,predicted_target_scaled[0],label="Predicted Target")
-print(predicted_target_scaled[0])
-plt.legend()
-plt.show()
-# input()
 
 
 '''
