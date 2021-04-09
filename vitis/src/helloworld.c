@@ -58,37 +58,46 @@
 
 int main()
 {
+    int read_data = 0;
+
+
     init_platform();
 
+    printf("Test Project\n\r");
+
+
     while(1){
-        printf("Test Project\n\r");
-        printf("Writing to a custom IP register...\n\r");
+        // printf("Writing to CTLR_REG\n\r");
+        // Xil_Out32(CTLR_REG_ADDR, 0xBEEF);
 
-        Xil_Out32(CTLR_REG_ADDR, 0xBEEF);
-        printf("Done\n\r");
+        // printf("Writing to ASIC_DATA_OUT_REG\n\r");
+        // Xil_Out32(ASIC_DATA_OUT_REG_ADDR, 0xBEEF);
 
-        printf("Writing to a custom IP register...\n\r");
-        Xil_Out32(ASIC_DATA_OUT_REG_ADDR, 0xBEEF);
-        printf("Done\n\r");
+        // printf("Writing to ASIC_DATA_IN_REG\n\r");
+        // Xil_Out32(ASIC_DATA_IN_REG_ADDR, 0xBEEF);
 
-        printf("Writing to a custom IP register...\n\r");
-        // enable slow clock
-        Xil_Out32(ASIC_DATA_IN_REG_ADDR, 0xBEEF);
-        printf("Done\n\r");
+        int i;
+        for (i = 0; i < 0x10000; i = i + 0x1000){
+            
+            printf("Writing %x to ASIC_DATA_OUT_REG\n\r",i);
+            Xil_Out32(ASIC_DATA_OUT_REG_ADDR, i);
 
-        int value = 0;
+            printf("Writing to CTLR_REG\n\r");
+            Xil_Out32(CTLR_REG_ADDR, 0x1);
 
-        printf("Reading from a custom IP register...\n\r");
-        value = Xil_In32(CTLR_REG_ADDR);
-        printf("Read: %x\n\r",value);
+            while(read_data == 0){
+                read_data = Xil_In32(CTLR_REG_ADDR);
+            }
+            printf("Reading from CTLR_REG_ADDR\n\r");
+            printf("Read: %x\n\r",read_data);
 
-        printf("Reading from a custom IP register...\n\r");
-        value = Xil_In32(ASIC_DATA_OUT_REG_ADDR);
-        printf("Read: %x\n\r",value);
+            printf("Reading from ASIC_DATA_IN_REG\n\r");
+            read_data = Xil_In32(ASIC_DATA_IN_REG_ADDR);
+            printf("Read: %x\n\r",read_data);
 
-        printf("Reading from a custom IP register...\n\r");
-        value = Xil_In32(ASIC_DATA_IN_REG_ADDR);
-        printf("Read: %x\n\r",value);
+            sleep(1);
+        }
+
     }
     
 
