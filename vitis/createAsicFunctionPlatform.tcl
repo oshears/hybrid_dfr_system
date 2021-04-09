@@ -25,8 +25,8 @@ platform active {asic_function_system_platform}
 platform generate
 
 # Create and Build App
-# app create -name asic_function_system_test_app -proc {ps7_cortexa9_0} -os {standalone} -template {Hello World}
-app create -name asic_function_system_test_app -proc {ps7_cortexa9_0} -os {standalone}
+app create -name asic_function_system_test_app -proc {ps7_cortexa9_0} -os {standalone} -template {Hello World}
+# app create -name asic_function_system_test_app -proc {ps7_cortexa9_0} -os {standalone}
 importsources -name asic_function_system_test_app -path ./src/
 app build -name asic_function_system_test_app
 
@@ -38,7 +38,7 @@ after 3000
 targets -set -filter {jtag_cable_name =~ "Digilent Zed 210248A39829" && level==0 && jtag_device_ctx=="jsn-Zed-210248A39829-23727093-0"}
 fpga -file ./asic_function_system_test_app/_ide/bitstream/asic_function_system_wrapper.bit
 targets -set -nocase -filter {name =~"APU*"}
-loadhw -hw ./neuromorphic/export/neuromorphic/hw/asic_function_system_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+loadhw -hw ./asic_function_system_platform/export/asic_function_system_platform/hw/asic_function_system_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
 configparams force-mem-access 1
 targets -set -nocase -filter {name =~"APU*"}
 source ./asic_function_system_test_app/_ide/psinit/ps7_init.tcl
