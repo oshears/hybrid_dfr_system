@@ -10,7 +10,7 @@ set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hy
 update_ip_catalog
 
 # Create Block Design and Add Zynq Processing System
-create_bd_design "asic_function_sytem"
+create_bd_design "asic_function_system"
 update_compile_order -fileset sources_1
 create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0
 
@@ -59,8 +59,8 @@ save_bd_design
 validate_bd_design -force
 
 # Make a top level wrapper
-make_wrapper -files [get_files ./asic_function_system_project/asic_function_system_project.srcs/sources_1/bd/asic_function_sytem/asic_function_sytem.bd] -top
-add_files -norecurse ./asic_function_system_project/asic_function_system_project.gen/sources_1/bd/asic_function_sytem/hdl/asic_function_system_wrapper.v
+make_wrapper -files [get_files ./asic_function_system_project/asic_function_system_project.srcs/sources_1/bd/asic_function_system/asic_function_system.bd] -top
+add_files -norecurse ./asic_function_system_project/asic_function_system_project.gen/sources_1/bd/asic_function_system/hdl/asic_function_system_wrapper.v
 
 # Update Compile Order
 update_compile_order -fileset sources_1
@@ -71,20 +71,20 @@ import_files -fileset constrs_1 ../xdc/asic_function_system_constraints.xdc
 set_property target_constrs_file ../xdc/asic_function_system_constraints.xdc [current_fileset -constrset]
 
 # Generate Output Products
-generate_target all [get_files ./asic_function_system_project/asic_function_system_project.srcs/sources_1/bd/asic_function_sytem/asic_function_sytem.bd]
+generate_target all [get_files ./asic_function_system_project/asic_function_system_project.srcs/sources_1/bd/asic_function_system/asic_function_system.bd]
 
 # Open Elaborated Design
-# create_ip_run [get_files -of_objects [get_fileset sources_1] ./asic_function_system_project/asic_function_system_project.srcs/sources_1/bd/asic_function_sytem/asic_function_sytem.bd]
-# launch_runs asic_function_sytem_processing_system7_0_0_synth_1 -jobs 16
-# wait_on_run asic_function_sytem_processing_system7_0_0_synth_1
-# launch_runs asic_function_sytem_asic_function_system_0_0_synth_1 -jobs 16
-# wait_on_run asic_function_sytem_asic_function_system_0_0_synth_1
-# launch_runs asic_function_sytem_rst_ps7_0_100M_0_synth_1 -jobs 16
-# wait_on_run asic_function_sytem_rst_ps7_0_100M_0_synth_1
-# launch_runs asic_function_sytem_auto_pc_0_synth_1 -jobs 16
-# wait_on_run asic_function_sytem_auto_pc_0_synth_1
-# launch_runs asic_function_sytem_ila_0_0_synth_1 -jobs 16
-# wait_on_run asic_function_sytem_ila_0_0_synth_1
+# create_ip_run [get_files -of_objects [get_fileset sources_1] ./asic_function_system_project/asic_function_system_project.srcs/sources_1/bd/asic_function_system/asic_function_system.bd]
+# launch_runs asic_function_system_processing_system7_0_0_synth_1 -jobs 16
+# wait_on_run asic_function_system_processing_system7_0_0_synth_1
+# launch_runs asic_function_system_asic_function_system_0_0_synth_1 -jobs 16
+# wait_on_run asic_function_system_asic_function_system_0_0_synth_1
+# launch_runs asic_function_system_rst_ps7_0_100M_0_synth_1 -jobs 16
+# wait_on_run asic_function_system_rst_ps7_0_100M_0_synth_1
+# launch_runs asic_function_system_auto_pc_0_synth_1 -jobs 16
+# wait_on_run asic_function_system_auto_pc_0_synth_1
+# launch_runs asic_function_system_ila_0_0_synth_1 -jobs 16
+# wait_on_run asic_function_system_ila_0_0_synth_1
 
 # synth_design -rtl -rtl_skip_mlo -name rtl_1
 
@@ -103,7 +103,7 @@ wait_on_run synth_1
 # set_property C_EN_STRG_QUAL false [get_debug_cores u_ila_0]
 # set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
 # set_property ALL_PROBE_SAME_MU_CNT 1 [get_debug_cores u_ila_0]
-# connect_debug_port u_ila_0/clk [get_nets [list asic_function_sytem_i/processing_system7_0/inst/FCLK_CLK1 ]]
+# connect_debug_port u_ila_0/clk [get_nets [list asic_function_system_i/processing_system7_0/inst/FCLK_CLK1 ]]
 # set_property port_width 16 [get_debug_ports u_ila_0/probe0]
 # set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe0]
 # connect_debug_port u_ila_0/probe0 [get_nets [list {digit_0_OBUF[0]} {digit_0_OBUF[1]} {digit_0_OBUF[2]} {digit_0_OBUF[3]} {digit_0_OBUF[4]} {digit_0_OBUF[5]} {digit_0_OBUF[6]} {digit_0_OBUF[7]} {digit_0_OBUF[8]} {digit_0_OBUF[9]} {digit_0_OBUF[10]} {digit_0_OBUF[11]} {digit_0_OBUF[12]} {digit_0_OBUF[13]} {digit_0_OBUF[14]} {digit_0_OBUF[15]} ]]
@@ -120,7 +120,7 @@ wait_on_run impl_1
 open_run impl_1
 
 # Export Hardware for Vitis
-# write_hw_platform -fixed -include_bit -force -file ./asic_function_system_project/asic_function_sytem.xsa
+# write_hw_platform -fixed -include_bit -force -file ./asic_function_system_project/asic_function_system.xsa
 write_hw_platform -fixed -include_bit -force -file ./asic_function_system_project/asic_function_system_wrapper.xsa
 
 exit
