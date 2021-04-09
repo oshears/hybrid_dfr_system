@@ -203,7 +203,8 @@ end
 always @(posedge S_AXI_ACLK, posedge Local_Reset)
 begin
     if (Local_Reset)
-        ctrl_reg = 0;
+        ctrl_reg[31:2] = 0;
+        ctrl_reg[0] = 0;
     else
     begin
         if(ctrl_reg_addr_valid) begin

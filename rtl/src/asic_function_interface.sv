@@ -10,12 +10,12 @@ module asic_function_interface
     input wire [15:0] data_in,
     input wire vp_in,
     input wire vn_in,
-    output reg xadc_data_valid = 0,
-    output reg [15:0] xadc_data_out = 0,
-    output reg dac_cs_n = 0,
-    output reg dac_ldac_n = 0,
-    output reg dac_din = 0,
-    output reg dac_sclk = 0
+    output reg xadc_data_valid,
+    output reg [15:0] xadc_data_out,
+    output reg dac_cs_n,
+    output reg dac_ldac_n,
+    output reg dac_din,
+    output reg dac_sclk
 
     // output reg [15:0] asic_outputs [2 ** 15 - 1: 0]
 );
