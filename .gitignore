@@ -24,6 +24,10 @@ RemoteSystemsTempFiles
 petalinux_neuromorphic
 test_linux_app
 test_linux_app_system
+asic_function_system_platform
+asic_function_system_test_app
+asic_function_system_test_app_system
+
 
 # PetaLinux Files
 /embedded_linux/neuromorphic_peta_linux

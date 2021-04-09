@@ -60,7 +60,7 @@ validate_bd_design -force
 
 # Make a top level wrapper
 make_wrapper -files [get_files ./asic_function_system_project/asic_function_system_project.srcs/sources_1/bd/asic_function_sytem/asic_function_sytem.bd] -top
-add_files -norecurse ./asic_function_system_project/asic_function_system_project.gen/sources_1/bd/asic_function_sytem/hdl/asic_function_sytem_wrapper.v
+add_files -norecurse ./asic_function_system_project/asic_function_system_project.gen/sources_1/bd/asic_function_sytem/hdl/asic_function_system_wrapper.v
 
 # Update Compile Order
 update_compile_order -fileset sources_1
@@ -121,6 +121,6 @@ open_run impl_1
 
 # Export Hardware for Vitis
 # write_hw_platform -fixed -include_bit -force -file ./asic_function_system_project/asic_function_sytem.xsa
-write_hw_platform -fixed -include_bit -force -file ./asic_function_system_project/asic_function_sytem_wrapper.xsa
+write_hw_platform -fixed -include_bit -force -file ./asic_function_system_project/asic_function_system_wrapper.xsa
 
 exit
