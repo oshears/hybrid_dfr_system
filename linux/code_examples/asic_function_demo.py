@@ -11,15 +11,16 @@ regs = asic_function_regs
 CTRL_REG_ADDR = 0x0
 ASIC_OUT_REG_ADDR = 0x4
 ASIC_IN_REG_ADDR = 0x8
+
 ASIC_DONE = 0x2
 
+dac_data = 0
 for i in range(16):
 
-    dac_data = i * 0x1111
-    encoded_dac_data = bytes([dac_data & 0x0F, (dac_data >> 8) & 0x0F, 0x00, 0x00])
+    encoded_dac_data = bytes([dac_data & 0xFF, (dac_data >> 8) & 0xFF, 0x00, 0x00])
 
     print(f"Writing: {hex(dac_data)}")
-    print(f"Writing: {encoded_dac_data}")
+    print(f"Writing (V): {(dac_data * 2.5) / (2**16)}")
 
     regs[ASIC_OUT_REG_ADDR : ASIC_OUT_REG_ADDR + 4] = encoded_dac_data
     regs[CTRL_REG_ADDR] = 0x1
@@ -29,8 +30,10 @@ for i in range(16):
         continue
 
     results_bytes = regs[ASIC_IN_REG_ADDR : ASIC_IN_REG_ADDR + 4]
-    results = int.from_bytes(results_bytes,"little")
-    print(f"Result (Bytes): {results_bytes}")
-    print(f"Result: {hex(results)}")
+    results = int.from_bytes(results_bytes,"little") / (2**4)
+    print(f"Result: {hex(round(results))}")
+    print(f"Result (V): {results / (2**12)}")
 
-    print("============================")
+    print("\n============================\n")
+
+    dac_data = dac_data + 0x1111
