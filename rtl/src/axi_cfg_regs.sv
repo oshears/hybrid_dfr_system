@@ -6,8 +6,6 @@ parameter C_S_AXI_DATA_WIDTH = 32,
 parameter C_S_AXI_ADDR_WIDTH = 9 
 )
 (
-    input clk,
-
     input busy,
 
     input S_AXI_ACLK,

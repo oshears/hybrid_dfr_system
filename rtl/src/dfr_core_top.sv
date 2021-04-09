@@ -158,8 +158,6 @@ axi_cfg_regs
 )
 axi_cfg_regs
 (
-    // System Signals
-    .clk(S_AXI_ACLK),
     // Debug Register Output
     .debug(debug),
     // Control Register
