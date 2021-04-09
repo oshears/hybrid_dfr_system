@@ -13,3 +13,9 @@ The FPGA design for MICS' Hybrid DFR System
 - Reference Voltage: 1.0V
 - Resolution: 12 Bits
 - User Guide: https://www.xilinx.com/support/documentation/user_guides/ug480_7Series_XADC.pdf
+
+
+# PetaLinux Configuration
+```
+petalinux-config --get-hw-description=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_system_project/asic_function_system_wrapper.xsa
+```
