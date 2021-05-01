@@ -3,19 +3,19 @@
 set_param general.maxThreads 8
 
 # Create Project
-create_project dfr_core_hybrid_system_project ./dfr_core_hybrid_system_project -part xc7z020clg484-1 -force
+create_project dfr_core_system_project ./dfr_core_system_project -part xc7z020clg484-1 -force
 
 # Add Custom IP
 set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
 update_ip_catalog
 
 # Create Block Design and Add Zynq Processing System
-create_bd_design "dfr_core_hybrid_system"
+create_bd_design "dfr_core_system"
 update_compile_order -fileset sources_1
 create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0
 
 # Add Custom Neuromorphic Bridge IP
-create_bd_cell -type ip -vlnv user.org:user:dfr_core_hybrid_top:1.0 dfr_core_hybrid_system_0
+create_bd_cell -type ip -vlnv user.org:user:dfr_core_top:1.0 dfr_core_system_0
 
 # Apply Block Automation
 apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_external "FIXED_IO, DDR" Master "Disable" Slave "Disable" }  [get_bd_cells processing_system7_0]
@@ -27,26 +27,20 @@ set_property -dict [list CONFIG.preset {ZedBoard}] [get_bd_cells processing_syst
 set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {10}] [get_bd_cells processing_system7_0]
 # Create slow clock for pwm_clk
 # set_property -dict [list CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {1} CONFIG.PCW_EN_CLK1_PORT {1}] [get_bd_cells processing_system7_0]
-# connect_bd_net [get_bd_pins processing_system7_0/FCLK_CLK1] [get_bd_pins dfr_core_hybrid_system_0/pwm_clk]
+# connect_bd_net [get_bd_pins processing_system7_0/FCLK_CLK1] [get_bd_pins dfr_core_system_0/pwm_clk]
 
 # Apply Connection Automation (Connect Clocks)
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/processing_system7_0/M_AXI_GP0} Slave {/dfr_core_hybrid_system_0/S_AXI} ddr_seg {Auto} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins dfr_core_hybrid_system_0/S_AXI]
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/processing_system7_0/M_AXI_GP0} Slave {/dfr_core_system_0/S_AXI} ddr_seg {Auto} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins dfr_core_system_0/S_AXI]
 
 # Configure Neuromorphic Bridge IP
-# make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/digit]
-# make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/leds]
-make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/VP_IN]
-make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/VN_IN]
-make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/DAC_CS_N]
-make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/DAC_LDAC_N]
-make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/DAC_DIN]
-make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/DAC_SCLK]
-# make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/XADC_MUXADDR]
+# make_bd_pins_external  [get_bd_pins dfr_core_system_0/digit]
+# make_bd_pins_external  [get_bd_pins dfr_core_system_0/leds]
+# make_bd_pins_external  [get_bd_pins dfr_core_system_0/XADC_MUXADDR]
 
 # # Add Internal Logic Analyzer
 # create_bd_cell -type ip -vlnv xilinx.com:ip:ila:6.2 ila_0
 # set_property -dict [list CONFIG.C_PROBE0_WIDTH {16} CONFIG.C_NUM_OF_PROBES {1} CONFIG.C_ENABLE_ILA_AXI_MON {false} CONFIG.C_MONITOR_TYPE {Native}] [get_bd_cells ila_0]
-# connect_bd_net [get_bd_pins dfr_core_hybrid_system_0/digit] [get_bd_pins ila_0/probe0]
+# connect_bd_net [get_bd_pins dfr_core_system_0/digit] [get_bd_pins ila_0/probe0]
 # # connect_bd_net [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins ila_0/clk]
 # connect_bd_net [get_bd_pins processing_system7_0/FCLK_CLK1] [get_bd_pins ila_0/clk]
 # # create_bd_port -dir I GCLK
@@ -59,32 +53,32 @@ save_bd_design
 validate_bd_design -force
 
 # Make a top level wrapper
-make_wrapper -files [get_files ./dfr_core_hybrid_system_project/dfr_core_hybrid_system_project.srcs/sources_1/bd/dfr_core_hybrid_system/dfr_core_hybrid_system.bd] -top
-add_files -norecurse ./dfr_core_hybrid_system_project/dfr_core_hybrid_system_project.gen/sources_1/bd/dfr_core_hybrid_system/hdl/dfr_core_hybrid_system_wrapper.v
+make_wrapper -files [get_files ./dfr_core_system_project/dfr_core_system_project.srcs/sources_1/bd/dfr_core_system/dfr_core_system.bd] -top
+add_files -norecurse ./dfr_core_system_project/dfr_core_system_project.gen/sources_1/bd/dfr_core_system/hdl/dfr_core_system_wrapper.v
 
 # Update Compile Order
 update_compile_order -fileset sources_1
 
 # Load Constraints
-read_xdc ../xdc/dfr_core_hybrid_system_constraints.xdc
-import_files -fileset constrs_1 ../xdc/dfr_core_hybrid_system_constraints.xdc
-set_property target_constrs_file ../xdc/dfr_core_hybrid_system_constraints.xdc [current_fileset -constrset]
+read_xdc ../xdc/dfr_core_system_constraints.xdc
+import_files -fileset constrs_1 ../xdc/dfr_core_system_constraints.xdc
+set_property target_constrs_file ../xdc/dfr_core_system_constraints.xdc [current_fileset -constrset]
 
 # Generate Output Products
-generate_target all [get_files ./dfr_core_hybrid_system_project/dfr_core_hybrid_system_project.srcs/sources_1/bd/dfr_core_hybrid_system/dfr_core_hybrid_system.bd]
+generate_target all [get_files ./dfr_core_system_project/dfr_core_system_project.srcs/sources_1/bd/dfr_core_system/dfr_core_system.bd]
 
 # Open Elaborated Design
-# create_ip_run [get_files -of_objects [get_fileset sources_1] ./dfr_core_hybrid_system_project/dfr_core_hybrid_system_project.srcs/sources_1/bd/dfr_core_hybrid_system/dfr_core_hybrid_system.bd]
-# launch_runs dfr_core_hybrid_system_processing_system7_0_0_synth_1 -jobs 16
-# wait_on_run dfr_core_hybrid_system_processing_system7_0_0_synth_1
-# launch_runs dfr_core_hybrid_system_dfr_core_hybrid_system_0_0_synth_1 -jobs 16
-# wait_on_run dfr_core_hybrid_system_dfr_core_hybrid_system_0_0_synth_1
-# launch_runs dfr_core_hybrid_system_rst_ps7_0_100M_0_synth_1 -jobs 16
-# wait_on_run dfr_core_hybrid_system_rst_ps7_0_100M_0_synth_1
-# launch_runs dfr_core_hybrid_system_auto_pc_0_synth_1 -jobs 16
-# wait_on_run dfr_core_hybrid_system_auto_pc_0_synth_1
-# launch_runs dfr_core_hybrid_system_ila_0_0_synth_1 -jobs 16
-# wait_on_run dfr_core_hybrid_system_ila_0_0_synth_1
+# create_ip_run [get_files -of_objects [get_fileset sources_1] ./dfr_core_system_project/dfr_core_system_project.srcs/sources_1/bd/dfr_core_system/dfr_core_system.bd]
+# launch_runs dfr_core_system_processing_system7_0_0_synth_1 -jobs 16
+# wait_on_run dfr_core_system_processing_system7_0_0_synth_1
+# launch_runs dfr_core_system_dfr_core_system_0_0_synth_1 -jobs 16
+# wait_on_run dfr_core_system_dfr_core_system_0_0_synth_1
+# launch_runs dfr_core_system_rst_ps7_0_100M_0_synth_1 -jobs 16
+# wait_on_run dfr_core_system_rst_ps7_0_100M_0_synth_1
+# launch_runs dfr_core_system_auto_pc_0_synth_1 -jobs 16
+# wait_on_run dfr_core_system_auto_pc_0_synth_1
+# launch_runs dfr_core_system_ila_0_0_synth_1 -jobs 16
+# wait_on_run dfr_core_system_ila_0_0_synth_1
 
 # synth_design -rtl -rtl_skip_mlo -name rtl_1
 
@@ -103,7 +97,7 @@ wait_on_run synth_1
 # set_property C_EN_STRG_QUAL false [get_debug_cores u_ila_0]
 # set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
 # set_property ALL_PROBE_SAME_MU_CNT 1 [get_debug_cores u_ila_0]
-# connect_debug_port u_ila_0/clk [get_nets [list dfr_core_hybrid_system_i/processing_system7_0/inst/FCLK_CLK1 ]]
+# connect_debug_port u_ila_0/clk [get_nets [list dfr_core_system_i/processing_system7_0/inst/FCLK_CLK1 ]]
 # set_property port_width 16 [get_debug_ports u_ila_0/probe0]
 # set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe0]
 # connect_debug_port u_ila_0/probe0 [get_nets [list {digit_0_OBUF[0]} {digit_0_OBUF[1]} {digit_0_OBUF[2]} {digit_0_OBUF[3]} {digit_0_OBUF[4]} {digit_0_OBUF[5]} {digit_0_OBUF[6]} {digit_0_OBUF[7]} {digit_0_OBUF[8]} {digit_0_OBUF[9]} {digit_0_OBUF[10]} {digit_0_OBUF[11]} {digit_0_OBUF[12]} {digit_0_OBUF[13]} {digit_0_OBUF[14]} {digit_0_OBUF[15]} ]]
@@ -120,7 +114,7 @@ wait_on_run impl_1
 open_run impl_1
 
 # Export Hardware for Vitis
-# write_hw_platform -fixed -include_bit -force -file ./dfr_core_hybrid_system_project/dfr_core_hybrid_system.xsa
-write_hw_platform -fixed -include_bit -force -file ./dfr_core_hybrid_system_project/dfr_core_hybrid_system_wrapper.xsa
+# write_hw_platform -fixed -include_bit -force -file ./dfr_core_system_project/dfr_core_system.xsa
+write_hw_platform -fixed -include_bit -force -file ./dfr_core_system_project/dfr_core_system_wrapper.xsa
 
 exit
