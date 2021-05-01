@@ -25,9 +25,7 @@ DATA_WIDTH = 32
 
 wire [DATA_WIDTH - 1 : 0] node_outputs [VIRTUAL_NODES : 0];
 
-wire [DATA_WIDTH - 1 : 0] dout_i;
-assign dout_i[DATA_WIDTH - 1 : DATA_WIDTH - 1 - 11] = node_outputs[VIRTUAL_NODES][11:0];
-assign dout_i[(DATA_WIDTH - 1) - 11 - 1 : 0] = 0;
+wire [DATA_WIDTH - 1 : 0] dout_i = {17'h0,node_outputs[VIRTUAL_NODES][11:0],3'h0};
 
 assign dout = dout_i;
 

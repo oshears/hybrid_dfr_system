@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module dfr_core_top_narma10_tb;
+module dfr_core_hybrid_top_narma10_tb;
 
 localparam CTRL_REG_ADDR = 16'h0000;
 localparam DEBUG_REG_ADDR = 16'h0004;
@@ -37,6 +37,8 @@ reg S_AXI_BREADY = 0;
 
 reg busy = 0;
 
+
+
 wire S_AXI_AWREADY; 
 wire S_AXI_ARREADY; 
 wire S_AXI_WREADY;  
@@ -46,7 +48,10 @@ wire S_AXI_RVALID;
 wire [1:0] S_AXI_BRESP;
 wire S_AXI_BVALID;  
 
-
+wire DAC_CS_N;
+wire DAC_LDAC_N;
+wire DAC_DIN;
+wire DAC_SCLK;
 
 reg [31:0] addr = 0;
 reg [31:0] read_data = 0;
@@ -54,7 +59,7 @@ reg [31:0] write_data = 0;
 
 
 
-dfr_core_top
+dfr_core_hybrid_top
 #(
     .C_S_AXI_ACLK_FREQ_HZ(C_S_AXI_ACLK_FREQ_HZ),
     .C_S_AXI_DATA_WIDTH(C_S_AXI_DATA_WIDTH),
@@ -85,7 +90,17 @@ uut
     .S_AXI_BRESP(S_AXI_BRESP),    
     .S_AXI_BVALID(S_AXI_BVALID),   
     .S_AXI_BREADY(S_AXI_BREADY),
-    .busy(busy)
+    .busy(busy),
+
+    // DAC Interface
+    .DAC_CS_N(DAC_CS_N),
+    .DAC_LDAC_N(DAC_LDAC_N),
+    .DAC_DIN(DAC_DIN),
+    .DAC_SCLK(DAC_SCLK),
+
+    //XADC Interface
+    .VP_IN(),
+    .VN_IN()
 );
 
 initial begin
@@ -247,7 +262,7 @@ initial begin
 
     // Test Write to Reservoir Output Mem
     for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
-        $display("Sample: %d",i);
+        $display("Sample: %d");
         AXI_READ( 32'h01_00 + i);
     end
     */
@@ -256,6 +271,9 @@ initial begin
 
 end
 
+// always @(negedge DAC_CS_N) begin
+//     $display("%t: DAC_CS_N Deasserted",$time);
+// end
 
 
 endmodule

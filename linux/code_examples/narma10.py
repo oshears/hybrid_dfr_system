@@ -1,13 +1,3 @@
-############################################################
-#
-#   Delay-feedback Reservoir (DFR)
-#   Modified by Kangjun
-#   Department of Electrical and Computer Engineering
-#   Virginia Tech
-#   Last modify at 06/20/2019
-#
-############################################################
-
 import numpy as np
 import os
 import mmap

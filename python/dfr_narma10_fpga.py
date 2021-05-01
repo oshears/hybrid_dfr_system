@@ -166,7 +166,7 @@ fh.close()
 ##  (Training) Initialize the reservoir layer
 
 # No need to store these values since they won't be used in training
-
+fh = open("./data/dfr_narma10_mg_output.txt","w")
 for k in range(0,(initLen * Tp)):
     # Compute the new input data for initialization
     # initJTR = (gamma * inputTR[k,0]) + (eta * nodeC[N-1,0])
@@ -176,6 +176,7 @@ for k in range(0,(initLen * Tp)):
     # nodeN[0,0]	= (np.tanh(initJTR / SCALE) * SCALE).astype(int)   
     # nodeN[0,0]	= (mackey_glass_fpga(initJTR)) * ( (SCALE / 2) / MAX_MG_OUT)
     nodeN[0,0]	= (mackey_glass_fpga(initJTR)) * (2 ** 3)
+    fh.write(str(nodeN[0,0])+"\n")
     # print(nodeN[0,0]) #OK
     # print(nodeN[N - 1,0]) #OK
     # print(f" mg({inputTR[k,0]} + {nodeC[N-1,0]}) = {mackey_glass_fpga(initJTR)} => {nodeN[0,0]}") #OK
@@ -199,6 +200,7 @@ for k in range(0,(trainLen * Tp)):
     # nodeN[0,0]	= (np.tanh(trainJ / SCALE) * SCALE).astype(int)   
     # nodeN[0,0]	= (mackey_glass_fpga(trainJ)) * ( (SCALE / 2) / MAX_MG_OUT)
     nodeN[0,0]	= (mackey_glass_fpga(trainJ)) * (2 ** 3)
+    fh.write(str(nodeN[0,0])+"\n")
     # print(f" mg({inputTR[t,0]} + {nodeC[N-1,0]}) = {mackey_glass_fpga(trainJ)} => {nodeN[0,0]}") #OK
     #nodeN[1,0]	= mackey_glass_asic(trainJ)	
     # print(nodeN[0,0]) #OK
@@ -213,7 +215,7 @@ for k in range(0,(trainLen * Tp)):
 
     # input()
 
-
+fh.close()
 # Consider the data just once everytime it loops around
 nodeTR[:,0:trainLen] = nodeE[:, N*np.arange(1,trainLen + 1)-1]
 # print(nodeTR) #OK
@@ -276,9 +278,9 @@ fh.close()
 
 # predicted_target = np.dot(Wout,nodeTR)
 predicted_target_int = np.dot(Wout_int,nodeTR_int)
-print(Wout_int)
-print(nodeTR_int[:,0])
-print(predicted_target_int[0])
+# print(Wout_int)
+# print(nodeTR_int[:,0])
+# print(predicted_target_int[0])
 predicted_target = predicted_target_int / (10 ** (ROUND_FACTOR * 2))
 #expected fpga outputs
 fh = open("./data/dfr_narma10_fpga_outputs.txt","w")
