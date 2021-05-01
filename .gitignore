@@ -4,6 +4,7 @@ dfr_core_project
 mac_project
 matrix_multiply_project
 asic_function_system_project
+dfr_core_hybrid_system_project
 *.jou
 *.log
 *.wdb

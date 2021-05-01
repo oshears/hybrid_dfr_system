@@ -42,9 +42,7 @@ move_files -fileset sim_1 [get_files  ../rtl/tb/dfr_core_top_narma10_tb.sv]
 move_files -fileset sim_1 [get_files  ../rtl/tb/asic_function_interface_tb.sv]
 move_files -fileset sim_1 [get_files  ../rtl/tb/asic_function_interface_top_tb.sv]
 
-add_files -fileset sim_1 -norecurse ../rtl/tb/design.txt
 add_files -fileset sim_1 -norecurse ../rtl/tb/xadc_inputs_asic_function.txt
-# import_files -norecurse /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/rtl/tb/design.txt
 
 # set_property top dfr_core_top_tb [get_filesets sim_1]
 # set_property top dfr_core_hybrid_top_tb [get_filesets sim_1]
@@ -77,30 +75,30 @@ set_property -name {xsim.simulate.runtime} -value {all} -objects [get_filesets s
 launch_simulation
 
 # package ASIC Interface Top IP
-set_property top asic_function_interface_top [get_filesets sources_1]
-update_compile_order -fileset sources_1
-ipx::package_project -root_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ -vendor user.org -library user -taxonomy /UserIP -force
-set_property taxonomy {/Embedded_Processing/AXI_Peripheral/Low_Speed_Peripheral /UserIP} [ipx::current_core]
-set_property core_revision 1 [ipx::current_core]
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::check_integrity [ipx::current_core]
-ipx::save_core [ipx::current_core]
-set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
-update_ip_catalog
+# set_property top asic_function_interface_top [get_filesets sources_1]
+# update_compile_order -fileset sources_1
+# ipx::package_project -root_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ -vendor user.org -library user -taxonomy /UserIP -force
+# set_property taxonomy {/Embedded_Processing/AXI_Peripheral/Low_Speed_Peripheral /UserIP} [ipx::current_core]
+# set_property core_revision 1 [ipx::current_core]
+# ipx::create_xgui_files [ipx::current_core]
+# ipx::update_checksums [ipx::current_core]
+# ipx::check_integrity [ipx::current_core]
+# ipx::save_core [ipx::current_core]
+# set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
+# update_ip_catalog
 
 # package FPGA DFR Core Top IP
-set_property top dfr_core_top [get_filesets sources_1]
-update_compile_order -fileset sources_1
-ipx::package_project -root_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ -vendor user.org -library user -taxonomy /UserIP -force
-set_property taxonomy {/Embedded_Processing/AXI_Peripheral/Low_Speed_Peripheral /UserIP} [ipx::current_core]
-set_property core_revision 1 [ipx::current_core]
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::check_integrity [ipx::current_core]
-ipx::save_core [ipx::current_core]
-set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
-update_ip_catalog
+# set_property top dfr_core_top [get_filesets sources_1]
+# update_compile_order -fileset sources_1
+# ipx::package_project -root_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ -vendor user.org -library user -taxonomy /UserIP -force
+# set_property taxonomy {/Embedded_Processing/AXI_Peripheral/Low_Speed_Peripheral /UserIP} [ipx::current_core]
+# set_property core_revision 1 [ipx::current_core]
+# ipx::create_xgui_files [ipx::current_core]
+# ipx::update_checksums [ipx::current_core]
+# ipx::check_integrity [ipx::current_core]
+# ipx::save_core [ipx::current_core]
+# set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
+# update_ip_catalog
 
 # package Hybrid DFR Core Top IP
 set_property top dfr_core_hybrid_top [get_filesets sources_1]
@@ -114,3 +112,5 @@ ipx::check_integrity [ipx::current_core]
 ipx::save_core [ipx::current_core]
 set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
 update_ip_catalog
+
+exit
