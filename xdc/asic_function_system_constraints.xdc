@@ -4,10 +4,10 @@ set_property PACKAGE_PIN M12 [get_ports {VN_0}]
 
 
 # PMOD Outputs
-set_property PACKAGE_PIN Y11 [get_ports {DAC_CS_N_0}];
-set_property PACKAGE_PIN AA11 [get_ports {DAC_DIN_0}];
-set_property PACKAGE_PIN Y10 [get_ports {DAC_LDAC_N_0}];
-set_property PACKAGE_PIN AA9 [get_ports {DAC_SCLK_0}];
+set_property PACKAGE_PIN Y11 [get_ports {DAC_CS_N_0}]; # "JA1"
+set_property PACKAGE_PIN AA11 [get_ports {DAC_DIN_0}]; # "JA2"
+set_property PACKAGE_PIN Y10 [get_ports {DAC_LDAC_N_0}]; # "JA3"
+set_property PACKAGE_PIN AA9 [get_ports {DAC_SCLK_0}]; # "JA4"
 
 
 
