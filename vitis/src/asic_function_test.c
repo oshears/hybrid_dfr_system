@@ -53,60 +53,50 @@
 #include "sleep.h"
 
 #define CTRL_REG_ADDR 0x43C00000
-#define DEBUG_REG_ADDR 0x43C00004
-#define NUM_INIT_SAMPLES_REG_ADDR 0x43C00008
-#define NUM_TRAIN_SAMPLES_REG_ADDR 0x43C0000C
-#define NUM_TEST_SAMPLES_REG_ADDR 0x43C00010
-#define NUM_STEPS_PER_SAMPLE_REG_ADDR 0x43C00014
-#define NUM_INIT_STEPS_REG_ADDR 0x43C00018
-#define NUM_TRAIN_STEPS_REG_ADDR 0x43C0001C
-#define NUM_TEST_STEPS_REG_ADDR 0x43C00020
+#define ASIC_DATA_OUT_REG_ADDR 0x43C00004
+#define ASIC_DATA_IN_REG_ADDR 0x43C00008
 
-#define NUM_STEPS_PER_SAMPLE 100
-#define NUM_INIT_SAMPLES 100
-#define NUM_TEST_SAMPLES 100
-
-int main()
+int main1()
 {
     int read_data = 0;
 
 
     init_platform();
 
-    printf("DFR FPGA Test Project\n\r");
+    printf("Test Project\n\r");
 
 
     while(1){
+        // printf("Writing to CTLR_REG\n\r");
+        // Xil_Out32(CTRL_REG_ADDR, 0xBEEF);
 
-        // Configure Widths
-        Xil_Out32(NUM_INIT_SAMPLES_REG_ADDR,NUM_INIT_SAMPLES);
-        Xil_Out32(NUM_TRAIN_SAMPLES_REG_ADDR,0);
-        Xil_Out32(NUM_TEST_SAMPLES_REG_ADDR,NUM_TEST_SAMPLES);
+        // printf("Writing to ASIC_DATA_OUT_REG\n\r");
+        // Xil_Out32(ASIC_DATA_OUT_REG_ADDR, 0xBEEF);
 
-        Xil_Out32(NUM_INIT_STEPS_REG_ADDR,NUM_INIT_SAMPLES * NUM_STEPS_PER_SAMPLE);
-        Xil_Out32(NUM_TRAIN_STEPS_REG_ADDR,0);
-        Xil_Out32(NUM_TEST_STEPS_REG_ADDR,NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE);
-        
-        Xil_Out32(NUM_STEPS_PER_SAMPLE_REG_ADDR,NUM_STEPS_PER_SAMPLE);
+        // printf("Writing to ASIC_DATA_IN_REG\n\r");
+        // Xil_Out32(ASIC_DATA_IN_REG_ADDR, 0xBEEF);
 
-        // Configure Input Samples
-        //Select Input Mem
-        Xil_Out32(CTRL_REG_ADDR,0x00000000);
+        int i;
+        for (i = 0; i < 0x10000; i = i + 0x1000){
+            
+            printf("Writing %x to ASIC_DATA_OUT_REG\n\r",i);
+            Xil_Out32(ASIC_DATA_OUT_REG_ADDR, i);
 
-        FILE* file = fopen ("dfr_narma10_data.txt", "r");
-        int i = 0;
+            printf("Writing to CTLR_REG\n\r");
+            Xil_Out32(CTRL_REG_ADDR, 0x1);
 
-        printf("Loading NARMA-10 Data from File: dfr_narma10_data.txt\n\r");
+            while(read_data == 0){
+                read_data = Xil_In32(CTRL_REG_ADDR);
+            }
+            printf("Reading from CTRL_REG_ADDR\n\r");
+            printf("Read: %x\n\r",read_data);
 
-        while (!feof (file))
-        {  
-            printf("Loading data...\n\r");
-            fscanf (file, "%d", &i);      
-            printf ("%d ", i);
+            printf("Reading from ASIC_DATA_IN_REG\n\r");
+            read_data = Xil_In32(ASIC_DATA_IN_REG_ADDR);
+            printf("Read: %x\n\r",read_data);
+
+            sleep(1);
         }
-        fclose (file);    
-
-        printf("Done loading NARMA-10 Data from File: dfr_narma10_data.txt\n\r");
 
     }
     

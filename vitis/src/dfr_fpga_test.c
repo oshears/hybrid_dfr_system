@@ -66,7 +66,7 @@
 #define NUM_INIT_SAMPLES 100
 #define NUM_TEST_SAMPLES 100
 
-int main()
+int main2()
 {
     int read_data = 0;
 
@@ -93,20 +93,16 @@ int main()
         //Select Input Mem
         Xil_Out32(CTRL_REG_ADDR,0x00000000);
 
-        FILE* file = fopen ("dfr_narma10_data.txt", "r");
+        FILE* file = fopen ("/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/python/data/dfr_narma10_data.txt", "r");
         int i = 0;
-
-        printf("Loading NARMA-10 Data from File: dfr_narma10_data.txt\n\r");
 
         while (!feof (file))
         {  
-            printf("Loading data...\n\r");
             fscanf (file, "%d", &i);      
             printf ("%d ", i);
         }
         fclose (file);    
 
-        printf("Done loading NARMA-10 Data from File: dfr_narma10_data.txt\n\r");
 
     }
     
