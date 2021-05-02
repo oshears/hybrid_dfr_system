@@ -128,3 +128,8 @@ for addr_offset in range(100):
 # > Software is byte-addressable
 # > reg[0] is a 1-byte read
 # > reg[0:4] is a 4-byte (1-word) read, generates 1 AXI read transaction
+
+
+# TODO: Develop better way to access input, weight and output mem
+# 1. Access from DDR3
+# 2. Access using an address register
