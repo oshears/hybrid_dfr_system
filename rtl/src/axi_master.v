@@ -3,7 +3,7 @@ module axi_master
 #(
 parameter C_M_AXI_ACLK_FREQ_HZ = 100000000,
 parameter C_M_AXI_DATA_WIDTH = 32,
-parameter C_M_AXI_ADDR_WIDTH = 9
+parameter C_M_AXI_ADDR_WIDTH = 32
 )
 (
 
@@ -35,15 +35,17 @@ parameter C_M_AXI_ADDR_WIDTH = 9
     output reg M_AXI_BREADY, 
 
     output reg done,
-    output reg [31:0] read_data
+    output reg [31:0] read_data = 0
 );
 
 reg [2:0] current_state = 0, next_state = 0;
 
+wire Local_Reset = ~M_AXI_ARESETN;
+
 localparam READY_STATE = 0, WRITE_REQ_STATE = 1, WRITE_PENDING_STATE = 2, WRITE_VALID_STATE = 3, READ_REQ_STATE = 4, READ_PENDING_STATE = 5, READ_VALID_STATE = 6;
 
-always @(posedge M_AXI_ACLK, posedge M_AXI_ARESETN) begin
-    if (M_AXI_ARESETN) begin
+always @(posedge M_AXI_ACLK, posedge Local_Reset) begin
+    if (Local_Reset) begin
         current_state = READY_STATE;
     end
     else begin
@@ -75,11 +77,8 @@ always @(
     start_write
 ) begin
 
-    M_AXI_AWADDR  = 0; 
     M_AXI_AWVALID = 0;
-    M_AXI_ARADDR  = 0; 
     M_AXI_ARVALID = 0;
-    M_AXI_WDATA   = 0;  
     M_AXI_WSTRB   = 0;  
     M_AXI_WVALID  = 0; 
     M_AXI_RREADY  = 0; 

@@ -3,7 +3,7 @@ module dfr_core_top_tb;
 
 localparam C_M_AXI_ACLK_FREQ_HZ = 100000000;
 localparam C_M_AXI_DATA_WIDTH = 32;
-localparam C_M_AXI_ADDR_WIDTH = 9;
+localparam C_M_AXI_ADDR_WIDTH = 32;
 
 reg [31:0] addr = 0;
 reg [31:0] write_data  = 0;
@@ -35,7 +35,7 @@ wire M_AXI_BREADY;
 wire done;
 wire [31:0] read_data;
 
-axi_master axi_master
+axi_master #(C_M_AXI_ACLK_FREQ_HZ,C_M_AXI_DATA_WIDTH,C_M_AXI_ADDR_WIDTH) axi_master
 (
 
     .addr(addr),
@@ -69,9 +69,9 @@ axi_master axi_master
     .read_data(read_data)
 );
 
-axi_cfg_regs axi_cfg_regs
+axi_cfg_regs #(C_M_AXI_ACLK_FREQ_HZ,C_M_AXI_DATA_WIDTH,C_M_AXI_ADDR_WIDTH) axi_cfg_regs
 (
-    .busy(),
+    .busy(1'b0),
     
     .S_AXI_ACLK(M_AXI_ACLK),
     .S_AXI_ARESETN(M_AXI_ARESETN),
@@ -141,8 +141,8 @@ initial begin
     @(posedge M_AXI_ACLK);
     start_write = 0;
 
-    @(posedge M_AXI_ACLK);
     @(posedge done);
+    @(posedge M_AXI_ACLK);
 
     addr = 32'h0000_0004;
     write_data = 32'hABCD_0123;
@@ -150,24 +150,24 @@ initial begin
     @(posedge M_AXI_ACLK);
     start_write = 0;
 
-    @(posedge M_AXI_ACLK);
     @(posedge done);
+    @(posedge M_AXI_ACLK);
 
     addr = 32'h0000_0000;
     start_read = 1;
     @(posedge M_AXI_ACLK);
     start_read = 0;
 
-    @(posedge M_AXI_ACLK);
     @(posedge done);
+    @(posedge M_AXI_ACLK);
 
     addr = 32'h0000_0004;
     start_read = 1;
     @(posedge M_AXI_ACLK);
     start_read = 0;
 
-    @(posedge M_AXI_ACLK);
     @(posedge done);
+    @(posedge M_AXI_ACLK);
 
     $finish;
 
