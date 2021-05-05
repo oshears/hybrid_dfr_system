@@ -13,14 +13,19 @@ localparam NUM_TEST_STEPS_REG_ADDR = 16'h0020;
 
 localparam C_S_AXI_ACLK_FREQ_HZ = 100000000;
 localparam C_S_AXI_DATA_WIDTH = 32;
-localparam C_S_AXI_ADDR_WIDTH = 16;
-localparam VIRTUAL_NODES = 100;
+localparam C_S_AXI_ADDR_WIDTH = 30;
+localparam NUM_VIRTUAL_NODES = 100;
 localparam RESERVOIR_DATA_WIDTH = 32;
 localparam RESERVOIR_HISTORY_ADDR_WIDTH = 16;
 
 localparam NUM_STEPS_PER_SAMPLE = 100;
 localparam NUM_INIT_SAMPLES = 100;
 localparam NUM_TEST_SAMPLES = 100;
+
+localparam DFR_INPUT_MEM_ADDR_OFFSET     = 32'h0100_0000;
+localparam DFR_RESERVOIR_ADDR_MEM_OFFSET = 32'h0200_0000;
+localparam DFR_WEIGHT_MEM_ADDR_OFFSET    = 32'h0300_0000;
+localparam DFR_OUTPUT_MEM_ADDR_OFFSET    = 32'h0400_0000;
 
 // Inputs
 reg S_AXI_ACLK = 0;
@@ -64,7 +69,7 @@ dfr_core_hybrid_top
     .C_S_AXI_ACLK_FREQ_HZ(C_S_AXI_ACLK_FREQ_HZ),
     .C_S_AXI_DATA_WIDTH(C_S_AXI_DATA_WIDTH),
     .C_S_AXI_ADDR_WIDTH(C_S_AXI_ADDR_WIDTH),
-    .VIRTUAL_NODES(VIRTUAL_NODES),
+    .NUM_VIRTUAL_NODES(NUM_VIRTUAL_NODES),
     .RESERVOIR_DATA_WIDTH(RESERVOIR_DATA_WIDTH),
     .RESERVOIR_HISTORY_ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH)
 )
@@ -204,37 +209,26 @@ initial begin
     
     AXI_WRITE(NUM_STEPS_PER_SAMPLE_REG_ADDR,NUM_STEPS_PER_SAMPLE);
 
-    // Configure Input Samples
-    //Select Input Mem
+
     AXI_WRITE(CTRL_REG_ADDR,32'h0000_0000);
 
-
-
+    // Configure Input Samples
+    
     i = 0;
-    j = 0;
-    while(!$feof(input_samples_file) && j < 8'hFF) begin
+    while(!$feof(input_samples_file) && i < NUM_STEPS_PER_SAMPLE * (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES + NUM_VIRTUAL_NODES)) begin
         $fgets(line,input_samples_file);
         readInt = line.atoi();
-        if (i == 9'h100) begin
-            i = 0;
-            j++;
-            AXI_WRITE(CTRL_REG_ADDR,{16'h0,j[7:0],8'h0});
-            write_addr = 32'h01_00 + i;
-        end
-        else write_addr = 32'h01_00 + i;
-        AXI_WRITE(write_addr, readInt,1);
+        AXI_WRITE(DFR_INPUT_MEM_ADDR_OFFSET + (i * 4), readInt, 1);
         i++;
     end
 
     // Configure Weights
-    //Select Weight Mem
-    AXI_WRITE(CTRL_REG_ADDR,32'h0000_0020);
 
-    i = VIRTUAL_NODES - 1;
+    i = NUM_VIRTUAL_NODES - 1;
     while(!$feof(weights_file)) begin
         $fgets(line,weights_file);
         readInt = line.atoi();
-        AXI_WRITE(32'h01_00 + i, readInt,1);
+        AXI_WRITE(DFR_WEIGHT_MEM_ADDR_OFFSET + (i * 4), readInt,1);
         i--;
     end
 
@@ -246,12 +240,10 @@ initial begin
     // end
     @(negedge busy);
 
-    //Select DFR Output Mem
-    AXI_WRITE(CTRL_REG_ADDR,32'h0000_0030);
 
     // Read DFR Output Mem
     for(i = 0; i < NUM_TEST_SAMPLES; i = i + 1) begin
-        AXI_READ( .READ_ADDR(32'h01_00 + i), .DECIMAL(1));
+        AXI_READ( .READ_ADDR(DFR_OUTPUT_MEM_ADDR_OFFSET + (i * 4) ), .DECIMAL(1));
     end
 
     /*
@@ -262,7 +254,7 @@ initial begin
 
     // Test Write to Reservoir Output Mem
     for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
-        $display("Sample: %d");
+        $display("Sample: %d",i);
         AXI_READ( 32'h01_00 + i);
     end
     */
@@ -270,10 +262,6 @@ initial begin
     $finish;
 
 end
-
-// always @(negedge DAC_CS_N) begin
-//     $display("%t: DAC_CS_N Deasserted",$time);
-// end
 
 
 endmodule

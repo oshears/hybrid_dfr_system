@@ -3,8 +3,8 @@ module dfr_core_hybrid_top
 #(
     parameter C_S_AXI_ACLK_FREQ_HZ = 100000000,
     parameter C_S_AXI_DATA_WIDTH = 32,
-    parameter C_S_AXI_ADDR_WIDTH = 16,
-    parameter VIRTUAL_NODES = 10,
+    parameter C_S_AXI_ADDR_WIDTH = 30,
+    parameter NUM_VIRTUAL_NODES = 10,
     parameter RESERVOIR_DATA_WIDTH = 32,
     parameter RESERVOIR_HISTORY_ADDR_WIDTH = 14
 )
@@ -53,10 +53,8 @@ assign rst = ~S_AXI_ARESETN;
 
 wire [31:0] debug;
 wire [31:0] ctrl;
-wire [3:0] mem_sel;
 
-wire  [RESERVOIR_HISTORY_ADDR_WIDTH - 1:0] mem_addr;
-wire  [15:0] mem_addr_i;
+wire  [29:0] mem_addr_i;
 wire  mem_wen;
 wire  [C_S_AXI_DATA_WIDTH - 1:0] mem_data_in;
 wire  [C_S_AXI_DATA_WIDTH - 1:0] mem_data_out;
@@ -134,29 +132,30 @@ wire init_sample_cntr_en;
 
 wire reservoir_history_rst;
 
-assign mem_addr = mem_addr_i[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0];
-assign mem_sel = ctrl[7:4];
+wire [7:0] mem_sel = mem_addr_i[29:22];
 
-assign input_mem_addr = (mem_sel == 4'h0 && ~busy) ? mem_addr : sample_cntr;
-assign input_mem_din =  (mem_sel == 4'h0 && ~busy) ? mem_data_in : 32'h0;
-assign input_mem_wen =  (mem_sel == 4'h0 && ~busy) ? mem_wen : 1'h0;
+wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] mem_addr = mem_addr_i[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0];
 
-assign reservoir_output_mem_addr =    (mem_sel == 4'h1 && ~busy) ? mem_addr : ( (reservoir_history_en) ? reservoir_history_addr : matrix_multiply_reservoir_history_addr);
-assign reservoir_output_mem_data_in = (mem_sel == 4'h1 && ~busy) ? mem_data_in : reservoir_data_out;
-assign reservoir_output_mem_wen =     (mem_sel == 4'h1 && ~busy) ? mem_wen : reservoir_history_en;
+assign input_mem_addr = (mem_sel == 8'h1 && ~busy) ? mem_addr : sample_cntr;
+assign input_mem_din =  (mem_sel == 8'h1 && ~busy) ? mem_data_in : 32'h0;
+assign input_mem_wen =  (mem_sel == 8'h1 && ~busy) ? mem_wen : 1'h0;
 
-assign output_weight_mem_addr =    (mem_sel == 4'h2 && ~busy) ? mem_addr : matrix_multiply_output_weight_addr;
-assign output_weight_mem_data_in = (mem_sel == 4'h2 && ~busy) ? mem_data_in : 32'h0;
-assign output_weight_mem_wen =     (mem_sel == 4'h2 && ~busy) ? mem_wen : 1'h0;
+assign reservoir_output_mem_addr =    (mem_sel == 8'h2 && ~busy) ? mem_addr : ( (reservoir_history_en) ? reservoir_history_addr : matrix_multiply_reservoir_history_addr);
+assign reservoir_output_mem_data_in = (mem_sel == 8'h2 && ~busy) ? mem_data_in : reservoir_data_out;
+assign reservoir_output_mem_wen =     (mem_sel == 8'h2 && ~busy) ? mem_wen : reservoir_history_en;
 
-assign dfr_output_mem_addr =        (mem_sel == 4'h3 && ~busy) ? mem_addr : dfr_output_cntr;
-assign dfr_output_mem_data_in =  (mem_sel == 4'h3 && ~busy) ? mem_data_in : dfr_output_data;
-assign dfr_output_mem_wen =      (mem_sel == 4'h3 && ~busy) ? mem_wen : dfr_output_wen;
+assign output_weight_mem_addr =    (mem_sel == 8'h3 && ~busy) ? mem_addr : matrix_multiply_output_weight_addr;
+assign output_weight_mem_data_in = (mem_sel == 8'h3 && ~busy) ? mem_data_in : 32'h0;
+assign output_weight_mem_wen =     (mem_sel == 8'h3 && ~busy) ? mem_wen : 1'h0;
 
-assign mem_data_out =   (mem_sel == 4'h0) ? input_mem_dout : (
-                        (mem_sel == 4'h1) ? reservoir_output_mem_data_out : (
-                        (mem_sel == 4'h2) ? output_weight_mem_data_out : (
-                        (mem_sel == 4'h3) ? dfr_output_mem_data_out : 32'h0
+assign dfr_output_mem_addr =        (mem_sel == 8'h4 && ~busy) ? mem_addr : dfr_output_cntr;
+assign dfr_output_mem_data_in =     (mem_sel == 8'h4 && ~busy) ? mem_data_in : dfr_output_data;
+assign dfr_output_mem_wen =         (mem_sel == 8'h4 && ~busy) ? mem_wen : dfr_output_wen;
+
+assign mem_data_out =   (mem_sel == 8'h1) ? input_mem_dout : (
+                        (mem_sel == 8'h2) ? reservoir_output_mem_data_out : (
+                        (mem_sel == 8'h3) ? output_weight_mem_data_out : (
+                        (mem_sel == 8'h4) ? dfr_output_mem_data_out : 32'h0
                         )));
 
 
@@ -251,7 +250,7 @@ assign reservoir_filled = (sample_cntr > num_init_steps + num_steps_per_sample -
 
 reservoir_asic 
 #(
-    .VIRTUAL_NODES(VIRTUAL_NODES),
+    .NUM_VIRTUAL_NODES(NUM_VIRTUAL_NODES),
     .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
 )
 reservoir_asic
@@ -388,14 +387,7 @@ matrix_multiplier_v2
     .z_wen(dfr_output_wen),
     .x_rows(num_test_samples[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0]),
     .y_cols({{(RESERVOIR_HISTORY_ADDR_WIDTH - 1){1'b0}},1'b1}),
-    .x_cols_y_rows(VIRTUAL_NODES[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0])
-    // .x_data(output_weight_mem_data_out),
-    // .y_data(reservoir_output_mem_data_out),
-    // .x_addr(matrix_multiply_output_weight_addr),
-    // .y_addr(matrix_multiply_reservoir_history_addr),
-    // .x_rows(20'b1),
-    // .y_cols(num_test_samples[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0]),
-    // .x_cols_y_rows(num_test_steps[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0])
+    .x_cols_y_rows(NUM_VIRTUAL_NODES[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0])
 );
 
 

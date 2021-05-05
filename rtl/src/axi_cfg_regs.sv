@@ -3,7 +3,7 @@ module axi_cfg_regs
 #(
 parameter C_S_AXI_ACLK_FREQ_HZ = 100000000,
 parameter C_S_AXI_DATA_WIDTH = 32,
-parameter C_S_AXI_ADDR_WIDTH = 9 
+parameter C_S_AXI_ADDR_WIDTH = 30 
 )
 (
     input busy,
@@ -20,7 +20,7 @@ parameter C_S_AXI_ADDR_WIDTH = 9
     input S_AXI_RREADY, 
     input S_AXI_BREADY, 
 
-    output [15:0] mem_addr,
+    output [29:0] mem_addr, // Valid Addr Range: 0x4000_0000 - 0x7FFF_FFFF
     output mem_wen,
     output [C_S_AXI_DATA_WIDTH - 1:0] mem_data_in,
     input [C_S_AXI_DATA_WIDTH - 1:0] mem_data_out,
@@ -77,7 +77,7 @@ reg mem_reg_addr_valid = 0;
 reg [2:0] current_state = 0;
 reg [2:0] next_state = 0;
 
-reg [15:0] local_address = 0;
+reg [29:0] local_address = 0;
 reg local_address_valid = 1;
 
 wire [1:0] combined_S_AXI_AWVALID_S_AXI_ARVALID;
@@ -218,9 +218,9 @@ begin
         begin
             case (combined_S_AXI_AWVALID_S_AXI_ARVALID)
                 2'b10:
-                    local_address = S_AXI_AWADDR[15:0];
+                    local_address = S_AXI_AWADDR[29:0];
                 2'b01:     
-                    local_address = S_AXI_ARADDR[15:0];
+                    local_address = S_AXI_ARADDR[29:0];
             endcase
         end
     end
@@ -246,23 +246,23 @@ begin
     if (write_enable_registers)
     begin
         case (local_address)
-            16'h0000:
+            30'h0000_0000:
                 ctrl_reg_addr_valid = 1;
-            16'h0004:
+            30'h0000_0004:
                 debug_reg_addr_valid = 1;
-            16'h0008:
+            30'h0000_0008:
                 num_init_samples_reg_valid = 1;
-            16'h000C:
+            30'h0000_000C:
                 num_train_samples_reg_valid = 1;
-            16'h0010:
+            30'h0000_0010:
                 num_test_samples_reg_valid = 1;
-            16'h0014:
+            30'h0000_0014:
                 num_steps_per_sample_reg_valid = 1;
-            16'h0018:
+            30'h0000_0018:
                 num_init_steps_reg_valid = 1;
-            16'h001C:
+            30'h0000_001C:
                 num_train_steps_reg_valid = 1;
-            16'h0020:
+            30'h0000_0020:
                 num_test_steps_reg_valid = 1;
             default:
             begin
@@ -392,10 +392,11 @@ end
 
 
 // mem access
-assign mem_wen = write_enable_registers && (local_address[15:8] > 0);
+assign mem_wen = write_enable_registers && (local_address[29:24] > 0);
 assign mem_data_in = S_AXI_WDATA;
-assign mem_addr[15:8] = ctrl_reg[15:8];
-assign mem_addr[7:0] = (combined_S_AXI_AWVALID_S_AXI_ARVALID[1]) ? S_AXI_AWADDR[7:0] : ( (combined_S_AXI_AWVALID_S_AXI_ARVALID[0]) ? S_AXI_ARADDR[7:0] : 8'h00);
+// assign mem_addr[15:8] = ctrl_reg[15:8];
+// assign mem_addr[7:0] = (combined_S_AXI_AWVALID_S_AXI_ARVALID[1]) ? S_AXI_AWADDR[7:0] : ( (combined_S_AXI_AWVALID_S_AXI_ARVALID[0]) ? S_AXI_ARADDR[7:0] : 8'h00);
+assign mem_addr[29:0] = (combined_S_AXI_AWVALID_S_AXI_ARVALID[1]) ? {2'h0,S_AXI_AWADDR[29:2]} : ( (combined_S_AXI_AWVALID_S_AXI_ARVALID[0]) ? {2'h0,S_AXI_ARADDR[29:2]} : 30'h00);
 
 assign num_init_samples = num_init_samples_reg;
 assign num_train_samples = num_train_samples_reg;

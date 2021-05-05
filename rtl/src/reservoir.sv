@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 module reservoir
 # (
-VIRTUAL_NODES = 10,
+NUM_VIRTUAL_NODES = 10,
 DATA_WIDTH = 32
 )
 (
@@ -13,9 +13,9 @@ DATA_WIDTH = 32
     output reg reservoir_valid = 0
 );
 
-wire [DATA_WIDTH - 1 : 0] node_outputs [VIRTUAL_NODES : 0];
+wire [DATA_WIDTH - 1 : 0] node_outputs [NUM_VIRTUAL_NODES : 0];
 
-wire [DATA_WIDTH - 1 : 0] dout_i = {17'h0,node_outputs[VIRTUAL_NODES][11:0],3'h0};
+wire [DATA_WIDTH - 1 : 0] dout_i = {17'h0,node_outputs[NUM_VIRTUAL_NODES][11:0],3'h0};
 
 assign dout = dout_i;
 
@@ -70,7 +70,7 @@ end
 
 genvar i;
 generate
-    for (i = 0; i < VIRTUAL_NODES; i = i + 1) begin : virtual_node_inst
+    for (i = 0; i < NUM_VIRTUAL_NODES; i = i + 1) begin : virtual_node_inst
     register 
     #(
         .DATA_WIDTH(DATA_WIDTH)
