@@ -46,6 +46,10 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Cl
 # # create_bd_port -dir I GCLK
 # # connect_bd_net [get_bd_ports GCLK] [get_bd_pins ila_0/clk]
 
+# Updated DFR Core Memory Address Range
+set_property offset 0x40000000 [get_bd_addr_segs {processing_system7_0/Data/SEG_dfr_core_system_0_reg0}]
+set_property range 1G [get_bd_addr_segs {processing_system7_0/Data/SEG_dfr_core_system_0_reg0}]
+
 # Save Block Design
 save_bd_design
 

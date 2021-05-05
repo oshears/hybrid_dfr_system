@@ -206,7 +206,7 @@
       <spirit:addressBlock>
         <spirit:name>reg0</spirit:name>
         <spirit:baseAddress spirit:format="bitString" spirit:resolve="user" spirit:bitStringLength="32">0</spirit:baseAddress>
-        <spirit:range spirit:format="long" spirit:resolve="dependent" spirit:dependency="pow(2,(spirit:decode(id(&apos;MODELPARAM_VALUE.C_S_AXI_ADDR_WIDTH&apos;)) - 1) + 1)" spirit:minimum="4096" spirit:rangeType="long">65536</spirit:range>
+        <spirit:range spirit:format="long" spirit:resolve="dependent" spirit:dependency="pow(2,(spirit:decode(id(&apos;MODELPARAM_VALUE.C_S_AXI_ADDR_WIDTH&apos;)) - 1) + 1)" spirit:minimum="4096" spirit:rangeType="long">1073741824</spirit:range>
         <spirit:width spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_S_AXI_DATA_WIDTH&apos;)) - 1) + 1">32</spirit:width>
         <spirit:usage>register</spirit:usage>
       </spirit:addressBlock>
@@ -226,7 +226,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>10aca283</spirit:value>
+            <spirit:value>1674b2ae</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -242,7 +242,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>10aca283</spirit:value>
+            <spirit:value>1674b2ae</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -256,7 +256,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>8f03dff9</spirit:value>
+            <spirit:value>cdf46c01</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -293,7 +293,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_S_AXI_ADDR_WIDTH&apos;)) - 1)">15</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_S_AXI_ADDR_WIDTH&apos;)) - 1)">29</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -329,7 +329,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_S_AXI_ADDR_WIDTH&apos;)) - 1)">15</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.C_S_AXI_ADDR_WIDTH&apos;)) - 1)">29</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -592,12 +592,12 @@
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>C_S_AXI_ADDR_WIDTH</spirit:name>
         <spirit:displayName>C S Axi Addr Width</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_S_AXI_ADDR_WIDTH">16</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_S_AXI_ADDR_WIDTH">30</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
-        <spirit:name>VIRTUAL_NODES</spirit:name>
-        <spirit:displayName>Virtual Nodes</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.VIRTUAL_NODES">10</spirit:value>
+        <spirit:name>NUM_VIRTUAL_NODES</spirit:name>
+        <spirit:displayName>Num Virtual Nodes</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.NUM_VIRTUAL_NODES">10</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>RESERVOIR_DATA_WIDTH</spirit:name>
@@ -656,7 +656,7 @@
       <spirit:file>
         <spirit:name>rtl/src/dfr_core_top.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_461ab2d0</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_cc06ebdb</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -703,7 +703,7 @@
       <spirit:file>
         <spirit:name>xgui/dfr_core_top_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_8f03dff9</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_cdf46c01</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
@@ -723,12 +723,12 @@
     <spirit:parameter>
       <spirit:name>C_S_AXI_ADDR_WIDTH</spirit:name>
       <spirit:displayName>C S Axi Addr Width</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_S_AXI_ADDR_WIDTH">16</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_S_AXI_ADDR_WIDTH">30</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
-      <spirit:name>VIRTUAL_NODES</spirit:name>
-      <spirit:displayName>Virtual Nodes</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.VIRTUAL_NODES">10</spirit:value>
+      <spirit:name>NUM_VIRTUAL_NODES</spirit:name>
+      <spirit:displayName>Num Virtual Nodes</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.NUM_VIRTUAL_NODES">10</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>RESERVOIR_DATA_WIDTH</spirit:name>
@@ -780,16 +780,22 @@
       <xilinx:displayName>dfr_core_top_v1_0</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
       <xilinx:coreRevision>1</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2021-05-01T21:51:15Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2021-05-05T18:37:15Z</xilinx:coreCreationDateTime>
+      <xilinx:tags>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4c53998b_ARCHIVE_LOCATION">/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@22bd4d10_ARCHIVE_LOCATION">/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@105b8c5f_ARCHIVE_LOCATION">/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@14e8473e_ARCHIVE_LOCATION">/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system</xilinx:tag>
+      </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2020.2</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="e3a8d09c"/>
-      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="8518f7a4"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="12b8e3d4"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="4abb1dc3"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="6ff5354d"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="9ba6749a"/>
+      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="f3d2ff12"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="1b80777d"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="a0b3e724"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="dc414729"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="aba25888"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>
