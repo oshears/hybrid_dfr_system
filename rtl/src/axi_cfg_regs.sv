@@ -196,11 +196,11 @@ begin
             16'h0014:
                 S_AXI_RDATA = num_steps_per_sample_reg;
             16'h0018:
-                S_AXI_RDATA = num_train_steps_reg;
-            16'h001C:
-                S_AXI_RDATA = num_test_steps_reg;
-            16'h0020:
                 S_AXI_RDATA = num_init_steps_reg;
+            16'h001C:
+                S_AXI_RDATA = num_train_steps_reg;
+            16'h0020:
+                S_AXI_RDATA = num_test_steps_reg;
             default:
                 S_AXI_RDATA = mem_data_out;
         endcase;     

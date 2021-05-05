@@ -244,6 +244,21 @@ initial begin
     end
     */
 
+    // Clear and Re-Read Input Samples
+    i = 0;
+    while(i < NUM_STEPS_PER_SAMPLE * (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES + NUM_VIRTUAL_NODES)) begin
+        AXI_WRITE(DFR_INPUT_MEM_ADDR_OFFSET + (i * 4), i, 1);
+        AXI_READ( .READ_ADDR(DFR_INPUT_MEM_ADDR_OFFSET + (i * 4) ), .DECIMAL(1));
+        i++;
+    end
+    // Clear and Re-Read Weights
+    i = 0;
+    while(i < NUM_VIRTUAL_NODES) begin
+        AXI_WRITE(DFR_WEIGHT_MEM_ADDR_OFFSET + (i * 4), i, 1);
+        AXI_READ( .READ_ADDR(DFR_WEIGHT_MEM_ADDR_OFFSET + (i * 4) ), .DECIMAL(1));
+        i++;
+    end
+
     $finish;
 
 end
