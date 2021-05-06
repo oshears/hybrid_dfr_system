@@ -170,87 +170,100 @@ initial begin
     S_AXI_ARESETN = 1;
 
     
-    /* Write Reg Tests */
-    for (i = 0; i < 4; i = i + 4)
-    begin
-        $display("Writing %h",i);
-        AXI_WRITE(i,32'hDEAD_BEEE);
-    end
+    // /* Write Reg Tests */
+    // for (i = 0; i < 4; i = i + 4)
+    // begin
+    //     $display("Writing %h",i);
+    //     AXI_WRITE(i,32'hDEAD_BEEE);
+    // end
 
-    /* Read Reg Tests */
-    for (i = 0; i <= 32'h0000_0020; i = i + 4)
-    begin
-        $display("Reading %h",i);
-        AXI_READ(i,32'hDEAD_BEEE,32'h0000_0003);
-    end
+    // /* Read Reg Tests */
+    // for (i = 0; i <= 32'h0000_0020; i = i + 4)
+    // begin
+    //     $display("Reading %h",i);
+    //     AXI_READ(i,32'hDEAD_BEEE,32'h0000_0003);
+    // end
 
 
-    // Test Write to Input Mem
-    $display("Testing Input Mem");
-    for(i = 0; i < 400; i = i + 4) begin
-        AXI_WRITE(DFR_INPUT_MEM_ADDR_OFFSET + i, i);
-        AXI_READ( DFR_INPUT_MEM_ADDR_OFFSET+ i, i);
-    end
+    // // Test Write to Input Mem
+    // $display("Testing Input Mem");
+    // for(i = 0; i < 400; i = i + 4) begin
+    //     AXI_WRITE(DFR_INPUT_MEM_ADDR_OFFSET + i, i);
+    //     AXI_READ( DFR_INPUT_MEM_ADDR_OFFSET+ i, i);
+    // end
 
-    // Test Write to Reservoir Output Mem
-    $display("Testing Reservoir Output Mem");
-    for(i = 0; i < 400; i = i + 4) begin
-        AXI_WRITE(DFR_RESERVOIR_ADDR_MEM_OFFSET + i, i);
-        AXI_READ( DFR_RESERVOIR_ADDR_MEM_OFFSET + i, i);
-    end
+    // // Test Write to Reservoir Output Mem
+    // $display("Testing Reservoir Output Mem");
+    // for(i = 0; i < 400; i = i + 4) begin
+    //     AXI_WRITE(DFR_RESERVOIR_ADDR_MEM_OFFSET + i, i);
+    //     AXI_READ( DFR_RESERVOIR_ADDR_MEM_OFFSET + i, i);
+    // end
 
-    // Test Write to Weight Mem
-    $display("Testing Weight Mem");
-    for(i = 0; i < 400; i = i + 4) begin
-        AXI_WRITE(DFR_WEIGHT_MEM_ADDR_OFFSET + i, i);
-        AXI_READ( DFR_WEIGHT_MEM_ADDR_OFFSET + i, i);
-    end
+    // // Test Write to Weight Mem
+    // $display("Testing Weight Mem");
+    // for(i = 0; i < 400; i = i + 4) begin
+    //     AXI_WRITE(DFR_WEIGHT_MEM_ADDR_OFFSET + i, i);
+    //     AXI_READ( DFR_WEIGHT_MEM_ADDR_OFFSET + i, i);
+    // end
 
-    // Test Write to DFR Output Mem
-    $display("Testing DFR Output Mem");
-    for(i = 0; i < 400; i = i + 4) begin
-        AXI_WRITE(DFR_OUTPUT_MEM_ADDR_OFFSET + i, i);
-        AXI_READ( DFR_OUTPUT_MEM_ADDR_OFFSET + i, i);
-    end
+    // // Test Write to DFR Output Mem
+    // $display("Testing DFR Output Mem");
+    // for(i = 0; i < 400; i = i + 4) begin
+    //     AXI_WRITE(DFR_OUTPUT_MEM_ADDR_OFFSET + i, i);
+    //     AXI_READ( DFR_OUTPUT_MEM_ADDR_OFFSET + i, i);
+    // end
+
 
     ////// ========= Test DFR ============= /////////
 
-    // Configure Widths
-    AXI_WRITE(NUM_INIT_SAMPLES_REG_ADDR,0);
-    AXI_WRITE(NUM_TRAIN_SAMPLES_REG_ADDR,0);
-    AXI_WRITE(NUM_TEST_SAMPLES_REG_ADDR,NUM_TEST_SAMPLES);
+    for (j = 0; j < 3; j++) begin
 
-    AXI_WRITE(NUM_INIT_STEPS_REG_ADDR,0);
-    AXI_WRITE(NUM_TRAIN_STEPS_REG_ADDR,0);
-    AXI_WRITE(NUM_TEST_STEPS_REG_ADDR,NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE);
+        // Configure Widths
+        AXI_WRITE(NUM_INIT_SAMPLES_REG_ADDR,0);
+        AXI_WRITE(NUM_TRAIN_SAMPLES_REG_ADDR,0);
+        AXI_WRITE(NUM_TEST_SAMPLES_REG_ADDR,NUM_TEST_SAMPLES);
 
-    AXI_WRITE(NUM_STEPS_PER_SAMPLE_REG_ADDR,NUM_STEPS_PER_SAMPLE);
+        AXI_WRITE(NUM_INIT_STEPS_REG_ADDR,0);
+        AXI_WRITE(NUM_TRAIN_STEPS_REG_ADDR,0);
+        AXI_WRITE(NUM_TEST_STEPS_REG_ADDR,NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE);
 
-    // Configure Input Samples
+        AXI_WRITE(NUM_STEPS_PER_SAMPLE_REG_ADDR,NUM_STEPS_PER_SAMPLE);
 
-    // Test Write to Input Mem
-    for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
-        AXI_WRITE(DFR_INPUT_MEM_ADDR_OFFSET + i*4, i*32,1);
-    end
-    // Clear Empty Spaces
-    for(i = NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE + NUM_STEPS_PER_SAMPLE; i = i + 1) begin
-        AXI_WRITE(DFR_INPUT_MEM_ADDR_OFFSET + i*4,0,1);
-    end
+        // Configure Input Samples
 
-    // Configure Weights
+        // Test Write to Input Mem
+        $display("Writing Input Mem");
+        for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
+            AXI_WRITE(DFR_INPUT_MEM_ADDR_OFFSET + i*4, i*32,1);
+        end
+        // Clear Empty Spaces
+        // for(i = NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE + NUM_STEPS_PER_SAMPLE; i = i + 1) begin
+        //     AXI_WRITE(DFR_INPUT_MEM_ADDR_OFFSET + i*4,0,1);
+        // end
 
-    // Test Write to Weight Mem
-    for(i = 0; i < NUM_VIRTUAL_NODES; i = i + 1) begin
-        AXI_WRITE(DFR_WEIGHT_MEM_ADDR_OFFSET + i*4, 1, 1);
-    end
+        // Configure Weights
 
-    // Launch DFR
-    AXI_WRITE(CTRL_REG_ADDR,32'h0000_0001);
-    @(negedge busy);
+        // Test Write to Weight Mem
+        $display("Writing Weight Mem");
+        for(i = 0; i < NUM_VIRTUAL_NODES; i = i + 1) begin
+            AXI_WRITE(DFR_WEIGHT_MEM_ADDR_OFFSET + i*4, 1, 1);
+        end
 
-    // Read DFR Output Mem
-    for(i = 0; i < NUM_TEST_SAMPLES; i = i + 1) begin
-        AXI_READ( .READ_ADDR(DFR_OUTPUT_MEM_ADDR_OFFSET + i*4), .DECIMAL(1));
+        // Launch DFR
+        AXI_WRITE(CTRL_REG_ADDR,32'h0000_0001);
+        @(negedge busy);
+
+        // Read Reservoir Output Mem
+        $display("Reading Reservoir Output Mem");
+        for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
+            AXI_READ( .READ_ADDR(DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4), .DECIMAL(1));
+        end
+
+        // Read DFR Output Mem
+        $display("Reading DFR Output Mem");
+        for(i = 0; i < NUM_TEST_SAMPLES; i = i + 1) begin
+            AXI_READ( .READ_ADDR(DFR_OUTPUT_MEM_ADDR_OFFSET + i*4), .DECIMAL(1));
+        end
     end
 
     /*

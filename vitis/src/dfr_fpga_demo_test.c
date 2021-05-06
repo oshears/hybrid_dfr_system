@@ -82,8 +82,8 @@ int main2()
 
     printf("DFR FPGA Test Project\n\r");
 
-
-    while(1){
+    int loop = 0;
+    while(loop < 3){
 
         // Configure Widths
         Xil_Out32(NUM_INIT_SAMPLES_REG_ADDR,0);
@@ -101,7 +101,7 @@ int main2()
         // Configure Input Mem
         printf("Configuring Input Mem\n\r");
         for (i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1){
-            Xil_Out32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4, i * 32);
+            Xil_Out32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4, i);
             read_data = Xil_In32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4);
             printf("Read Input: %x\n\r",read_data);
         }
@@ -109,7 +109,7 @@ int main2()
         // Configure Weights
         printf("Configuring Weights\n\r");
         for (i = 0; i < NUM_VIRTUAL_NODES; i = i + 1){
-            Xil_Out32(DFR_WEIGHT_MEM_ADDR_OFFSET + i * 4, 1);
+            Xil_Out32(DFR_WEIGHT_MEM_ADDR_OFFSET + i * 4, i);
             read_data = Xil_In32(DFR_WEIGHT_MEM_ADDR_OFFSET + i * 4);
             printf("Read Weight: %x\n\r",read_data);
         }
@@ -123,16 +123,23 @@ int main2()
             read_data = Xil_In32(CTRL_REG_ADDR);
         }
 
-        for (i = 0; i < NUM_TEST_SAMPLES; i = i + 1){
-            read_data = Xil_In32(DFR_OUTPUT_MEM_ADDR_OFFSET + i * 4);
-            printf("Read Output: %x\n\r",read_data);
+        for (i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1){
+            read_data = Xil_In32(DFR_RESERVOIR_ADDR_MEM_OFFSET + i * 4);
+            printf("Read Reservoir Output: %x\n\r",read_data);
         }
 
-        sleep(10);
+        for (i = 0; i < NUM_TEST_SAMPLES; i = i + 1){
+            read_data = Xil_In32(DFR_OUTPUT_MEM_ADDR_OFFSET + i * 4);
+            printf("Read DFR Output: %x\n\r",read_data);
+        }
+
+        // sleep(10);
+        loop = loop + 1;
 
     }
-    
 
+    sleep(1000);
+    
     cleanup_platform();
     return 0;
 }
