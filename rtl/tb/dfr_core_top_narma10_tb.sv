@@ -219,10 +219,6 @@ initial begin
 
     // Launch DFR
     AXI_WRITE(CTRL_REG_ADDR,32'h0000_0001);
-    // Wait until finished
-    // while (busy) begin
-    //    WAIT(1);
-    // end
     @(negedge busy);
 
 

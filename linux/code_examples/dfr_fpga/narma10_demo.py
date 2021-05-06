@@ -89,8 +89,8 @@ for line in lines:
     regs[DFR_WEIGHT_MEM_ADDR_OFFSET + addr_offset*4 : DFR_WEIGHT_MEM_ADDR_OFFSET + addr_offset*4 + 4] = int2bytes(weight_val)
 
     # Test Read
-    # readback = bytes2int(regs[DFR_WEIGHT_MEM_ADDR_OFFSET + addr_offset*4 : DFR_WEIGHT_MEM_ADDR_OFFSET + addr_offset + 4])
-    # print(f"Wrote: {readback}")
+    readback = bytes2int(regs[DFR_WEIGHT_MEM_ADDR_OFFSET + addr_offset*4 : DFR_WEIGHT_MEM_ADDR_OFFSET + addr_offset + 4])
+    print(f"Wrote: {readback}")
 
     # Next Addr
     addr_offset -= 1
@@ -101,7 +101,7 @@ fh.close()
 print("Running DFR")
 regs[CTRL_REG_ADDR] = 0x0000_0001
 
-while(regs[CTRL_REG_ADDR] != 0x2):
+while(regs[CTRL_REG_ADDR] != 0x0):
     continue
 
 # Check CTRL_REG (Bit 1 = Busy)
@@ -131,3 +131,15 @@ exit()
 # peek 0x40000018
 # peek 0x4000001C
 # peek 0x40000020
+
+# Input Mem
+# peek 0x41000000
+
+# Reservoir History Mem
+# peek 0x42000000
+
+# Weight Mem
+# peek 0x43000000
+
+# Output Mem
+# peek 0x44000000
