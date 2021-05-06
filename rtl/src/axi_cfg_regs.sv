@@ -286,8 +286,10 @@ begin
         // BIT [15:8]: Upper 8 MEM BITS
         if(ctrl_reg_addr_valid)
             ctrl_reg = {S_AXI_WDATA[31:2],busy,S_AXI_WDATA[0]};
-        else
+        else begin
+            ctrl_reg[1] = busy;
             ctrl_reg[0] = 0;
+        end
     end
 end
 
