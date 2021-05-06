@@ -66,7 +66,7 @@
 #define NUM_INIT_SAMPLES 100
 #define NUM_TEST_SAMPLES 100
 
-int main2()
+int main3()
 {
     int read_data = 0;
 

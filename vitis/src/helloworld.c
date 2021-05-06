@@ -52,19 +52,26 @@
 #include "xil_io.h"
 #include "sleep.h"
 
-#define CTRL_REG_ADDR 0x43C00000
-#define DEBUG_REG_ADDR 0x43C00004
-#define NUM_INIT_SAMPLES_REG_ADDR 0x43C00008
-#define NUM_TRAIN_SAMPLES_REG_ADDR 0x43C0000C
-#define NUM_TEST_SAMPLES_REG_ADDR 0x43C00010
-#define NUM_STEPS_PER_SAMPLE_REG_ADDR 0x43C00014
-#define NUM_INIT_STEPS_REG_ADDR 0x43C00018
-#define NUM_TRAIN_STEPS_REG_ADDR 0x43C0001C
-#define NUM_TEST_STEPS_REG_ADDR 0x43C00020
+#define CTRL_REG_ADDR 0x40000000
+#define DEBUG_REG_ADDR 0x40000004
+#define NUM_INIT_SAMPLES_REG_ADDR 0x40000008
+#define NUM_TRAIN_SAMPLES_REG_ADDR 0x4000000C
+#define NUM_TEST_SAMPLES_REG_ADDR 0x40000010
+#define NUM_STEPS_PER_SAMPLE_REG_ADDR 0x40000014
+#define NUM_INIT_STEPS_REG_ADDR 0x40000018
+#define NUM_TRAIN_STEPS_REG_ADDR 0x4000001C
+#define NUM_TEST_STEPS_REG_ADDR 0x40000020
+
+#define DFR_INPUT_MEM_ADDR_OFFSET 0x41000000
+#define DFR_RESERVOIR_ADDR_MEM_OFFSET 0x42000000
+#define DFR_WEIGHT_MEM_ADDR_OFFSET 0x43000000
+#define DFR_OUTPUT_MEM_ADDR_OFFSET 0x44000000
 
 #define NUM_STEPS_PER_SAMPLE 100
 #define NUM_INIT_SAMPLES 100
-#define NUM_TEST_SAMPLES 100
+#define NUM_TEST_SAMPLES 1
+
+#define NUM_VIRTUAL_NODES 100
 
 int main()
 {
@@ -79,34 +86,49 @@ int main()
     while(1){
 
         // Configure Widths
-        Xil_Out32(NUM_INIT_SAMPLES_REG_ADDR,NUM_INIT_SAMPLES);
+        Xil_Out32(NUM_INIT_SAMPLES_REG_ADDR,0);
         Xil_Out32(NUM_TRAIN_SAMPLES_REG_ADDR,0);
         Xil_Out32(NUM_TEST_SAMPLES_REG_ADDR,NUM_TEST_SAMPLES);
 
-        Xil_Out32(NUM_INIT_STEPS_REG_ADDR,NUM_INIT_SAMPLES * NUM_STEPS_PER_SAMPLE);
+        Xil_Out32(NUM_INIT_STEPS_REG_ADDR,0);
         Xil_Out32(NUM_TRAIN_STEPS_REG_ADDR,0);
         Xil_Out32(NUM_TEST_STEPS_REG_ADDR,NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE);
         
         Xil_Out32(NUM_STEPS_PER_SAMPLE_REG_ADDR,NUM_STEPS_PER_SAMPLE);
 
-        // Configure Input Samples
-        //Select Input Mem
-        Xil_Out32(CTRL_REG_ADDR,0x00000000);
-
-        FILE* file = fopen ("dfr_narma10_data.txt", "r");
         int i = 0;
 
-        printf("Loading NARMA-10 Data from File: dfr_narma10_data.txt\n\r");
-
-        while (!feof (file))
-        {  
-            printf("Loading data...\n\r");
-            fscanf (file, "%d", &i);      
-            printf ("%d ", i);
+        // Configure Input Mem
+        printf("Configuring Input Mem\n\r");
+        for (i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1){
+            Xil_Out32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4, i * 32);
+            read_data = Xil_In32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4);
+            printf("Read Input: %x\n\r",read_data);
         }
-        fclose (file);    
 
-        printf("Done loading NARMA-10 Data from File: dfr_narma10_data.txt\n\r");
+        // Configure Weights
+        printf("Configuring Weights\n\r");
+        for (i = 0; i < NUM_VIRTUAL_NODES; i = i + 1){
+            Xil_Out32(DFR_WEIGHT_MEM_ADDR_OFFSET + i * 4, 1);
+            read_data = Xil_In32(DFR_WEIGHT_MEM_ADDR_OFFSET + i * 4);
+            printf("Read Weight: %x\n\r",read_data);
+        }
+
+        // Launch DFR
+        printf("Launching DFR\n\r");
+        Xil_Out32(CTRL_REG_ADDR,0x00000001);
+
+        read_data = Xil_In32(CTRL_REG_ADDR);
+        while(read_data != 0){
+            read_data = Xil_In32(CTRL_REG_ADDR);
+        }
+
+        for (i = 0; i < NUM_TEST_SAMPLES; i = i + 1){
+            read_data = Xil_In32(DFR_OUTPUT_MEM_ADDR_OFFSET + i * 4);
+            printf("Read Output: %x\n\r",read_data);
+        }
+
+        sleep(10);
 
     }
     
