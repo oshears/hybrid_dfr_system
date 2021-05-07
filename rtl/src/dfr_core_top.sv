@@ -42,6 +42,7 @@ wire rst;
 assign rst = ~S_AXI_ARESETN;
 
 wire [31:0] debug;
+wire [31:0] debug_in;
 wire [31:0] ctrl;
 
 wire  [29:0] mem_addr_i;
@@ -122,25 +123,27 @@ wire init_sample_cntr_en;
 
 wire reservoir_history_rst;
 
-wire [7:0] mem_sel = mem_addr_i[29:22];
+wire [7:0] mem_sel = (busy) ? 8'h0 : mem_addr_i[29:22];
 
 wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] mem_addr = mem_addr_i[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0];
 
-assign input_mem_addr = (mem_sel == 8'h1 && ~busy) ? mem_addr : sample_cntr;
-assign input_mem_din =  (mem_sel == 8'h1 && ~busy) ? mem_data_in : 32'h0;
-assign input_mem_wen =  (mem_sel == 8'h1 && ~busy) ? mem_wen : 1'h0;
+wire [2:0] current_state_out;
 
-assign reservoir_output_mem_addr =    (mem_sel == 8'h2 && ~busy) ? mem_addr : ( (reservoir_history_en) ? reservoir_history_addr : matrix_multiply_reservoir_history_addr);
-assign reservoir_output_mem_data_in = (mem_sel == 8'h2 && ~busy) ? mem_data_in : reservoir_data_out;
-assign reservoir_output_mem_wen =     (mem_sel == 8'h2 && ~busy) ? mem_wen : reservoir_history_en;
+assign input_mem_addr = (mem_sel == 8'h1) ? mem_addr : sample_cntr;
+assign input_mem_din =  (mem_sel == 8'h1) ? mem_data_in : 32'h0;
+assign input_mem_wen =  (mem_sel == 8'h1) ? mem_wen : 1'h0;
 
-assign output_weight_mem_addr =    (mem_sel == 8'h3 && ~busy) ? mem_addr : matrix_multiply_output_weight_addr;
-assign output_weight_mem_data_in = (mem_sel == 8'h3 && ~busy) ? mem_data_in : 32'h0;
-assign output_weight_mem_wen =     (mem_sel == 8'h3 && ~busy) ? mem_wen : 1'h0;
+assign reservoir_output_mem_addr =    (mem_sel == 8'h2) ? mem_addr : ( (reservoir_history_en) ? reservoir_history_addr : matrix_multiply_reservoir_history_addr);
+assign reservoir_output_mem_data_in = (mem_sel == 8'h2) ? mem_data_in : reservoir_data_out;
+assign reservoir_output_mem_wen =     (mem_sel == 8'h2) ? mem_wen : reservoir_history_en;
 
-assign dfr_output_mem_addr =        (mem_sel == 8'h4 && ~busy) ? mem_addr : dfr_output_cntr;
-assign dfr_output_mem_data_in =     (mem_sel == 8'h4 && ~busy) ? mem_data_in : dfr_output_data;
-assign dfr_output_mem_wen =         (mem_sel == 8'h4 && ~busy) ? mem_wen : dfr_output_wen;
+assign output_weight_mem_addr =    (mem_sel == 8'h3) ? mem_addr : matrix_multiply_output_weight_addr;
+assign output_weight_mem_data_in = (mem_sel == 8'h3) ? mem_data_in : 32'h0;
+assign output_weight_mem_wen =     (mem_sel == 8'h3) ? mem_wen : 1'h0;
+
+assign dfr_output_mem_addr =        (mem_sel == 8'h4) ? mem_addr : dfr_output_cntr;
+assign dfr_output_mem_data_in =     (mem_sel == 8'h4) ? mem_data_in : dfr_output_data;
+assign dfr_output_mem_wen =         (mem_sel == 8'h4) ? mem_wen : dfr_output_wen;
 
 assign mem_data_out =   (mem_sel == 8'h1) ? input_mem_dout : (
                         (mem_sel == 8'h2) ? reservoir_output_mem_data_out : (
@@ -148,6 +151,18 @@ assign mem_data_out =   (mem_sel == 8'h1) ? input_mem_dout : (
                         (mem_sel == 8'h4) ? dfr_output_mem_data_out : 32'h0
                         )));
 
+
+assign debug_in[0] = busy; // DFR Core Controller
+assign debug_in[1] = matrix_multiply_busy;
+assign debug_in[2] = dfr_done;
+assign debug_in[3] = reservoir_busy;
+assign debug_in[4] = reservoir_init_busy;
+assign debug_in[5] = reservoir_filled;
+assign debug_in[6] = reservoir_en;
+assign debug_in[7] = 1'b0;
+assign debug_in[15:8] = mem_sel;
+assign debug_in[18:16] = current_state_out;
+assign debug_in[31:19] = reservoir_history_addr[13:0];
 
 axi_cfg_regs 
 #(
@@ -159,6 +174,7 @@ axi_cfg_regs
 (
     // Debug Register Output
     .debug(debug),
+    .debug_in(debug_in),
     // Control Register
     .ctrl(ctrl),
     .busy(busy),
@@ -229,7 +245,8 @@ dfr_core_controller
     .init_sample_cntr_rst(init_sample_cntr_rst),
     .init_sample_cntr_en(init_sample_cntr_en),
     .reservoir_history_rst(reservoir_history_rst),
-    .reservoir_valid(reservoir_valid)
+    .reservoir_valid(reservoir_valid),
+    .current_state_out(current_state_out)
 );
 
 assign reservoir_init_busy = (reservoir_init_cntr < num_init_steps) ? 1'b1 : 1'b0;

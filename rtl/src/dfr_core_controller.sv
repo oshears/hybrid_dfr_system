@@ -27,7 +27,8 @@ module dfr_core_controller
     output reg reservoir_history_en = 0,
     output reg reservoir_history_rst = 0,
     output reg dfr_done = 0,
-    output reg sample_cntr_en = 0
+    output reg sample_cntr_en = 0,
+    output wire [2:0] current_state_out
 );
 
 localparam DONE = 0, RESERVOIR_INIT_STAGE = 1, RESERVOIR_INIT_WAIT_STAGE = 2, RESERVOIR_STAGE = 3, RESERVOIR_WAIT_STAGE = 4, MATRIX_MULTIPLY_STAGE = 5;
@@ -35,7 +36,9 @@ localparam DONE = 0, RESERVOIR_INIT_STAGE = 1, RESERVOIR_INIT_WAIT_STAGE = 2, RE
 reg [2:0] current_state = 0;
 reg [2:0] next_state = 0;
 
-always @ (posedge clk or posedge rst) begin
+assign current_state_out = current_state;
+
+always @ (posedge clk) begin
     if (rst)
         current_state <= DONE;
     else
@@ -75,6 +78,11 @@ always @(
                 init_sample_cntr_rst = 1;
                 reservoir_history_rst = 1;
                 sample_cntr_rst = 1;
+                busy = 1;
+            end
+            else begin
+                dfr_done = 1;
+                busy = 0;
             end
         end
         RESERVOIR_INIT_STAGE:

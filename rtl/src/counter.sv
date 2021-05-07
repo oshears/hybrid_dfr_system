@@ -11,7 +11,7 @@ DATA_WIDTH = 32
     output reg [DATA_WIDTH - 1 : 0] dout = 0
 );
 
-always @(posedge clk, posedge rst)
+always @(posedge clk)
 begin
     if (rst)
         dout <= 0;

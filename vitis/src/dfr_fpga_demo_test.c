@@ -101,9 +101,9 @@ int main2()
         // Configure Input Mem
         printf("Configuring Input Mem\n\r");
         for (i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1){
-            Xil_Out32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4, i);
+            Xil_Out32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4, i*600);
             read_data = Xil_In32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4);
-            printf("Read Input: %x\n\r",read_data);
+            printf("Read Input: %d\n\r",read_data);
         }
 
         // Configure Weights
@@ -111,7 +111,7 @@ int main2()
         for (i = 0; i < NUM_VIRTUAL_NODES; i = i + 1){
             Xil_Out32(DFR_WEIGHT_MEM_ADDR_OFFSET + i * 4, i);
             read_data = Xil_In32(DFR_WEIGHT_MEM_ADDR_OFFSET + i * 4);
-            printf("Read Weight: %x\n\r",read_data);
+            printf("Read Weight: %d\n\r",read_data);
         }
 
         // Launch DFR
@@ -119,25 +119,35 @@ int main2()
         Xil_Out32(CTRL_REG_ADDR,0x00000001);
 
         read_data = Xil_In32(CTRL_REG_ADDR);
-        while(read_data != 0){
+        // while(read_data != 0){
+        while(read_data != 0x24){
+            sleep(3);
+            read_data = Xil_In32(DEBUG_REG_ADDR);
+            printf("DBG_REG: %x\n\r",read_data);
             read_data = Xil_In32(CTRL_REG_ADDR);
+            printf("CTRL_REG: %x\n\r",read_data);
+            // read_data = Xil_In32(DEBUG_REG_ADDR);
+            // printf("DBG_REG: %x\n\r",read_data);
         }
+
+        read_data = Xil_In32(DEBUG_REG_ADDR);
+        printf("Read Debug Reg: %x\n\r",read_data);
 
         for (i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1){
             read_data = Xil_In32(DFR_RESERVOIR_ADDR_MEM_OFFSET + i * 4);
-            printf("Read Reservoir Output: %x\n\r",read_data);
+            printf("Read Reservoir Output: %d\n\r",read_data);
         }
 
         for (i = 0; i < NUM_TEST_SAMPLES; i = i + 1){
             read_data = Xil_In32(DFR_OUTPUT_MEM_ADDR_OFFSET + i * 4);
-            printf("Read DFR Output: %x\n\r",read_data);
+            printf("Read DFR Output: %d\n\r",read_data);
         }
 
         // sleep(10);
         loop = loop + 1;
 
     }
-
+    printf("Done...\n\r");
     sleep(1000);
     
     cleanup_platform();

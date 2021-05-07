@@ -34,6 +34,8 @@ parameter C_S_AXI_ADDR_WIDTH = 30
     output reg [1:0] S_AXI_BRESP,
     output reg S_AXI_BVALID,  
 
+    input [31:0] debug_in,
+
     output [31:0] debug,
     output [31:0] ctrl,
     output [31:0] num_init_samples,
@@ -95,7 +97,7 @@ assign combined_S_AXI_AWVALID_S_AXI_ARVALID = {S_AXI_AWVALID, S_AXI_ARVALID};
 assign debug = debug_reg;
 assign ctrl = ctrl_reg;
 
-always @ (posedge S_AXI_ACLK or posedge Local_Reset) begin
+always @ (posedge S_AXI_ACLK) begin
     if (Local_Reset)
         current_state <= reset;
     else
@@ -274,7 +276,7 @@ begin
 end
 
 // ctrl_reg
-always @(posedge S_AXI_ACLK, posedge Local_Reset)
+always @(posedge S_AXI_ACLK)
 begin
     if (Local_Reset)
         ctrl_reg = 0;
@@ -294,7 +296,7 @@ begin
 end
 
 // debug_reg
-always @(posedge S_AXI_ACLK, posedge Local_Reset)
+always @(posedge S_AXI_ACLK)
 begin
     if (Local_Reset)
         debug_reg = 0;
@@ -308,12 +310,13 @@ begin
         // BIT 3: Use slow 1HZ Clock
         // BIT 4: Use 1-Hot Encoding for XADC Multiplexer
         // BIT 5: debug_reg[5] output on XADC header GPIO3
-        if(debug_reg_addr_valid)
-            debug_reg = S_AXI_WDATA;
+        //if(debug_reg_addr_valid)
+        //    debug_reg = S_AXI_WDATA;
+        debug_reg = debug_in;
     end
 end
 
-always @(posedge S_AXI_ACLK, posedge Local_Reset)
+always @(posedge S_AXI_ACLK)
 begin
     if (Local_Reset)
         num_init_samples_reg = 0;
@@ -324,7 +327,7 @@ begin
     end
 end
 
-always @(posedge S_AXI_ACLK, posedge Local_Reset)
+always @(posedge S_AXI_ACLK)
 begin
     if (Local_Reset)
         num_train_samples_reg = 0;
@@ -335,7 +338,7 @@ begin
     end
 end
 
-always @(posedge S_AXI_ACLK, posedge Local_Reset)
+always @(posedge S_AXI_ACLK)
 begin
     if (Local_Reset)
         num_test_samples_reg = 0;
@@ -346,7 +349,7 @@ begin
     end
 end
 
-always @(posedge S_AXI_ACLK, posedge Local_Reset)
+always @(posedge S_AXI_ACLK)
 begin
     if (Local_Reset)
         num_steps_per_sample_reg = 0;
@@ -358,7 +361,7 @@ begin
 end
 
 
-always @(posedge S_AXI_ACLK, posedge Local_Reset)
+always @(posedge S_AXI_ACLK)
 begin
     if (Local_Reset)
         num_init_steps_reg = 0;
@@ -369,7 +372,7 @@ begin
     end
 end
 
-always @(posedge S_AXI_ACLK, posedge Local_Reset)
+always @(posedge S_AXI_ACLK)
 begin
     if (Local_Reset)
         num_train_steps_reg = 0;
@@ -380,7 +383,7 @@ begin
     end
 end
 
-always @(posedge S_AXI_ACLK, posedge Local_Reset)
+always @(posedge S_AXI_ACLK)
 begin
     if (Local_Reset)
         num_test_steps_reg = 0;
@@ -391,7 +394,7 @@ begin
     end
 end
 
-
+// TODO: Attempt to insert a write buffer
 
 // mem access
 assign mem_wen = write_enable_registers && (local_address[29:24] > 0);

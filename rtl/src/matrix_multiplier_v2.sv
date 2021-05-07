@@ -59,7 +59,7 @@ reg [2:0] next_state = 0;
 
 localparam done = 0, x_row_loop = 1, y_col_loop = 2, x_addr_loop = 3, x_col_y_row_loop = 4, y_addr_loop = 5, z_sum_loop = 6;
 
-always @ (posedge clk or posedge rst) begin
+always @ (posedge clk) begin
     if (rst)
         current_state <= done;
     else

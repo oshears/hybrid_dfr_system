@@ -25,17 +25,9 @@ set_property -dict [list CONFIG.preset {ZedBoard}] [get_bd_cells processing_syst
 
 # Configure AXI CLK to 10MHz
 set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {10}] [get_bd_cells processing_system7_0]
-# Create slow clock for pwm_clk
-# set_property -dict [list CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {1} CONFIG.PCW_EN_CLK1_PORT {1}] [get_bd_cells processing_system7_0]
-# connect_bd_net [get_bd_pins processing_system7_0/FCLK_CLK1] [get_bd_pins dfr_core_system_0/pwm_clk]
 
 # Apply Connection Automation (Connect Clocks)
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/processing_system7_0/M_AXI_GP0} Slave {/dfr_core_system_0/S_AXI} ddr_seg {Auto} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins dfr_core_system_0/S_AXI]
-
-# Configure Neuromorphic Bridge IP
-# make_bd_pins_external  [get_bd_pins dfr_core_system_0/digit]
-# make_bd_pins_external  [get_bd_pins dfr_core_system_0/leds]
-# make_bd_pins_external  [get_bd_pins dfr_core_system_0/XADC_MUXADDR]
 
 # # Add Internal Logic Analyzer
 # create_bd_cell -type ip -vlnv xilinx.com:ip:ila:6.2 ila_0
