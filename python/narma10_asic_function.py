@@ -81,7 +81,7 @@ def mackey_glass_fpga(inData):
         return 0
 
 # def mackey_glass_asic(inData):
-#     encoded_dac_data = bytes([inData & 0xFF, (inData >> 8) & 0xFF, 0x00, 0x00])
+#     encoded_dac_data = bytes([int(inData) & 0xFF, (int(inData) >> 8) & 0xFF, 0x00, 0x00])
 #     asic_function_regs[ASIC_OUT_REG_ADDR : ASIC_OUT_REG_ADDR + 4] = encoded_dac_data
 #     asic_function_regs[CTRL_REG_ADDR] = 0x1
 #     while(asic_function_regs[CTRL_REG_ADDR] != ASIC_DONE):
@@ -97,8 +97,8 @@ def mackey_glass_fpga(inData):
 ##	Import dataset
 
 # 10th order nonlinear auto-regressive moving average (NARMA10)
-seed = 9
-np.random.seed(seed)
+# seed = 0
+# np.random.seed(seed)
 data, target = narma10_create(5000)
 
 
