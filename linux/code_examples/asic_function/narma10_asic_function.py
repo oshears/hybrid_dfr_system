@@ -73,7 +73,7 @@ def narma10_create(inLen):
     return (inp, tar)
 
 # ASIC Mackey-Glass Activation Function
-def mackey_glass_fpga(inData):
+def mackey_glass(inData):
 
     if inData < MG_FUNCTION_RESOLUTION:
         return mg_vector[1,int(inData)]
@@ -89,8 +89,6 @@ def mackey_glass_asic(inData):
     results_bytes = asic_function_regs[ASIC_IN_REG_ADDR : ASIC_IN_REG_ADDR + 4]
     results = int.from_bytes(results_bytes,"little") / (2**4)
     return results
-
-
 
 
 
@@ -164,7 +162,7 @@ for k in range(0,(initLen * Tp)):
     
     # Activation
     # multiply by 8 to scale 12-bit output to 16 bits (15 bits unsigned)
-    nodeN[0,0]	= (mackey_glass_fpga(initJTR)) * (2 ** 3)
+    nodeN[0,0]	= (mackey_glass(initJTR)) * (2 ** 3)
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -181,7 +179,7 @@ for k in range(0,(trainLen * Tp)):
     trainJ = (inputTR[t,0]) + (nodeC[N-1,0])
     
     # Activation
-    nodeN[0,0]	= (mackey_glass_fpga(trainJ)) * (2 ** 3)
+    nodeN[0,0]	= (mackey_glass(trainJ)) * (2 ** 3)
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -198,6 +196,7 @@ nodeTR[:,0:trainLen] = nodeE[:, N*np.arange(1,trainLen + 1)-1]
 ##  Train output weights using ridge regression
 
 # Call-out the target outputs
+# Scale to put the data in the same range as input
 Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen) * SCALE
 
 # Transpose nodeR for matrix claculation
@@ -206,27 +205,16 @@ nodeTR_T = nodeTR.T
 # Calculate output weights
 print("(Training) Calculate output weights")
 Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T))))
+
 # round weights for int conversion later
-Wout = np.round(Wout, 4)
-
-# High Accuracy:
-# Wout_int = Wout * (10 ** 4)
-# Wout_int = Wout_int.astype(int)
-# nodeTR_int = nodeTR * (10 ** 4)
-# nodeTR_int = nodeTR_int.astype(int)
-
-# convert weights to int
-ROUND_FACTOR = 0
+# ROUND_FACTOR = 4
+ROUND_FACTOR = 0 # No Decimals
+Wout = np.round(Wout, ROUND_FACTOR)
 Wout_int = Wout * (10 ** ROUND_FACTOR)
 Wout_int = Wout_int.astype(int)
 nodeTR_int = nodeTR * (10 ** ROUND_FACTOR)
 nodeTR_int = nodeTR_int.astype(int)
 
-# Lower Accuracy:
-# Wout_int = Wout 
-# Wout_int = Wout_int.astype(int)
-# nodeTR_int = nodeTR 
-# nodeTR_int = nodeTR_int.astype(int)
 
 ##  Compute training error
 print("(Training) Compute training error")
@@ -278,7 +266,7 @@ for k in range(0,(testLen * Tp)):
     initJTS = (inputTS[k,0]) + (nodeC[N-1,0])
     
     # Activation
-    nodeN[0,0]	= (mackey_glass_fpga(initJTS)) * (2 ** 3)
+    nodeN[0,0]	= (mackey_glass(initJTS)) * (2 ** 3)
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -296,7 +284,7 @@ for k in range(0,(testLen * Tp)):
     testJ = (inputTS[t,0]) + (nodeC[N-1,0])
     
     # Activation
-    nodeN[0,0]	= (mackey_glass_fpga(testJ)) * (2 ** 3)
+    nodeN[0,0]	= (mackey_glass(testJ)) * (2 ** 3)
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
