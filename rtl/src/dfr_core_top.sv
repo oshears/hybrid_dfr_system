@@ -30,7 +30,9 @@ module dfr_core_top
     output [1:0] S_AXI_BRESP,
     output S_AXI_BVALID,
 
-    output busy
+    output busy,
+    
+    output [31:0] debug_reg
 );
 
 
@@ -163,6 +165,8 @@ assign debug_in[7] = 1'b0;
 assign debug_in[15:8] = mem_sel;
 assign debug_in[18:16] = current_state_out;
 assign debug_in[31:19] = reservoir_history_addr[13:0];
+
+assign debug_reg = debug_in;
 
 axi_cfg_regs 
 #(
@@ -390,6 +394,12 @@ matrix_multiplier_v2
     .y_cols({{(RESERVOIR_HISTORY_ADDR_WIDTH - 1){1'b0}},1'b1}),
     .x_cols_y_rows(NUM_VIRTUAL_NODES[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0])
 );
+
+//debug_reg_ila debug_reg_ila
+//(
+//    .clk(S_AXI_ACLK),
+//    .probe0(debug_in)
+//);
 
 
 endmodule
