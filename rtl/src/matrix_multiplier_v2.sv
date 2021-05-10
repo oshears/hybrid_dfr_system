@@ -57,7 +57,7 @@ reg x_col_y_row_rst = 0;
 reg [2:0] current_state = 0;
 reg [2:0] next_state = 0;
 
-localparam done = 0, x_row_loop = 1, y_col_loop = 2, x_addr_loop = 3, x_col_y_row_loop = 4, y_addr_loop = 5, z_sum_loop = 6;
+localparam done = 0, x_row_loop = 1, y_col_loop = 2, x_addr_loop = 3, x_col_y_row_loop = 4, y_addr_loop = 5, z_sum_loop = 6, z_sum_store = 7;
 
 always @ (posedge clk) begin
     if (rst)
@@ -188,15 +188,11 @@ always @(
         z_sum_loop:
         begin
             busy = 1;
-            // if (multi_iter == x_data) begin
-            //     x_addr_cnt_en = 2'b10;
-            //     x_col_y_row_en = 1;
-            //     next_state = x_col_y_row_loop;
-            // end
-            // else begin
-            //     multi_iter_en = 1;
-            //     z_sum_reg_en = 1;
-            // end
+            next_state = z_sum_store;
+        end
+        z_sum_store:
+        begin
+            busy = 1;
             z_sum_reg_en = 1;
             x_addr_cnt_en = 2'b10;
             x_col_y_row_en = 1;
@@ -283,7 +279,16 @@ always @(posedge clk) begin
     if (z_sum_reg_rst)
         z_data <= 0;
     else if(z_sum_reg_en) 
-        z_data <= x_data * y_data + z_data;
+        z_data <= x_mul_y[31:0] + z_data;
 end
+
+wire [63:0] x_mul_y;
+multiplier multiplier
+(
+    .CLK(clk),
+    .A(x_data),
+    .B(y_data),
+    .P(x_mul_y)
+);
 
 endmodule

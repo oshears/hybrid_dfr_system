@@ -116,9 +116,8 @@ N           = Tp
 theta       = Tp / N
 # gamma       = 0.99
 # eta         = 1 - gamma
-initLen     = 100 
-trainLen	= 1000
-testLen     = 1000
+initLen     = 0 
+testLen     = 1
 SCALE = 2**16
 MAX_MG_OUT = 3072
 
@@ -127,110 +126,6 @@ MAX_MG_OUT = 3072
 # Random Uniform [0, 1]
 # Scale data for range 0 - 2^16 (65536) 
 M = np.random.rand(Tp, 1) * SCALE
-
-##  (Training) Initialization of reservoir dynamics
-
-# nodeC     = reservoir dynamic at the current cycle
-# nodeN     = reservoir dynamic at the next cycle
-# nodeE     = reservoir dynamic at every timestep during training
-# nodeTR    = a snapshot of all node states at each full rotation through 
-#             the reservoir during training
-
-nodeC   = np.zeros(shape=(N, 1),dtype=int)
-nodeN   = np.zeros(shape=(N, 1),dtype=int)
-nodeE	= np.zeros(shape=(N , trainLen * Tp),dtype=int)
-nodeTR	= np.zeros(shape=(N , trainLen),dtype=int)
-
-
-##  (Training) Apply masking to training data
-print("(Training) Apply masking to training data")
-inputTR = np.ndarray(shape=((initLen + trainLen) * Tp,1))
-
-for k in range(0,(initLen + trainLen)):
-    uTR = data[0,k]
-    # multiply input by mask and convert to int
-    masked_input = (M * uTR).astype(int)
-    inputTR[k*Tp:(k+1)*Tp] = masked_input.copy()
-
-
-##  (Training) Initialize the reservoir layer
-print("(Training) Initialize the reservoir layer")
-# No need to store these values since they won't be used in training
-for k in range(0,(initLen * Tp)):
-    # Compute the new input data for initialization
-    initJTR = (inputTR[k,0]) + (nodeC[N-1,0])
-    
-    # Activation
-    # multiply by 8 to scale 12-bit output to 16 bits (15 bits unsigned)
-    nodeN[0,0]	= (mackey_glass(initJTR)) * (2 ** 3)
-    nodeN[1:N]  = nodeC[0:(N - 1)]
-    
-    # Update the current node state
-    nodeC       = nodeN.copy()
-
-
-##	(Training) Run data through the reservoir
-print("(Training) Run data through the reservoir")
-for k in range(0,(trainLen * Tp)):
-    # Define the time step that starts storing node states
-    t = initLen * Tp + k
-    
-    # Compute the new input data for training
-    trainJ = (inputTR[t,0]) + (nodeC[N-1,0])
-    
-    # Activation
-    nodeN[0,0]	= (mackey_glass(trainJ)) * (2 ** 3)
-    nodeN[1:N]  = nodeC[0:(N - 1)]
-    
-    # Update the current node state
-    nodeC       = nodeN.copy()
-    
-    # Updete all node states
-    nodeE[:, k] = nodeC[:,0]
-
-
-
-# Consider the data just once everytime it loops around
-nodeTR[:,0:trainLen] = nodeE[:, N*np.arange(1,trainLen + 1)-1]
-
-##  Train output weights using ridge regression
-
-# Call-out the target outputs
-# Scale to put the data in the same range as input
-Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen) * SCALE
-
-# Transpose nodeR for matrix claculation
-nodeTR_T = nodeTR.T
-
-# Calculate output weights
-print("(Training) Calculate output weights")
-Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T))))
-
-# round weights for int conversion later
-ROUND_FACTOR = 4
-# ROUND_FACTOR = 0 # No Decimals
-Wout = np.round(Wout, ROUND_FACTOR)
-Wout_int = Wout * (10 ** ROUND_FACTOR)
-Wout_int = Wout_int.astype(int)
-nodeTR_int = nodeTR * (10 ** ROUND_FACTOR)
-nodeTR_int = nodeTR_int.astype(int)
-
-
-##  Compute training error
-print("(Training) Compute training error")
-predicted_target_int = np.dot(Wout_int,nodeTR_int)
-predicted_target = predicted_target_int / (10 ** (ROUND_FACTOR * 2))
-
-# Calculate the MSE through L2 norm
-mseTR = (((Yt - predicted_target)**2).mean(axis=1))
-
-# Calculate the NMSE
-nmseTR = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
-
-print('--------------------------------------------------')
-print('Training Errors')
-print(f'training MSE     = {mseTR[0]}')
-print(f'training NMSE    = {nmseTR}')
 
 
 ## (Testing) Initialize the reservoir layer
@@ -247,15 +142,7 @@ nodeE	= np.zeros(shape=(N , testLen * Tp),dtype=int)
 nodeTS	= np.zeros(shape=(N , testLen),dtype=int)
 
 
-##  (Testing) Apply masking to input testing data
-print("(Testing) Apply masking to input testing data")
-inputTS = np.ndarray(shape=((initLen + testLen) * Tp,1))
-
-for k in range(0,(initLen + testLen)):
-    uTS = data[0,initLen + trainLen + k]
-    masked_input = (M * uTS).astype(int)
-    inputTS[k*Tp:(k+1)*Tp] = masked_input.copy()
-
+i = 0
 
 ## (Testing) Initialize the reservoir layer
 print("(Testing) Initialize the reservoir layer")
@@ -263,7 +150,7 @@ print("(Testing) Initialize the reservoir layer")
 # No need to store these values since they won't be used in testing
 for k in range(0,(initLen * Tp)):
     # Compute the new input data for initialization
-    initJTS = (inputTS[k,0]) + (nodeC[N-1,0])
+    initJTS = i * 600 + (nodeC[N-1,0])
     
     # Activation
     nodeN[0,0]	= (mackey_glass(initJTS)) * (2 ** 3)
@@ -271,6 +158,8 @@ for k in range(0,(initLen * Tp)):
     
     # Update the current node state
     nodeC       = nodeN.copy()
+
+    i += 1
 
 
 
@@ -281,7 +170,7 @@ for k in range(0,(testLen * Tp)):
     t = initLen * Tp + k
     
     # Compute the new input data for training
-    testJ = (inputTS[t,0]) + (nodeC[N-1,0])
+    testJ = i * 600 + (nodeC[N-1,0])
     
     # Activation
     nodeN[0,0]	= (mackey_glass(testJ)) * (2 ** 3)
@@ -293,43 +182,16 @@ for k in range(0,(testLen * Tp)):
     # Updete all node states
     nodeE[:, k] = nodeC[:,0]
 
-
+    i += 1
 
 # Consider the data just once everytime it loops around
 nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
+print(nodeTS)
+
+##  Setup Weights
+Wout = np.linspace(99,0,100).reshape((1,100))
 
 
-##  Compute testing errors
-print("(Testing) Compute testing errors")
+predicted_target = np.dot(Wout,nodeTS)
 
-# Call-out the target outputs
-Yt = target[0,initLen + trainLen + 1 : initLen + trainLen + 1 + testLen].reshape(1,trainLen) * SCALE
-
-nodeTS_int = nodeTS * (10 ** ROUND_FACTOR)
-nodeTS_int = nodeTS_int.astype(int)
-
-
-predicted_target_int = np.dot(Wout_int,nodeTS_int)
-predicted_target = predicted_target_int / (10 ** (ROUND_FACTOR * 2))
-
-# Calculate the MSE through L2 norm
-mse_testing = (((Yt - predicted_target)**2).mean(axis=1))
-
-# Calculate the NMSE
-nmse_testing = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
-
-print('--------------------------------------------------')
-print('Training Errors')
-print(f'training MSE     = {mse_testing[0]}')
-print(f'training NMSE    = {nmse_testing}')
-
-
-# Expected Accuracy:
-# --------------------------------------------------
-# Training Errors
-# training MSE     = 826257035.7929817
-# training NMSE    = 1.360547823426434
-# --------------------------------------------------
-# Training Errors
-# training MSE     = 934633849.438002
-# training NMSE    = 1.6171391757981401
+print(predicted_target)

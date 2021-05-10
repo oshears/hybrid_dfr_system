@@ -23,7 +23,7 @@ wire [DATA_WIDTH - 1 : 0] sum_i = din + dout_i;
 
 reg node_en = 0;
 
-localparam RESERVOIR_UPDATE = 0, MG_FUNCTION = 1;
+localparam RESERVOIR_UPDATE = 0, MG_FUNCTION_WAIT = 1, MG_FUNCTION_READY = 2;
 reg [1:0] current_state = 0, next_state = 0;
 
 
@@ -38,12 +38,17 @@ end
 
 always @(
     current_state,
-    en
+    en,
+    mem_cntr
 ) 
 begin
     
     node_en = 0;
     reservoir_valid = 0;
+
+    mem_cntr_en = 0;
+    mem_cntr_rst = 0;
+
     next_state = current_state;
 
     case(current_state)
@@ -52,12 +57,20 @@ begin
             
             if (en) begin
                 reservoir_valid = 0;
-                next_state = MG_FUNCTION;
+                mem_cntr_rst = 1;
+
+                next_state = MG_FUNCTION_WAIT;
             end
             else
                 reservoir_valid = 1;
         end
-        MG_FUNCTION:
+        MG_FUNCTION_WAIT:
+        begin
+            mem_cntr_en = 1;
+            if (mem_cntr == 2)
+                next_state = MG_FUNCTION_READY;
+        end
+        MG_FUNCTION_READY:
         begin
             node_en = 1;
             next_state = RESERVOIR_UPDATE;
@@ -66,6 +79,17 @@ begin
             next_state = RESERVOIR_UPDATE;
     endcase
     
+end
+
+// Counter to Wait for Memory Data Availability
+reg [1:0] mem_cntr = 0;
+reg mem_cntr_en = 0;
+reg mem_cntr_rst = 0;
+always @(posedge clk) begin
+    if (mem_cntr_rst)
+        mem_cntr = 0;
+    else if (mem_cntr_en)
+        mem_cntr = mem_cntr + 1;
 end
 
 genvar i;
@@ -86,11 +110,19 @@ generate
 end 
 endgenerate
 
-mackey_glass_block_16bit mackey_glass_block
+// mackey_glass_block_16bit mackey_glass_block
+// (
+//     .din(sum_i),
+//     .dout(node_outputs[0])
+// );
+
+asic_activation_function_ram asic_activation_function_ram
 (
-    .din(sum_i),
-    .dout(node_outputs[0])
+    .addra(sum_i[15:0]),
+    .clka(clk),
+    .douta(node_outputs[0][11:0])
 );
 
+assign node_outputs[0][31:12] = 0;
 
 endmodule

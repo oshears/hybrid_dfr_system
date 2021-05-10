@@ -131,20 +131,12 @@ wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] mem_addr = mem_addr_i[RESERVOIR_HIST
 
 wire [2:0] current_state_out;
 
-assign input_mem_addr = (mem_sel == 8'h1) ? mem_addr : sample_cntr;
-assign input_mem_din =  (mem_sel == 8'h1) ? mem_data_in : 32'h0;
 assign input_mem_wen =  (mem_sel == 8'h1) ? mem_wen : 1'h0;
 
-assign reservoir_output_mem_addr =    (mem_sel == 8'h2) ? mem_addr : ( (reservoir_history_en) ? reservoir_history_addr : matrix_multiply_reservoir_history_addr);
-assign reservoir_output_mem_data_in = (mem_sel == 8'h2) ? mem_data_in : reservoir_data_out;
 assign reservoir_output_mem_wen =     (mem_sel == 8'h2) ? mem_wen : reservoir_history_en;
 
-assign output_weight_mem_addr =    (mem_sel == 8'h3) ? mem_addr : matrix_multiply_output_weight_addr;
-assign output_weight_mem_data_in = (mem_sel == 8'h3) ? mem_data_in : 32'h0;
 assign output_weight_mem_wen =     (mem_sel == 8'h3) ? mem_wen : 1'h0;
 
-assign dfr_output_mem_addr =        (mem_sel == 8'h4) ? mem_addr : dfr_output_cntr;
-assign dfr_output_mem_data_in =     (mem_sel == 8'h4) ? mem_data_in : dfr_output_data;
 assign dfr_output_mem_wen =         (mem_sel == 8'h4) ? mem_wen : dfr_output_wen;
 
 assign mem_data_out =   (mem_sel == 8'h1) ? input_mem_dout : (
@@ -268,7 +260,7 @@ reservoir
 (
     .clk(S_AXI_ACLK),
     .rst(reservoir_rst),
-    .din(input_mem_dout),
+    .din(input_mem_doutb),
     .dout(reservoir_data_out),
     .reservoir_valid(reservoir_valid),
     .en(reservoir_en)
@@ -312,6 +304,7 @@ init_sample_counter
     .dout(reservoir_init_cntr)
 );
 
+/*
 ram
 # (
     .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
@@ -325,7 +318,24 @@ input_mem
     .din(input_mem_din),
     .dout(input_mem_dout)
 );
+*/
+wire [31:0] input_mem_doutb; 
 
+bram_16k_dual_port input_sample_mem
+(
+    .addra(mem_addr[13:0]),
+    .clka(S_AXI_ACLK),
+    .dina(mem_data_in),
+    .douta(input_mem_dout),
+    .wea(input_mem_wen),
+    .addrb(sample_cntr[13:0]),
+    .clkb(S_AXI_ACLK),
+    .dinb(32'h0000_0000),
+    .doutb(input_mem_doutb),
+    .web(1'b0)
+);
+
+/*
 ram
 # (
     .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
@@ -339,7 +349,26 @@ reservoir_output_mem
     .din(reservoir_output_mem_data_in),
     .dout(reservoir_output_mem_data_out)
 );
+*/
 
+assign reservoir_output_mem_addr = (reservoir_history_en) ? reservoir_history_addr : matrix_multiply_reservoir_history_addr;
+wire [31:0] reservoir_output_mem_doutb;
+
+bram_16k_dual_port reservoir_output_mem
+(
+    .addra(mem_addr[13:0]),
+    .clka(S_AXI_ACLK),
+    .dina(mem_data_in),
+    .douta(reservoir_output_mem_data_out),
+    .wea(reservoir_output_mem_wen),
+    .addrb(reservoir_output_mem_addr[13:0]),
+    .clkb(S_AXI_ACLK),
+    .dinb(reservoir_data_out),
+    .doutb(reservoir_output_mem_doutb),
+    .web(reservoir_history_en)
+);
+
+/*
 ram
 # (
     .ADDR_WIDTH(8),
@@ -353,8 +382,25 @@ output_weight_mem
     .din(output_weight_mem_data_in),
     .dout(output_weight_mem_data_out)
 );
+*/
 
+wire [31:0] output_weight_mem_doutb;
 
+bram_128_dual_port output_weight_mem
+(
+    .addra(mem_addr[6:0]),
+    .clka(S_AXI_ACLK),
+    .dina(mem_data_in),
+    .douta(output_weight_mem_data_out),
+    .wea(output_weight_mem_wen),
+    .addrb(matrix_multiply_output_weight_addr[6:0]),
+    .clkb(S_AXI_ACLK),
+    .dinb(32'h0000_0000),
+    .doutb(output_weight_mem_doutb),
+    .web(1'b0)
+);
+
+/*
 ram
 # (
     .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
@@ -367,6 +413,23 @@ dfr_output_mem
     .addr(dfr_output_mem_addr),
     .din(dfr_output_mem_data_in),
     .dout(dfr_output_mem_data_out)
+);
+*/
+
+wire [31:0] dfr_output_mem_doutb;
+
+bram_16k_dual_port dfr_output_mem
+(
+    .addra(mem_addr[13:0]),
+    .clka(S_AXI_ACLK),
+    .dina(mem_data_in),
+    .douta(dfr_output_mem_data_out),
+    .wea(output_weight_mem_wen),
+    .addrb(dfr_output_cntr[13:0]),
+    .clkb(S_AXI_ACLK),
+    .dinb(dfr_output_data),
+    .doutb(dfr_output_mem_doutb),
+    .web(dfr_output_wen)
 );
 
 
@@ -383,8 +446,8 @@ matrix_multiplier_v2
     .rst(matrix_multiply_rst),
     .start(matrix_multiply_start),
     .busy(matrix_multiply_busy),
-    .x_data(reservoir_output_mem_data_out),
-    .y_data(output_weight_mem_data_out),
+    .x_data(reservoir_output_mem_doutb),
+    .y_data(output_weight_mem_doutb),
     .x_addr(matrix_multiply_reservoir_history_addr),
     .y_addr(matrix_multiply_output_weight_addr),
     .z_addr(dfr_output_cntr),

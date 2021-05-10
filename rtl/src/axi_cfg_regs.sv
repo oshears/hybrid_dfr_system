@@ -90,7 +90,7 @@ reg send_read_data_to_AXI = 0;
 wire Local_Reset;
 
 
-localparam reset = 0, idle = 1, read_transaction_in_progress = 2, write_transaction_in_progress = 3, complete = 4;
+localparam reset = 0, idle = 1, read_transaction_in_progress = 2, write_transaction_in_progress = 3, mem_read_transaction_done_stage = 4, complete = 5;
 
 assign Local_Reset = ~S_AXI_ARESETN;
 assign combined_S_AXI_AWVALID_S_AXI_ARVALID = {S_AXI_AWVALID, S_AXI_ARVALID};
@@ -133,13 +133,7 @@ always @ (current_state, combined_S_AXI_AWVALID_S_AXI_ARVALID, S_AXI_ARVALID, S_
         end
         read_transaction_in_progress:
         begin
-            next_state = read_transaction_in_progress;
-            S_AXI_ARREADY = S_AXI_ARVALID;
-            S_AXI_RVALID = 1;
-            S_AXI_RRESP = 2'b00;
-            send_read_data_to_AXI = 1;
-            if (S_AXI_RREADY == 1) 
-                next_state = complete;
+            next_state = mem_read_transaction_done_stage;
         end
         write_transaction_in_progress:
         begin
@@ -151,6 +145,16 @@ always @ (current_state, combined_S_AXI_AWVALID_S_AXI_ARVALID, S_AXI_ARVALID, S_
             S_AXI_BVALID = 1;
 			if (S_AXI_BREADY == 1)
 			    next_state = complete;
+        end
+        mem_read_transaction_done_stage:
+        begin
+            next_state = mem_read_transaction_done_stage;
+            S_AXI_ARREADY = S_AXI_ARVALID;
+            S_AXI_RVALID = 1;
+            S_AXI_RRESP = 2'b00;
+            send_read_data_to_AXI = 1;
+            if (S_AXI_RREADY == 1) 
+                next_state = complete;
         end
         complete:
         begin

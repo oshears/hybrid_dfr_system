@@ -109,8 +109,11 @@ task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA, input DECIMAL=
         S_AXI_AWVALID = 1'b1;
         S_AXI_WVALID = 1;
         S_AXI_WDATA = WRITE_DATA;
+        @(posedge S_AXI_ACLK);
         S_AXI_BREADY = 1'b1;
-        @(posedge S_AXI_WREADY);
+        while(S_AXI_WREADY != 1) begin
+            @(posedge S_AXI_ACLK);
+        end
         @(posedge S_AXI_ACLK);
         S_AXI_WVALID = 0;
         S_AXI_AWVALID = 0;
@@ -218,7 +221,7 @@ initial begin
 
     ////// ========= Test DFR ============= /////////
 
-    for (j = 0; j < 3; j++) begin
+    // for (j = 0; j < 3; j++) begin
 
         // Configure Widths
         AXI_WRITE(NUM_INIT_SAMPLES_REG_ADDR,0);
@@ -277,7 +280,7 @@ initial begin
         for(i = 0; i < NUM_TEST_SAMPLES; i = i + 1) begin
             AXI_READ( .READ_ADDR(DFR_OUTPUT_MEM_ADDR_OFFSET + i*4), .DECIMAL(1), .READ_DATA(read_data));
         end
-    end
+    // end
 
     /*
     // DEBUG: Read Reservoir Output
