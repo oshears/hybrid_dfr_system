@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 module dfr_core_top
 #(
-    parameter C_S_AXI_ACLK_FREQ_HZ = 100000000,
+    // parameter C_S_AXI_ACLK_FREQ_HZ = 100000000,
     parameter C_S_AXI_DATA_WIDTH = 32,
     parameter C_S_AXI_ADDR_WIDTH = 30,
     parameter NUM_VIRTUAL_NODES = 10,
@@ -131,6 +131,13 @@ wire [RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0] mem_addr = mem_addr_i[RESERVOIR_HIST
 
 wire [2:0] current_state_out;
 
+wire [31:0] input_mem_doutb; 
+
+wire [31:0] reservoir_output_mem_doutb;
+
+wire [31:0] output_weight_mem_doutb;
+
+
 assign input_mem_wen =  (mem_sel == 8'h1) ? mem_wen : 1'h0;
 
 assign reservoir_output_mem_wen =     (mem_sel == 8'h2) ? mem_wen : reservoir_history_en;
@@ -162,7 +169,7 @@ assign debug_reg = debug_in;
 
 axi_cfg_regs 
 #(
-    C_S_AXI_ACLK_FREQ_HZ,
+    // C_S_AXI_ACLK_FREQ_HZ,
     C_S_AXI_DATA_WIDTH,
     C_S_AXI_ADDR_WIDTH
 )
@@ -319,7 +326,6 @@ input_mem
     .dout(input_mem_dout)
 );
 */
-wire [31:0] input_mem_doutb; 
 
 bram_16k_dual_port input_sample_mem
 (
@@ -352,7 +358,6 @@ reservoir_output_mem
 */
 
 assign reservoir_output_mem_addr = (reservoir_history_en) ? reservoir_history_addr : matrix_multiply_reservoir_history_addr;
-wire [31:0] reservoir_output_mem_doutb;
 
 bram_16k_dual_port reservoir_output_mem
 (
@@ -384,7 +389,6 @@ output_weight_mem
 );
 */
 
-wire [31:0] output_weight_mem_doutb;
 
 bram_128_dual_port output_weight_mem
 (

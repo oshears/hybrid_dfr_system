@@ -47,7 +47,7 @@ add_files -fileset sim_1 -norecurse ../rtl/tb/xadc_inputs_asic_function.txt
 
 # set_property top dfr_core_top_tb [get_filesets sim_1]
 # set_property top dfr_core_hybrid_top_tb [get_filesets sim_1]
-set_property top dfr_core_top_narma10_tb [get_filesets sim_1]
+set_property top dfr_core_top_tb [get_filesets sim_1]
 set_property top_lib xil_defaultlib [get_filesets sim_1]
 
 # XADC IP

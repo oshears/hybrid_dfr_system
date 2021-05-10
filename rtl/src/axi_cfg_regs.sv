@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 module axi_cfg_regs
 #(
-parameter C_S_AXI_ACLK_FREQ_HZ = 100000000,
+// parameter C_S_AXI_ACLK_FREQ_HZ = 100000000,
 parameter C_S_AXI_DATA_WIDTH = 32,
 parameter C_S_AXI_ADDR_WIDTH = 30 
 )
