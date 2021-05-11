@@ -53,6 +53,8 @@ reg y_col_rst = 0;
 reg x_col_y_row_en = 0;
 reg x_col_y_row_rst = 0;
 
+wire [63:0] x_mul_y;
+
 
 reg [2:0] current_state = 0;
 reg [2:0] next_state = 0;
@@ -98,6 +100,8 @@ always @(
     y_col_rst = 0;
     x_col_y_row_en = 0;
     x_col_y_row_rst = 0;
+
+    next_state = current_state;
 
     case (current_state)
         done:
@@ -188,7 +192,9 @@ always @(
         z_sum_loop:
         begin
             busy = 1;
-            next_state = z_sum_store;
+            multi_iter_en = 1;
+            if (multi_iter == 6)
+                next_state = z_sum_store;
         end
         z_sum_store:
         begin
@@ -282,7 +288,6 @@ always @(posedge clk) begin
         z_data <= x_mul_y[31:0] + z_data;
 end
 
-wire [63:0] x_mul_y;
 multiplier multiplier
 (
     .CLK(clk),

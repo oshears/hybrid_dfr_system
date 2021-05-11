@@ -68,6 +68,8 @@ always @(
     init_sample_cntr_en = 0;
     reservoir_history_rst = 0;
 
+    next_state = current_state;
+
     case (current_state)
         DONE:
         begin

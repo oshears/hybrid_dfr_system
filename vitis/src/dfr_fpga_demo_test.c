@@ -120,7 +120,7 @@ int main2()
 
         read_data = Xil_In32(CTRL_REG_ADDR);
         // while(read_data != 0){
-        while(read_data != 0x24){
+        // while(read_data != 0x24){
             sleep(3);
             read_data = Xil_In32(DEBUG_REG_ADDR);
             printf("DBG_REG: %x\n\r",read_data);
@@ -128,7 +128,7 @@ int main2()
             printf("CTRL_REG: %x\n\r",read_data);
             // read_data = Xil_In32(DEBUG_REG_ADDR);
             // printf("DBG_REG: %x\n\r",read_data);
-        }
+        // }
 
         read_data = Xil_In32(DEBUG_REG_ADDR);
         printf("Read Debug Reg: %x\n\r",read_data);

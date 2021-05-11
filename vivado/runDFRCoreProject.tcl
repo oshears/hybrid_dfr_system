@@ -121,6 +121,7 @@ export_simulation -of_objects [get_files /home/oshears/Documents/vt/research/cod
 create_ip -name mult_gen -vendor xilinx.com -library ip -version 12.0 -module_name multiplier
 set_property -dict [list CONFIG.Component_Name {multiplier} CONFIG.PortAWidth {32} CONFIG.PortBWidth {32} CONFIG.OutputWidthHigh {63}] [get_ips multiplier]
 set_property -dict [list CONFIG.Multiplier_Construction {Use_Mults}] [get_ips multiplier]
+set_property -dict [list CONFIG.PipeStages {6}] [get_ips multiplier]
 generate_target {instantiation_template} [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/dfr_core_project/dfr_core_project.srcs/sources_1/ip/multiplier/multiplier.xci]
 generate_target all [get_files  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/dfr_core_project/dfr_core_project.srcs/sources_1/ip/multiplier/multiplier.xci]
 catch { config_ip_cache -export [get_ips -all multiplier] }
@@ -152,20 +153,7 @@ set_property -name {xsim.simulate.runtime} -value {all} -objects [get_filesets s
 launch_simulation
 
 # package ASIC Interface Top IP
-set_property top asic_function_interface_top [get_filesets sources_1]
-update_compile_order -fileset sources_1
-ipx::package_project -root_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ -vendor user.org -library user -taxonomy /UserIP -force
-set_property taxonomy {/Embedded_Processing/AXI_Peripheral/Low_Speed_Peripheral /UserIP} [ipx::current_core]
-set_property core_revision 1 [ipx::current_core]
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::check_integrity [ipx::current_core]
-ipx::save_core [ipx::current_core]
-set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
-update_ip_catalog
-
-# package FPGA DFR Core Top IP
-# set_property top dfr_core_top [get_filesets sources_1]
+# set_property top asic_function_interface_top [get_filesets sources_1]
 # update_compile_order -fileset sources_1
 # ipx::package_project -root_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ -vendor user.org -library user -taxonomy /UserIP -force
 # set_property taxonomy {/Embedded_Processing/AXI_Peripheral/Low_Speed_Peripheral /UserIP} [ipx::current_core]
@@ -176,6 +164,19 @@ update_ip_catalog
 # ipx::save_core [ipx::current_core]
 # set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
 # update_ip_catalog
+
+# package FPGA DFR Core Top IP
+set_property top dfr_core_top [get_filesets sources_1]
+update_compile_order -fileset sources_1
+ipx::package_project -root_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ -vendor user.org -library user -taxonomy /UserIP -force
+set_property taxonomy {/Embedded_Processing/AXI_Peripheral/Low_Speed_Peripheral /UserIP} [ipx::current_core]
+set_property core_revision 1 [ipx::current_core]
+ipx::create_xgui_files [ipx::current_core]
+ipx::update_checksums [ipx::current_core]
+ipx::check_integrity [ipx::current_core]
+ipx::save_core [ipx::current_core]
+set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
+update_ip_catalog
 
 # package Hybrid DFR Core Top IP
 # set_property top dfr_core_hybrid_top [get_filesets sources_1]

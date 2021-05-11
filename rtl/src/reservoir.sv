@@ -17,14 +17,20 @@ wire [DATA_WIDTH - 1 : 0] node_outputs [NUM_VIRTUAL_NODES : 0];
 
 wire [DATA_WIDTH - 1 : 0] dout_i = {17'h0,node_outputs[NUM_VIRTUAL_NODES][11:0],3'h0};
 
-assign dout = dout_i;
 
 wire [DATA_WIDTH - 1 : 0] sum_i = din + dout_i;
 
 reg node_en = 0;
 
-localparam RESERVOIR_UPDATE = 0, MG_FUNCTION_WAIT = 1, MG_FUNCTION_READY = 2;
+reg [1:0] mem_cntr = 0;
+reg mem_cntr_en = 0;
+reg mem_cntr_rst = 0;
+
 reg [1:0] current_state = 0, next_state = 0;
+
+localparam RESERVOIR_UPDATE = 0, MG_FUNCTION_WAIT = 1, MG_FUNCTION_READY = 2;
+
+assign dout = dout_i;
 
 
 always @(posedge clk, posedge rst) begin
@@ -82,9 +88,7 @@ begin
 end
 
 // Counter to Wait for Memory Data Availability
-reg [1:0] mem_cntr = 0;
-reg mem_cntr_en = 0;
-reg mem_cntr_rst = 0;
+
 always @(posedge clk) begin
     if (mem_cntr_rst)
         mem_cntr = 0;
@@ -116,7 +120,7 @@ endgenerate
 //     .dout(node_outputs[0])
 // );
 
-asic_activation_function_ram asic_activation_function_ram
+asic_activation_function_ram asic_activation_function_rom
 (
     .addra(sum_i[15:0]),
     .clka(clk),

@@ -23,19 +23,41 @@ run_hw_axi txn_2
 #peek_hw_axi [get_hw_axi_txns txn1]
 
 reset_hw_axi [get_hw_axis]
-create_hw_axi_txn ctrl_reg_clr [get_hw_axis hw_axi_1] -address 00000000 -data 12340000 -type write -force
-create_hw_axi_txn ctrl_reg_test [get_hw_axis hw_axi_1] -address 00000000 -data DEADBEE0 -type write -force
-create_hw_axi_txn ctrl_reg_read [get_hw_axis hw_axi_1] -address 00000000 -type read -force
+create_hw_axi_txn ctrl_reg_clr  [get_hw_axis hw_axi_1]  -address 0x00000000 -data 00000000 -type write -force
+create_hw_axi_txn ctrl_reg_test [get_hw_axis hw_axi_1]  -address 0x00000000 -data DEADBEE0 -type write -force
+create_hw_axi_txn ctrl_reg_read [get_hw_axis hw_axi_1]  -address 0x00000000 -type read -force
 run_hw_axi ctrl_reg_clr
 run_hw_axi ctrl_reg_read
 run_hw_axi ctrl_reg_test
 run_hw_axi ctrl_reg_read
 
 reset_hw_axi [get_hw_axis]
-create_hw_axi_txn ctrl_reg_clr [get_hw_axis hw_axi_1] -address 0x40000000 -data 12340000 -type write -force
+create_hw_axi_txn ctrl_reg_clr [get_hw_axis hw_axi_1]  -address 0x40000000 -data 12340000 -type write -force
 create_hw_axi_txn ctrl_reg_test [get_hw_axis hw_axi_1] -address 0x40000000 -data DEADBEE0 -type write -force
 create_hw_axi_txn ctrl_reg_read [get_hw_axis hw_axi_1] -address 0x40000000 -type read -force
 run_hw_axi ctrl_reg_clr
 run_hw_axi ctrl_reg_read
 run_hw_axi ctrl_reg_test
 run_hw_axi ctrl_reg_read
+
+
+
+# DFR Task
+create_hw_axi_txn input_mem_write_0  [get_hw_axis hw_axi_1]  -address 01000000 -data DEADBEEF -type write -force
+create_hw_axi_txn input_mem_read_0   [get_hw_axis hw_axi_1]  -address 01000000 -type read -force
+create_hw_axi_txn reservoir_mem_write_0  [get_hw_axis hw_axi_1]  -address 02000000 -data DEADBEEF -type write -force
+create_hw_axi_txn reservoir_mem_read_0   [get_hw_axis hw_axi_1]  -address 02000000 -type read -force
+create_hw_axi_txn weight_mem_write_0  [get_hw_axis hw_axi_1]  -address 03000000 -data DEADBEEF -type write -force
+create_hw_axi_txn weight_mem_read_0   [get_hw_axis hw_axi_1]  -address 03000000 -type read -force
+create_hw_axi_txn dfr_mem_write_0  [get_hw_axis hw_axi_1]  -address 04000000 -data DEADBEEF -type write -force
+create_hw_axi_txn dfr_mem_read_0   [get_hw_axis hw_axi_1]  -address 04000000 -type read -force
+
+reset_hw_axi [get_hw_axis]
+run_hw_axi input_mem_write_0
+run_hw_axi input_mem_read_0
+run_hw_axi reservoir_mem_write_0
+run_hw_axi reservoir_mem_read_0
+run_hw_axi weight_mem_write_0
+run_hw_axi weight_mem_read_0
+run_hw_axi dfr_mem_write_0
+run_hw_axi dfr_mem_read_0

@@ -152,7 +152,7 @@ assign mem_data_out =   (mem_sel == 8'h1) ? input_mem_dout : (
                         (mem_sel == 8'h4) ? dfr_output_mem_data_out : 32'h0
                         )));
 
-
+// DEBUG_REG BITS
 assign debug_in[0] = busy; // DFR Core Controller
 assign debug_in[1] = matrix_multiply_busy;
 assign debug_in[2] = dfr_done;
