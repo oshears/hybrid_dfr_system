@@ -44,7 +44,9 @@ parameter C_S_AXI_ADDR_WIDTH = 30
     output [31:0] num_train_steps,
     output [31:0] num_test_samples,
     output [31:0] num_test_steps,
-    output [31:0] num_steps_per_sample
+    output [31:0] num_steps_per_sample,
+
+    output [2:0] current_state_out
 );
 
 reg num_train_samples_reg_valid = 0;
@@ -96,6 +98,8 @@ assign Local_Reset = ~S_AXI_ARESETN;
 assign combined_S_AXI_AWVALID_S_AXI_ARVALID = {S_AXI_AWVALID, S_AXI_ARVALID};
 assign debug = debug_reg;
 assign ctrl = ctrl_reg;
+
+assign current_state_out = current_state;
 
 always @ (posedge S_AXI_ACLK) begin
     if (Local_Reset)
@@ -401,7 +405,7 @@ end
 // TODO: Attempt to insert a write buffer
 
 // mem access
-assign mem_wen = write_enable_registers && (local_address[29:24] > 0);
+assign mem_wen = write_enable_registers && (local_address[29:24] > 0) && ~busy;
 assign mem_data_in = S_AXI_WDATA;
 // assign mem_addr[15:8] = ctrl_reg[15:8];
 // assign mem_addr[7:0] = (combined_S_AXI_AWVALID_S_AXI_ARVALID[1]) ? S_AXI_AWADDR[7:0] : ( (combined_S_AXI_AWVALID_S_AXI_ARVALID[0]) ? S_AXI_ARADDR[7:0] : 8'h00);

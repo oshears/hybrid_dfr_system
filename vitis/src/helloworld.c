@@ -68,7 +68,7 @@
 #define DFR_OUTPUT_MEM_ADDR_OFFSET 0x44000000
 
 #define NUM_STEPS_PER_SAMPLE 100
-#define NUM_INIT_SAMPLES 100
+#define NUM_INIT_SAMPLES 1
 #define NUM_TEST_SAMPLES 1
 
 #define NUM_VIRTUAL_NODES 100
@@ -85,7 +85,7 @@ int main()
 
 
     // Configure Widths
-    Xil_Out32(NUM_INIT_SAMPLES_REG_ADDR,0);
+    Xil_Out32(NUM_INIT_SAMPLES_REG_ADDR,NUM_INIT_SAMPLES);
     read_data = Xil_In32(NUM_INIT_SAMPLES_REG_ADDR);
     printf("NUM_INIT_SAMPLES_REG_ADDR: %d\n\r",read_data);
     Xil_Out32(NUM_TRAIN_SAMPLES_REG_ADDR,0);
@@ -95,7 +95,7 @@ int main()
     read_data = Xil_In32(NUM_TEST_SAMPLES_REG_ADDR);
     printf("NUM_TEST_SAMPLES_REG_ADDR: %d\n\r",read_data);
 
-    Xil_Out32(NUM_INIT_STEPS_REG_ADDR,0);
+    Xil_Out32(NUM_INIT_STEPS_REG_ADDR,NUM_INIT_SAMPLES * NUM_STEPS_PER_SAMPLE);
     read_data = Xil_In32(NUM_INIT_STEPS_REG_ADDR);
     printf("NUM_INIT_STEPS_REG_ADDR: %d\n\r",read_data);
     Xil_Out32(NUM_TRAIN_STEPS_REG_ADDR,0);
@@ -113,8 +113,8 @@ int main()
 
     // Configure Input Mem
     printf("Configuring Input Mem\n\r");
-    for (i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1){
-        Xil_Out32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4, i*600);
+    for (i = 0; i < (NUM_INIT_SAMPLES + NUM_TEST_SAMPLES) * NUM_STEPS_PER_SAMPLE; i = i + 1){
+        Xil_Out32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4, i*300);
         read_data = Xil_In32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4);
         printf("Read Input: %d\n\r",read_data);
     }
@@ -129,10 +129,10 @@ int main()
 
     // Launch DFR
     printf("Launching DFR\n\r");
-    Xil_Out32(CTRL_REG_ADDR,0x00000001);
+    Xil_Out32(CTRL_REG_ADDR,0x1);
 
     read_data = Xil_In32(CTRL_REG_ADDR);
-    while(read_data != 0){
+    while(read_data & 0x2 != 0){
         read_data = Xil_In32(CTRL_REG_ADDR);
         printf("CTRL_REG: %x\n\r",read_data);
     }

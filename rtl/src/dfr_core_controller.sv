@@ -60,7 +60,7 @@ always @(
     reservoir_en = 0;
     reservoir_rst = 0;
     dfr_done = 0;
-    busy = 0;
+    // busy = 0;
     reservoir_history_en = 0;
     sample_cntr_rst = 0;
     sample_cntr_en = 0;
@@ -73,6 +73,7 @@ always @(
     case (current_state)
         DONE:
         begin
+            busy = 0;
             if (start) begin
                 next_state = RESERVOIR_INIT_STAGE;
                 reservoir_rst = 1;
@@ -80,11 +81,9 @@ always @(
                 init_sample_cntr_rst = 1;
                 reservoir_history_rst = 1;
                 sample_cntr_rst = 1;
-                busy = 1;
             end
             else begin
                 dfr_done = 1;
-                busy = 0;
             end
         end
         RESERVOIR_INIT_STAGE:
@@ -139,6 +138,8 @@ always @(
         end
         default:
         begin
+            busy = 1;
+            next_state = DONE;
         end
     endcase
 end

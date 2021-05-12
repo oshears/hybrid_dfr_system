@@ -10,7 +10,8 @@ DATA_WIDTH = 32
     input en,
     input [DATA_WIDTH - 1 : 0] din,
     output [DATA_WIDTH - 1 : 0] dout,
-    output reg reservoir_valid = 0
+    output reg reservoir_valid = 0,
+    output [11:0] asic_function_out
 );
 
 wire [DATA_WIDTH - 1 : 0] node_outputs [NUM_VIRTUAL_NODES : 0];
@@ -128,5 +129,6 @@ asic_activation_function_ram asic_activation_function_rom
 );
 
 assign node_outputs[0][31:12] = 0;
+assign asic_function_out = node_outputs[0][11:0];
 
 endmodule

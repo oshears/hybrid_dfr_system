@@ -4,7 +4,7 @@ module dfr_core_top
     // parameter C_S_AXI_ACLK_FREQ_HZ = 100000000,
     parameter C_S_AXI_DATA_WIDTH = 32,
     parameter C_S_AXI_ADDR_WIDTH = 30,
-    parameter NUM_VIRTUAL_NODES = 10,
+    parameter NUM_VIRTUAL_NODES = 100,
     parameter RESERVOIR_DATA_WIDTH = 32,
     parameter RESERVOIR_HISTORY_ADDR_WIDTH = 14
 )
@@ -137,14 +137,13 @@ wire [31:0] reservoir_output_mem_doutb;
 
 wire [31:0] output_weight_mem_doutb;
 
+wire [11:0] asic_function_out;
 
-assign input_mem_wen =  (mem_sel == 8'h1) ? mem_wen : 1'h0;
 
-assign reservoir_output_mem_wen =     (mem_sel == 8'h2) ? mem_wen : reservoir_history_en;
-
-assign output_weight_mem_wen =     (mem_sel == 8'h3) ? mem_wen : 1'h0;
-
-assign dfr_output_mem_wen =         (mem_sel == 8'h4) ? mem_wen : dfr_output_wen;
+assign input_mem_wen            =     (mem_sel == 8'h1) ? mem_wen : 1'h0;
+assign reservoir_output_mem_wen =     (mem_sel == 8'h2) ? mem_wen : 1'h0;
+assign output_weight_mem_wen    =     (mem_sel == 8'h3) ? mem_wen : 1'h0;
+assign dfr_output_mem_wen       =     (mem_sel == 8'h4) ? mem_wen : dfr_output_wen;
 
 assign mem_data_out =   (mem_sel == 8'h1) ? input_mem_dout : (
                         (mem_sel == 8'h2) ? reservoir_output_mem_data_out : (
@@ -161,11 +160,17 @@ assign debug_in[4] = reservoir_init_busy;
 assign debug_in[5] = reservoir_filled;
 assign debug_in[6] = reservoir_en;
 assign debug_in[7] = 1'b0;
-assign debug_in[15:8] = mem_sel;
-assign debug_in[18:16] = current_state_out;
-assign debug_in[31:19] = reservoir_history_addr[13:0];
+assign debug_in[19:8] = asic_function_out;
+assign debug_in[22:20] = axi_current_state_out;
+assign debug_in[23] = 1'b0;
+assign debug_in[31:24] = input_mem_doutb[7:0];
+// assign debug_in[15:8] = mem_sel;
+// assign debug_in[18:16] = current_state_out;
+// assign debug_in[31:19] = reservoir_history_addr[13:0];
 
 assign debug_reg = debug_in;
+
+wire [2:0] axi_current_state_out;
 
 axi_cfg_regs 
 #(
@@ -213,7 +218,8 @@ axi_cfg_regs
     .S_AXI_RREADY(S_AXI_RREADY),   
     .S_AXI_BRESP(S_AXI_BRESP),    
     .S_AXI_BVALID(S_AXI_BVALID),   
-    .S_AXI_BREADY(S_AXI_BREADY)   
+    .S_AXI_BREADY(S_AXI_BREADY),
+    .current_state_out(axi_current_state_out)   
 );
 
 
@@ -270,7 +276,8 @@ reservoir
     .din(input_mem_doutb),
     .dout(reservoir_data_out),
     .reservoir_valid(reservoir_valid),
-    .en(reservoir_en)
+    .en(reservoir_en),
+    .asic_function_out(asic_function_out)
 );
 
 assign reservoir_rst = rst || reservoir_rst_i;
@@ -311,22 +318,6 @@ init_sample_counter
     .dout(reservoir_init_cntr)
 );
 
-/*
-ram
-# (
-    .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
-    .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
-)
-input_mem
-(
-    .clk(S_AXI_ACLK),
-    .wen(input_mem_wen),
-    .addr(input_mem_addr),
-    .din(input_mem_din),
-    .dout(input_mem_dout)
-);
-*/
-
 bram_16k_dual_port input_sample_mem
 (
     .addra(mem_addr[13:0]),
@@ -340,22 +331,6 @@ bram_16k_dual_port input_sample_mem
     .doutb(input_mem_doutb),
     .web(1'b0)
 );
-
-/*
-ram
-# (
-    .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
-    .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
-)
-reservoir_output_mem
-(
-    .clk(S_AXI_ACLK),
-    .wen(reservoir_output_mem_wen),
-    .addr(reservoir_output_mem_addr),
-    .din(reservoir_output_mem_data_in),
-    .dout(reservoir_output_mem_data_out)
-);
-*/
 
 assign reservoir_output_mem_addr = (reservoir_history_en) ? reservoir_history_addr : matrix_multiply_reservoir_history_addr;
 
@@ -373,23 +348,6 @@ bram_16k_dual_port reservoir_output_mem
     .web(reservoir_history_en)
 );
 
-/*
-ram
-# (
-    .ADDR_WIDTH(8),
-    .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
-)
-output_weight_mem
-(
-    .clk(S_AXI_ACLK),
-    .wen(output_weight_mem_wen),
-    .addr(output_weight_mem_addr[7:0]),
-    .din(output_weight_mem_data_in),
-    .dout(output_weight_mem_data_out)
-);
-*/
-
-
 bram_128_dual_port output_weight_mem
 (
     .addra(mem_addr[6:0]),
@@ -403,22 +361,6 @@ bram_128_dual_port output_weight_mem
     .doutb(output_weight_mem_doutb),
     .web(1'b0)
 );
-
-/*
-ram
-# (
-    .ADDR_WIDTH(RESERVOIR_HISTORY_ADDR_WIDTH),
-    .DATA_WIDTH(RESERVOIR_DATA_WIDTH)
-)
-dfr_output_mem
-(
-    .clk(S_AXI_ACLK),
-    .wen(dfr_output_mem_wen),
-    .addr(dfr_output_mem_addr),
-    .din(dfr_output_mem_data_in),
-    .dout(dfr_output_mem_data_out)
-);
-*/
 
 wire [31:0] dfr_output_mem_doutb;
 
@@ -461,12 +403,5 @@ matrix_multiplier_v2
     .y_cols({{(RESERVOIR_HISTORY_ADDR_WIDTH - 1){1'b0}},1'b1}),
     .x_cols_y_rows(NUM_VIRTUAL_NODES[RESERVOIR_HISTORY_ADDR_WIDTH - 1 : 0])
 );
-
-//debug_reg_ila debug_reg_ila
-//(
-//    .clk(S_AXI_ACLK),
-//    .probe0(debug_in)
-//);
-
 
 endmodule
