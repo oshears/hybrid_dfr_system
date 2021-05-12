@@ -5,7 +5,6 @@ localparam CTRL_REG_ADDR = 16'h0000;
 localparam ASIC_DATA_OUT_REG_ADDR = 16'h0004;
 localparam ASIC_DATA_IN_REG_ADDR = 16'h0008;
 
-localparam C_S_AXI_ACLK_FREQ_HZ = 100000000;
 localparam C_S_AXI_DATA_WIDTH = 32;
 localparam C_S_AXI_ADDR_WIDTH = 16;
 
@@ -44,7 +43,6 @@ wire VN_IN;
 
 asic_function_interface_top
 #(
-    .C_S_AXI_ACLK_FREQ_HZ(C_S_AXI_ACLK_FREQ_HZ),
     .C_S_AXI_DATA_WIDTH(C_S_AXI_DATA_WIDTH),
     .C_S_AXI_ADDR_WIDTH(C_S_AXI_ADDR_WIDTH)
 )

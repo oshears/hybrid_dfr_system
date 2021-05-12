@@ -1,7 +1,6 @@
 `timescale 1ns / 1ps
 module dfr_core_top
 #(
-    // parameter C_S_AXI_ACLK_FREQ_HZ = 100000000,
     parameter C_S_AXI_DATA_WIDTH = 32,
     parameter C_S_AXI_ADDR_WIDTH = 30,
     parameter NUM_VIRTUAL_NODES = 100,
@@ -164,9 +163,6 @@ assign debug_in[19:8] = asic_function_out;
 assign debug_in[22:20] = axi_current_state_out;
 assign debug_in[23] = 1'b0;
 assign debug_in[31:24] = input_mem_doutb[7:0];
-// assign debug_in[15:8] = mem_sel;
-// assign debug_in[18:16] = current_state_out;
-// assign debug_in[31:19] = reservoir_history_addr[13:0];
 
 assign debug_reg = debug_in;
 
@@ -174,7 +170,6 @@ wire [2:0] axi_current_state_out;
 
 axi_cfg_regs 
 #(
-    // C_S_AXI_ACLK_FREQ_HZ,
     C_S_AXI_DATA_WIDTH,
     C_S_AXI_ADDR_WIDTH
 )

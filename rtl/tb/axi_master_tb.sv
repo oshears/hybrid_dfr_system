@@ -1,7 +1,6 @@
 `timescale 1ns / 1ps
 module dfr_core_top_tb;
 
-localparam C_M_AXI_ACLK_FREQ_HZ = 100000000;
 localparam C_M_AXI_DATA_WIDTH = 32;
 localparam C_M_AXI_ADDR_WIDTH = 32;
 
@@ -35,7 +34,7 @@ wire M_AXI_BREADY;
 wire done;
 wire [31:0] read_data;
 
-axi_master #(C_M_AXI_ACLK_FREQ_HZ,C_M_AXI_DATA_WIDTH,C_M_AXI_ADDR_WIDTH) axi_master
+axi_master #(C_M_AXI_DATA_WIDTH,C_M_AXI_ADDR_WIDTH) axi_master
 (
 
     .addr(addr),

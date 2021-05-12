@@ -11,7 +11,6 @@ localparam NUM_INIT_STEPS_REG_ADDR = 16'h0018;
 localparam NUM_TRAIN_STEPS_REG_ADDR = 16'h001C;
 localparam NUM_TEST_STEPS_REG_ADDR = 16'h0020;
 
-// localparam C_S_AXI_ACLK_FREQ_HZ = 100000000;
 localparam C_S_AXI_DATA_WIDTH = 32;
 localparam C_S_AXI_ADDR_WIDTH = 30;
 localparam NUM_VIRTUAL_NODES = 100;
@@ -61,7 +60,6 @@ reg [31:0] write_data = 0;
 
 dfr_core_top
 #(
-    // .C_S_AXI_ACLK_FREQ_HZ(C_S_AXI_ACLK_FREQ_HZ),
     .C_S_AXI_DATA_WIDTH(C_S_AXI_DATA_WIDTH),
     .C_S_AXI_ADDR_WIDTH(C_S_AXI_ADDR_WIDTH),
     .NUM_VIRTUAL_NODES(NUM_VIRTUAL_NODES),
