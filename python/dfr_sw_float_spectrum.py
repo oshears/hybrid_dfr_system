@@ -38,7 +38,7 @@ def load_mg_vector():
 
     return mg_vector
 
-mg_vector = load_mg_vector()
+mg_vector = np.genfromtxt(f"./data/asic_function_onboard_dac.csv", delimiter=",").T
 
 # ASIC Mackey-Glass Activation Function
 def mackey_glass(inData):
@@ -55,7 +55,7 @@ def mackey_glass(inData):
 ##	Import dataset
 NOISE = 10
 ANT = 6
-spectrum_vector = np.genfromtxt (f"./data/spectrum/spectrum_-{NOISE}_db_{ANT}_ant.csv", delimiter=",")
+spectrum_vector = np.genfromtxt(f"./data/spectrum/spectrum_-{NOISE}_db_{ANT}_ant.csv", delimiter=",")
 data   = spectrum_vector[:,0].reshape((1,spectrum_vector.shape[0]))
 target = spectrum_vector[:,1].reshape((1,spectrum_vector.shape[0]))
 

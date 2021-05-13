@@ -11,34 +11,20 @@ MG_FUNCTION_RESOLUTION = 2**16
 
 MAX_INPUT = 0
 
-def load_mg_vector():
-    # Open ASIC Activation Function File
-    fh = open("./data/asic_function_onboard_dac.csv",mode="r")
+
+# ASIC Mackey-Glass Activation Function
+mg_vector = np.genfromtxt(f"./data/asic_function_onboard_dac.csv", delimiter=",").T
+
+def mackey_glass(inData):
+
+    if inData < MG_FUNCTION_RESOLUTION:
+        # scaled_input = int(MG_FUNCTION_RESOLUTION * inData)
+        scaled_input = int(MG_FUNCTION_RESOLUTION * inData / MAX_INPUT )
+        if scaled_input < MG_FUNCTION_RESOLUTION and scaled_input > 0:
+            float_output = mg_vector[1,scaled_input] / (2**12)
+            return float_output
     
-    # MG Vector
-    mg_vector = np.zeros((2,MG_FUNCTION_RESOLUTION))
-
-    # Read All Lines
-    lines = fh.readlines()
-
-    # Scale Input Data
-    # scaledInData = (inData / inDataMax) * 1.8
-
-    i = 0
-    for line in lines:
-        # Parse Data
-        vals = line.split("\n")
-        vals = vals[0].split(",")
-        inVal = float(vals[0])
-        outVal = float(vals[1])
-
-        mg_vector[0,i] = inVal
-        mg_vector[1,i] = outVal
-        i += 1
-
-    return mg_vector
-
-mg_vector = load_mg_vector()
+    return 0
 
 # NARMA10
 def narma10_create(inLen):
@@ -54,17 +40,6 @@ def narma10_create(inLen):
     
     return (inp, tar)
 
-# ASIC Mackey-Glass Activation Function
-def mackey_glass(inData):
-
-    if inData < MG_FUNCTION_RESOLUTION:
-        # scaled_input = int(MG_FUNCTION_RESOLUTION * inData)
-        scaled_input = int(MG_FUNCTION_RESOLUTION * inData / MAX_INPUT )
-        if scaled_input < MG_FUNCTION_RESOLUTION and scaled_input > 0:
-            float_output = mg_vector[1,scaled_input] / (2**12)
-            return float_output
-    
-    return 0
 
 ##	Import dataset
 

@@ -13,33 +13,10 @@ MAX_INPUT = 2**16
 
 MAX_MG_OUTPUT = 2**12
 
-def load_mg_vector():
-    # Open ASIC Activation Function File
-    fh = open("./data/asic_function_onboard_dac.csv",mode="r")
-    
-    # MG Vector
-    mg_vector = np.zeros((2,MG_FUNCTION_RESOLUTION))
-
-    # Read All Lines
-    lines = fh.readlines()
-
-    i = 0
-    for line in lines:
-        # Parse Data
-        vals = line.split("\n")
-        vals = vals[0].split(",")
-        inVal = float(vals[0])
-        outVal = float(vals[1])
-
-        mg_vector[0,i] = inVal
-        mg_vector[1,i] = outVal
-        i += 1
-
-    return mg_vector
-
-mg_vector = load_mg_vector()
 
 # ASIC Mackey-Glass Activation Function
+mg_vector = np.genfromtxt(f"./data/asic_function_onboard_dac.csv", delimiter=",").T
+
 def mackey_glass(inData):
 
     if inData < MG_FUNCTION_RESOLUTION and inData >= 0:
