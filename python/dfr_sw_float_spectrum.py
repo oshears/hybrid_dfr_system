@@ -11,36 +11,10 @@ MG_FUNCTION_RESOLUTION = 2**16
 
 MAX_INPUT = 0
 
-def load_mg_vector():
-    # Open ASIC Activation Function File
-    fh = open("./data/asic_function_onboard_dac.csv",mode="r")
-    
-    # MG Vector
-    mg_vector = np.zeros((2,MG_FUNCTION_RESOLUTION))
-
-    # Read All Lines
-    lines = fh.readlines()
-
-    # Scale Input Data
-    # scaledInData = (inData / inDataMax) * 1.8
-
-    i = 0
-    for line in lines:
-        # Parse Data
-        vals = line.split("\n")
-        vals = vals[0].split(",")
-        inVal = float(vals[0])
-        outVal = float(vals[1])
-
-        mg_vector[0,i] = inVal
-        mg_vector[1,i] = outVal
-        i += 1
-
-    return mg_vector
-
-mg_vector = np.genfromtxt(f"./data/asic_function_onboard_dac.csv", delimiter=",").T
 
 # ASIC Mackey-Glass Activation Function
+mg_vector = np.genfromtxt(f"./data/asic_function_onboard_dac.csv", delimiter=",").T
+
 def mackey_glass(inData):
 
     if inData < MG_FUNCTION_RESOLUTION:
@@ -258,12 +232,14 @@ nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
 Yt = target[0,initLen + trainLen + initLen + 1 : initLen + trainLen + initLen + 1 + testLen].reshape(1,testLen)
 
 predicted_target = np.dot(Wout,nodeTS)
+predicted_target = predicted_target > 0.5
 
 # Calculate the MSE through L2 norm
 mse_testing = (((Yt - predicted_target)**2).mean(axis=1))
 
 # Calculate the NMSE
 nmse_testing  = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
+nmse_testing  = (np.linalg.norm(Yt[0,0:testLen-1] - predicted_target[0,1:testLen]) / np.linalg.norm(Yt[0,0:testLen-1]))**2
 nrmse_testing = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
 # nmse_testing  =         np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size
 # nrmse_testing = np.sqrt(np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size)
@@ -283,3 +259,13 @@ print(f'testing NMSE    = {nmse_testing}')
 # (Goudarzi et al.2014)     DFR     0.065                   0.464                   85.3%
 # (Ortín and Pesquera2017)  DFR     /                       0.17                    59.8%
 # This Work                 DFR     0.0849                  0.0683                  /
+
+import matplotlib.pyplot as plt
+SAMPLES = 200
+x = np.linspace(0,SAMPLES-1,SAMPLES)
+plt.plot(x,Yt[0,0:SAMPLES],label="Yt")
+# plt.plot(x,predicted_target[0,0:SAMPLES],'--',label="Predicted Target")
+plt.plot(x,predicted_target[0,1:SAMPLES+1],'--',label="Predicted Target")
+plt.legend()
+# plt.ylim([0,1])
+plt.savefig("./data/dfr_sw_float_spectrum_fig.png")
