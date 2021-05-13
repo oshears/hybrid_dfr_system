@@ -1,10 +1,7 @@
 ############################################################
 #
 #   Delay-feedback Reservoir (DFR)
-#   Modified by Kangjun
-#   Department of Electrical and Computer Engineering
-#   Virginia Tech
-#   Last modify at 06/20/2019
+#   NARMA-10 (Int)
 #
 ############################################################
 
@@ -72,8 +69,8 @@ def mackey_glass(inData):
 ##	Import dataset
 
 # 10th order nonlinear auto-regressive moving average (NARMA10)
-# seed = 0
-# np.random.seed(seed)
+seed = 0
+np.random.seed(seed)
 data, target = narma10_create(10000)
 
 
@@ -102,8 +99,6 @@ testLen     = 4000
 
 # Random Uniform [0, 1]
 M = np.random.rand(Tp, 1)
-# M = np.random.rand(Tp,1) * 2 - 1
-# M = np.sign(M) * 0.1
 
 ##  (Training) Initialization of reservoir dynamics
 
@@ -139,7 +134,6 @@ for k in range(0,(initLen * Tp)):
     # Activation
     # multiply by 8 to scale 12-bit output to 16 bits (15 bits unsigned)
     nodeN[0,0]	= (mackey_glass(initJTR))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTR[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -156,7 +150,6 @@ for k in range(0,(trainLen * Tp)):
     
     # Activation
     nodeN[0,0]	= (mackey_glass(trainJ))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTR[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -181,7 +174,6 @@ nodeTR_T = nodeTR.T
 
 # Calculate output weights
 reg = 1e-8
-# Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T))))
 Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T)) + reg * np.eye(N)))
 Wout = np.round(Wout)
 
@@ -237,7 +229,6 @@ for k in range(0,(initLen * Tp)):
     
     # Activation
     nodeN[0,0]	= (mackey_glass(initJTS))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTS[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -255,7 +246,6 @@ for k in range(0,(testLen * Tp)):
     
     # Activation
     nodeN[0,0]	= (mackey_glass(testJ))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTS[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -304,7 +294,7 @@ fh.close()
 # Save Reservoir Outputs
 fh = open("./data/narma10/dfr_sw_int_narma10_reservoir_outputs.txt","w")
 for input_idx in range(nodeTS.shape[1]):
-    for sample_idx in range(nodeTS.shape[0]):
+    for sample_idx in range(nodeTS.shape[0] - 1, 0,-1):
         fh.write(f"{nodeTS[sample_idx,input_idx]}\n")
 fh.close()
 
@@ -317,7 +307,7 @@ fh.close()
 # Save DFR Outputs
 fh = open("./data/narma10/dfr_sw_int_narma10_dfr_outputs.txt","w")
 for i in range(predicted_target.size):
-    fh.write(f"{predicted_target[0,i]}\n")
+    fh.write(f"{int(predicted_target[0,i])}\n")
 fh.close()
 
 # DFR: An Energy-efficient Analog Delay Feedback Reservoir Computing System
@@ -328,18 +318,3 @@ fh.close()
 # (Goudarzi et al.2014)     DFR     0.065                   0.464                   85.3%
 # (Ortín and Pesquera2017)  DFR     /                       0.17                    59.8%
 # This Work                 DFR     0.0849                  0.0683                  /
-
-
-
-'''
---------------------------------------------------
-Training Errors
-training MSE     = 0.007536716963330973
-training NMSE    = 0.05501284837934046
-training NRMSE    = 0.23454817922836335
---------------------------------------------------
-Testing Errors
-testing MSE     = 0.010291252049471808
-testing NMSE    = 0.07304348311498177
-testing NRMSE    = 0.2702655788571341
-'''

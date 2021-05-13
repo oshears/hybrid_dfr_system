@@ -1,10 +1,7 @@
 ############################################################
 #
 #   Delay-feedback Reservoir (DFR)
-#   Modified by Kangjun
-#   Department of Electrical and Computer Engineering
-#   Virginia Tech
-#   Last modify at 06/20/2019
+#   NARMA-10 (Float)
 #
 ############################################################
 
@@ -300,18 +297,3 @@ print(f'testing NMSE    = {nmse_testing}')
 # (Goudarzi et al.2014)     DFR     0.065                   0.464                   85.3%
 # (Ortín and Pesquera2017)  DFR     /                       0.17                    59.8%
 # This Work                 DFR     0.0849                  0.0683                  /
-
-
-
-'''
---------------------------------------------------
-Training Errors
-training MSE     = 0.007536716963330973
-training NMSE    = 0.05501284837934046
-training NRMSE    = 0.23454817922836335
---------------------------------------------------
-Testing Errors
-testing MSE     = 0.010291252049471808
-testing NMSE    = 0.07304348311498177
-testing NRMSE    = 0.2702655788571341
-'''
