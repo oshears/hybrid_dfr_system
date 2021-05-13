@@ -228,12 +228,6 @@ for k in range(0,(initLen * Tp)):
     # Activation
     nodeN[0,0]	= (mackey_glass(initJTS))
     nodeN[1:N]  = nodeC[0:(N - 1)]
-    if k == 0:
-        print(100*"=")
-        print(inputTS[k,0])
-        print(nodeC[N-1,0])
-        print(initJTS)
-        print(nodeN[0,0])
     
     # Update the current node state
     nodeC       = nodeN.copy()
@@ -251,12 +245,6 @@ for k in range(0,(testLen * Tp)):
     # Activation
     nodeN[0,0]	= (mackey_glass(testJ))
     nodeN[1:N]  = nodeC[0:(N - 1)]
-    if k == 0:
-        print(100*"=")
-        print(inputTS[t,0])
-        print(nodeC[N-1,0])
-        print(testJ)
-        print(nodeN[0,0])
     
     # Update the current node state
     nodeC       = nodeN.copy()
@@ -268,7 +256,6 @@ for k in range(0,(testLen * Tp)):
 
 # Consider the data just once everytime it loops around
 nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
-
 
 ##  Compute testing errors
 

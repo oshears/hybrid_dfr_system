@@ -92,21 +92,23 @@ input_cntr = 0
 fh = open("./data/narma10/dfr_sw_int_narma10_inputs.txt","r")
 file_lines = fh.readlines()
 for file_line in file_lines:
-    if input_cntr < initLen + testLen:
+    if input_cntr < (initLen + testLen) * Tp:
         input_sample = int(file_line.strip())
         inputTS[input_cntr,0] = input_sample
     input_cntr += 1
+fh.close()
 
 # Load Weight Data
 Wout = np.ndarray(shape=(1,N),dtype=int)
 weight_cntr = 0
 fh = open("./data/narma10/dfr_sw_int_narma10_weights.txt","r")
+file_lines = fh.readlines()
 for file_line in file_lines:
     if weight_cntr < N:
         input_weight = int(file_line.strip())
         Wout[0,weight_cntr] = input_weight
     weight_cntr += 1
-
+fh.close()
 
 # No need to store these values since they won't be used in testing
 for k in range(0,(initLen * Tp)):
@@ -117,12 +119,6 @@ for k in range(0,(initLen * Tp)):
     # Activation
     nodeN[0,0]	= (mackey_glass(initJTS))
     nodeN[1:N]  = nodeC[0:(N - 1)]
-    if k == 0:
-        print(100*"=")
-        print(inputTS[k,0])
-        print(nodeC[N-1,0])
-        print(initJTS)
-        print(nodeN[0,0])
     
     # Update the current node state
     nodeC       = nodeN.copy()
@@ -141,12 +137,6 @@ for k in range(0,(testLen * Tp)):
     # Activation
     nodeN[0,0]	= (mackey_glass(testJ))
     nodeN[1:N]  = nodeC[0:(N - 1)]
-    if k == 0:
-        print(100*"=")
-        print(inputTS[t,0])
-        print(nodeC[N-1,0])
-        print(testJ)
-        print(nodeN[0,0])
 
     # Update the current node state
     nodeC       = nodeN.copy()
@@ -171,7 +161,7 @@ for file_line in file_lines:
     if expected_output_cntr < testLen:
         Yt[0,expected_output_cntr] = float(file_line.strip())
     expected_output_cntr += 1
-    
+fh.close()
 
 predicted_target = np.dot(Wout,nodeTS)
 
