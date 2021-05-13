@@ -9,7 +9,11 @@ import numpy as np
 
 MG_FUNCTION_RESOLUTION = 2**16
 
-MAX_INPUT = 2**15
+MAX_INPUT = 2**16
+
+MAX_MG_OUTPUT = 2**12
+
+YT_SCALE = 2**32
 
 def load_mg_vector():
     # Open ASIC Activation Function File
@@ -20,9 +24,6 @@ def load_mg_vector():
 
     # Read All Lines
     lines = fh.readlines()
-
-    # Scale Input Data
-    # scaledInData = (inData / inDataMax) * 1.8
 
     i = 0
     for line in lines:
@@ -36,6 +37,7 @@ def load_mg_vector():
         mg_vector[1,i] = outVal
         i += 1
 
+    # Return mackey glass transformation vector
     return mg_vector
 
 mg_vector = load_mg_vector()
@@ -43,12 +45,16 @@ mg_vector = load_mg_vector()
 # ASIC Mackey-Glass Activation Function
 def mackey_glass(inData):
 
-    if inData < MG_FUNCTION_RESOLUTION:
-        # scaled_input = int(MG_FUNCTION_RESOLUTION * inData)
-        scaled_input = int(MG_FUNCTION_RESOLUTION * inData / MAX_INPUT )
-        if scaled_input < MG_FUNCTION_RESOLUTION and scaled_input > 0:
-            float_output = mg_vector[1,scaled_input] * ( (2**16) / (2**12) )
-            return float_output
+    # scaled the input based on the max MG function input (MG_FUNCTION_RESOLUTION)
+    # and the max input data value
+    scaled_input = int( MG_FUNCTION_RESOLUTION * ( inData / MAX_INPUT ) )
+
+    # if the scaled result is in the range of the MG function
+    if scaled_input < MG_FUNCTION_RESOLUTION and scaled_input >= 0:
+        
+        # scale the output back within the range of the max input values
+        int_output = MAX_INPUT * ( mg_vector[1,scaled_input] / MAX_MG_OUTPUT )
+        return int_output
     
     return 0
 
@@ -97,8 +103,8 @@ testLen     = 4000
 
 ##  Define the masking (input weight, choose one of the followings)
 
-# Random Uniform [0, 1]
-M = np.random.rand(Tp, 1)
+# Random Uniform [0, MAX_INPUT]
+M = np.random.rand(Tp, 1) * MAX_INPUT
 
 ##  (Training) Initialization of reservoir dynamics
 
@@ -120,7 +126,7 @@ inputTR = np.ndarray(shape=((initLen + trainLen) * Tp,1),dtype=int)
 for k in range(0,(initLen + trainLen)):
     uTR = data[0,k]
     # multiply input by mask and convert to int
-    masked_input = (M * uTR) * 2**16
+    masked_input = (M * uTR)
     inputTR[k*Tp:(k+1)*Tp] = masked_input.copy()
 
 ##  (Training) Initialize the reservoir layer
@@ -165,15 +171,15 @@ nodeTR[:,0:trainLen] = nodeE[:, N*np.arange(1,trainLen + 1)-1]
 
 # Call-out the target outputs
 # Scale to put the data in the same range as input
-Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen) * 2**32
+Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen) * YT_SCALE
 
 # Transpose nodeR for matrix claculation
 nodeTR_T = nodeTR.T
 
 # Calculate output weights
-reg = 1e-8
-Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T)) + reg * np.eye(N)))
-Wout = np.round(Wout)
+# initialize regularization coefficient
+reg = 1e8
+Wout = np.round( np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T)) + reg * np.eye(N))) )
 
 ##  Compute training error
 predicted_target = np.dot(Wout,nodeTR)
@@ -213,7 +219,7 @@ inputTS = np.ndarray(shape=((initLen + testLen) * Tp,1),dtype=int)
 
 for k in range(0,(initLen + testLen)):
     uTS = data[0,initLen + trainLen + k]
-    masked_input = (M * uTS) * 2**16
+    masked_input = (M * uTS)
     inputTS[k*Tp:(k+1)*Tp] = masked_input.copy()
 
 
@@ -260,7 +266,7 @@ nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
 ##  Compute testing errors
 
 # Call-out the target outputs
-Yt = target[0,initLen + trainLen + initLen + 1 : initLen + trainLen + initLen + 1 + testLen].reshape(1,testLen) * 2**32
+Yt = target[0,initLen + trainLen + initLen + 1 : initLen + trainLen + initLen + 1 + testLen].reshape(1,testLen) * YT_SCALE
 
 predicted_target = np.dot(Wout,nodeTS)
 
@@ -279,6 +285,8 @@ print(f'testing MSE     = {mse_testing[0]}')
 print(f'testing NMSE    = {nmse_testing}')
 # print(f'testing NRMSE    = {nrmse_testing}')
 
+########################################################################
+########################################################################
 
 ### Write Data for Hybrid System Simulation ###
 # Save Inputs

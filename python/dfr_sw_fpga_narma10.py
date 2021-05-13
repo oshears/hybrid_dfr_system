@@ -9,7 +9,9 @@ import numpy as np
 
 MG_FUNCTION_RESOLUTION = 2**16
 
-MAX_INPUT = 2**15
+MAX_INPUT = 2**16
+
+MAX_MG_OUTPUT = 2**12
 
 def load_mg_vector():
     # Open ASIC Activation Function File
@@ -20,9 +22,6 @@ def load_mg_vector():
 
     # Read All Lines
     lines = fh.readlines()
-
-    # Scale Input Data
-    # scaledInData = (inData / inDataMax) * 1.8
 
     i = 0
     for line in lines:
@@ -43,12 +42,10 @@ mg_vector = load_mg_vector()
 # ASIC Mackey-Glass Activation Function
 def mackey_glass(inData):
 
-    if inData < MG_FUNCTION_RESOLUTION:
-        # scaled_input = int(MG_FUNCTION_RESOLUTION * inData)
-        scaled_input = int(MG_FUNCTION_RESOLUTION * inData / MAX_INPUT )
-        if scaled_input < MG_FUNCTION_RESOLUTION and scaled_input > 0:
-            float_output = mg_vector[1,scaled_input] * ( (2**16) / (2**12) )
-            return float_output
+    if inData < MG_FUNCTION_RESOLUTION and inData >= 0:
+        # Shift << 4
+        int_output = mg_vector[1,int(inData)] * (MAX_INPUT / MAX_MG_OUTPUT)
+        return int_output
     
     return 0
 
@@ -152,7 +149,6 @@ nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
 ##  Compute testing errors
 
 # Call-out the target outputs
-# Yt = target[0,initLen + trainLen + initLen + 1 : initLen + trainLen + initLen + 1 + testLen].reshape(1,testLen) * 2**32
 Yt = np.ndarray(shape=(1,testLen))
 expected_output_cntr = 0
 fh = open("./data/narma10/dfr_sw_int_narma10_expected_dfr_outputs.txt","r")
