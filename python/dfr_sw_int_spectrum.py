@@ -148,7 +148,7 @@ Wout = np.round( np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_
 
 ##  Compute training error
 predicted_target = np.dot(Wout,nodeTR)
-# predicted_target = predicted_target > np.max(predicted_target) / 2
+predicted_target = (predicted_target > YT_SCALE / 2) * YT_SCALE
 
 # Calculate the MSE through L2 norm
 mseTR = (((Yt - predicted_target)**2).mean(axis=1))
@@ -235,7 +235,7 @@ nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
 Yt = target[0,initLen + trainLen + initLen : initLen + trainLen + initLen + testLen].reshape(1,testLen) * YT_SCALE
 
 predicted_target = np.dot(Wout,nodeTS)
-# predicted_target = predicted_target > np.max(predicted_target) / 2
+predicted_target = (predicted_target > YT_SCALE / 2) * YT_SCALE
 
 # Calculate the MSE through L2 norm
 mse_testing = (((Yt - predicted_target)**2).mean(axis=1))
