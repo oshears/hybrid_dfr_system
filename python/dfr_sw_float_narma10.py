@@ -244,7 +244,7 @@ nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
 ##  Compute testing errors
 
 # Call-out the target outputs
-Yt = target[0,initLen + trainLen + initLen + 1 : initLen + trainLen + initLen + 1 + testLen].reshape(1,testLen)
+Yt = target[0,initLen + trainLen + initLen : initLen + trainLen + initLen + testLen].reshape(1,testLen)
 
 predicted_target = np.dot(Wout,nodeTS)
 

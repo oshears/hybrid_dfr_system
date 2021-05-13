@@ -44,16 +44,16 @@ target = spectrum_vector[:,1].reshape((1,spectrum_vector.shape[0]))
 # initLen	= number of samples used in initialization
 # trainLen	= number of samples used in training
 # testLen	= number of samples used in testing
-
+NUM_SAMPLES = 6102
 Tp          = 100
 N           = Tp
 theta       = Tp / N
 gamma       = 0.8
 # eta         = 1 - gamma
 eta         = 1/4
-initLen     = 1 
-trainLen	= 3660
-testLen     = 2439
+initLen     = 20 
+trainLen	= 49 * initLen 
+testLen     = NUM_SAMPLES - (trainLen + initLen + initLen)
 
 ##  Define the masking (input weight, choose one of the followings)
 
@@ -81,22 +81,21 @@ inputTR = np.ndarray(shape=((initLen + trainLen) * Tp,1))
 
 for k in range(0,(initLen + trainLen)):
     uTR = data[0,k]
-    # multiply input by mask and convert to int
     masked_input = (M * uTR)
     inputTR[k*Tp:(k+1)*Tp] = masked_input.copy()
 
 MAX_INPUT = np.max(inputTR)
 
 ##  (Training) Initialize the reservoir layer
+
 # No need to store these values since they won't be used in training
 for k in range(0,(initLen * Tp)):
+
     # Compute the new input data for initialization
     initJTR = (inputTR[k,0]) + eta * (nodeC[N-1,0])
     
     # Activation
-    # multiply by 8 to scale 12-bit output to 16 bits (15 bits unsigned)
     nodeN[0,0]	= (mackey_glass(initJTR))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTR[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -105,6 +104,7 @@ for k in range(0,(initLen * Tp)):
 
 ##	(Training) Run data through the reservoir
 for k in range(0,(trainLen * Tp)):
+
     # Define the time step that starts storing node states
     t = initLen * Tp + k
     
@@ -113,7 +113,6 @@ for k in range(0,(trainLen * Tp)):
     
     # Activation
     nodeN[0,0]	= (mackey_glass(trainJ))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTR[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -130,7 +129,6 @@ nodeTR[:,0:trainLen] = nodeE[:, N*np.arange(1,trainLen + 1)-1]
 ##  Train output weights using ridge regression
 
 # Call-out the target outputs
-# Scale to put the data in the same range as input
 Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen)
 
 # Transpose nodeR for matrix claculation
@@ -138,11 +136,11 @@ nodeTR_T = nodeTR.T
 
 # Calculate output weights
 reg = 1e-8
-# Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T))))
 Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T)) + reg * np.eye(N)))
 
 ##  Compute training error
 predicted_target = np.dot(Wout,nodeTR)
+predicted_target = predicted_target > 0.5
 
 # Calculate the MSE through L2 norm
 mseTR = (((Yt - predicted_target)**2).mean(axis=1))
@@ -193,7 +191,6 @@ for k in range(0,(initLen * Tp)):
     
     # Activation
     nodeN[0,0]	= (mackey_glass(initJTS))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTS[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -203,6 +200,7 @@ for k in range(0,(initLen * Tp)):
 
 ##  (Testing) Run data through the reservoir
 for k in range(0,(testLen * Tp)):
+
     # Define the time step that starts storing node states
     t = initLen * Tp + k
     
@@ -211,7 +209,6 @@ for k in range(0,(testLen * Tp)):
     
     # Activation
     nodeN[0,0]	= (mackey_glass(testJ))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTS[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -229,7 +226,7 @@ nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
 ##  Compute testing errors
 
 # Call-out the target outputs
-Yt = target[0,initLen + trainLen + initLen + 1 : initLen + trainLen + initLen + 1 + testLen].reshape(1,testLen)
+Yt = target[0,initLen + trainLen + initLen : initLen + trainLen + initLen + testLen].reshape(1,testLen)
 
 predicted_target = np.dot(Wout,nodeTS)
 predicted_target = predicted_target > 0.5
@@ -239,7 +236,6 @@ mse_testing = (((Yt - predicted_target)**2).mean(axis=1))
 
 # Calculate the NMSE
 nmse_testing  = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
-nmse_testing  = (np.linalg.norm(Yt[0,0:testLen-1] - predicted_target[0,1:testLen]) / np.linalg.norm(Yt[0,0:testLen-1]))**2
 nrmse_testing = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
 # nmse_testing  =         np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size
 # nrmse_testing = np.sqrt(np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size)
@@ -264,8 +260,6 @@ import matplotlib.pyplot as plt
 SAMPLES = 200
 x = np.linspace(0,SAMPLES-1,SAMPLES)
 plt.plot(x,Yt[0,0:SAMPLES],label="Yt")
-# plt.plot(x,predicted_target[0,0:SAMPLES],'--',label="Predicted Target")
-plt.plot(x,predicted_target[0,1:SAMPLES+1],'--',label="Predicted Target")
+plt.plot(x,predicted_target[0,0:SAMPLES],'--',label="Predicted Target")
 plt.legend()
-# plt.ylim([0,1])
 plt.savefig("./data/dfr_sw_float_spectrum_fig.png")
