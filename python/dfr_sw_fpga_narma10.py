@@ -188,7 +188,8 @@ print(f'testing NMSE    = {nmse_testing}')
 
 import matplotlib.pyplot as plt
 x = np.linspace(0,99,100)
-plt.plot(x,Yt[0,0:100],'--',label="Yt")
-plt.plot(x,predicted_target[0,0:100],label="Predicted Target")
+plt.plot(x,Yt[0,0:100]/(2**32),label="Yt")
+plt.plot(x,predicted_target[0,0:100]/(2**32),'--',label="Predicted Target")
 plt.legend()
+plt.ylim([0,1])
 plt.savefig("./data/dfr_sw_fpga_narma10_fig.png")
