@@ -1,7 +1,7 @@
 ############################################################
 #
 #   Delay-feedback Reservoir (DFR)
-#   NARMA-10 (FPGA)
+#   Spectrum (FPGA)
 #
 ############################################################
 
@@ -13,6 +13,7 @@ MAX_INPUT = 2**16
 
 MAX_MG_OUTPUT = 2**12
 
+YT_SCALE = 2**32
 
 # ASIC Mackey-Glass Activation Function
 mg_vector = np.genfromtxt(f"./data/asic_function_onboard_dac.csv", delimiter=",").T
@@ -37,15 +38,16 @@ def mackey_glass(inData):
 # trainLen	= number of samples used in training
 # testLen	= number of samples used in testing
 
+NUM_SAMPLES = 6102
 Tp          = 100
 N           = Tp
 theta       = Tp / N
 gamma       = 0.8
 # eta         = 1 - gamma
 eta         = 1/4
-initLen     = 1 
-trainLen	= 5900
-testLen     = 4000
+initLen     = 20 
+trainLen	= 49 * initLen 
+testLen     = NUM_SAMPLES - (trainLen + initLen + initLen)
 
 ## (Testing) Initialize the reservoir layer
 
@@ -63,7 +65,7 @@ nodeTS	= np.zeros(shape=(N , testLen),dtype=int)
 # Load DFR Input Samples
 inputTS = np.ndarray(shape=((initLen + testLen) * Tp,1),dtype=int)
 input_cntr = 0
-fh = open("./data/narma10/dfr_sw_int_narma10_inputs.txt","r")
+fh = open("./data/spectrum/dfr_sw_int_spectrum_inputs.txt","r")
 file_lines = fh.readlines()
 for file_line in file_lines:
     if input_cntr < (initLen + testLen) * Tp:
@@ -75,7 +77,7 @@ fh.close()
 # Load Weight Data
 Wout = np.ndarray(shape=(1,N),dtype=int)
 weight_cntr = 0
-fh = open("./data/narma10/dfr_sw_int_narma10_weights.txt","r")
+fh = open("./data/spectrum/dfr_sw_int_spectrum_weights.txt","r")
 file_lines = fh.readlines()
 for file_line in file_lines:
     if weight_cntr < N:
@@ -128,7 +130,7 @@ nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
 # Call-out the target outputs
 Yt = np.ndarray(shape=(1,testLen))
 expected_output_cntr = 0
-fh = open("./data/narma10/dfr_sw_int_narma10_expected_dfr_outputs.txt","r")
+fh = open("./data/spectrum/dfr_sw_int_spectrum_expected_dfr_outputs.txt","r")
 file_lines = fh.readlines()
 for file_line in file_lines:
     if expected_output_cntr < testLen:
@@ -137,6 +139,7 @@ for file_line in file_lines:
 fh.close()
 
 predicted_target = np.dot(Wout,nodeTS)
+predicted_target = (predicted_target > YT_SCALE / 2) * YT_SCALE
 
 # Calculate the MSE through L2 norm
 mse_testing = (((Yt - predicted_target)**2).mean(axis=1))
@@ -169,4 +172,4 @@ plt.plot(x,Yt[0,0:100]/(2**32),label="Yt")
 plt.plot(x,predicted_target[0,0:100]/(2**32),'--',label="Predicted Target")
 plt.legend()
 plt.ylim([0,1])
-plt.savefig("./data/narma10/dfr_sw_fpga_narma10_fig.png")
+plt.savefig("./data/spectrum/dfr_sw_fpga_spectrum_fig.png")
