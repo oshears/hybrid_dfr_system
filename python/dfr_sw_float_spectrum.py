@@ -257,7 +257,7 @@ print(f'testing NMSE    = {nmse_testing}')
 # This Work                 DFR     0.0849                  0.0683                  /
 
 import matplotlib.pyplot as plt
-SAMPLES = 200
+SAMPLES = 100
 x = np.linspace(0,SAMPLES-1,SAMPLES)
 plt.plot(x,Yt[0,0:SAMPLES],label="Yt")
 plt.plot(x,predicted_target[0,0:SAMPLES],'--',label="Predicted Target")
