@@ -1,7 +1,7 @@
 ############################################################
 #
 #   Delay-feedback Reservoir (DFR)
-#   NARMA-10 (Int)
+#   NARMA-10 (FPGA)
 #
 ############################################################
 
@@ -15,7 +15,7 @@ MAX_MG_OUTPUT = 2**12
 
 def load_mg_vector():
     # Open ASIC Activation Function File
-    fh = open("asic_function_onboard_dac.csv",mode="r")
+    fh = open("./data/asic_function_onboard_dac.csv",mode="r")
     
     # MG Vector
     mg_vector = np.zeros((2,MG_FUNCTION_RESOLUTION))

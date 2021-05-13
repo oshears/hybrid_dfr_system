@@ -13,7 +13,7 @@ MAX_INPUT = 0
 
 def load_mg_vector():
     # Open ASIC Activation Function File
-    fh = open("asic_function_onboard_dac.csv",mode="r")
+    fh = open("./data/asic_function_onboard_dac.csv",mode="r")
     
     # MG Vector
     mg_vector = np.zeros((2,MG_FUNCTION_RESOLUTION))
