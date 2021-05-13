@@ -185,3 +185,10 @@ print(f'testing NMSE    = {nmse_testing}')
 # (Goudarzi et al.2014)     DFR     0.065                   0.464                   85.3%
 # (Ortín and Pesquera2017)  DFR     /                       0.17                    59.8%
 # This Work                 DFR     0.0849                  0.0683                  /
+
+import matplotlib.pyplot as plt
+x = np.linspace(0,99,100)
+plt.plot(x,Yt[0,0:100],'--',label="Yt")
+plt.plot(x,predicted_target[0,0:100],label="Predicted Target")
+plt.legend()
+plt.savefig("./data/dfr_sw_fpga_narma10_fig.png")
