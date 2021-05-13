@@ -9,10 +9,10 @@
 ############################################################
 
 import numpy as np
-import os
-import time
 
 MG_FUNCTION_RESOLUTION = 2**16
+
+MAX_INPUT = 0
 
 def load_mg_vector():
     # Open ASIC Activation Function File
@@ -61,8 +61,9 @@ def narma10_create(inLen):
 def mackey_glass(inData):
 
     if inData < MG_FUNCTION_RESOLUTION:
-        scaled_input = int(MG_FUNCTION_RESOLUTION * inData)
-        if scaled_input < MG_FUNCTION_RESOLUTION:
+        # scaled_input = int(MG_FUNCTION_RESOLUTION * inData)
+        scaled_input = int(MG_FUNCTION_RESOLUTION * inData / MAX_INPUT )
+        if scaled_input < MG_FUNCTION_RESOLUTION and scaled_input > 0:
             float_output = mg_vector[1,scaled_input] / (2**12)
             return float_output
     
@@ -71,8 +72,8 @@ def mackey_glass(inData):
 ##	Import dataset
 
 # 10th order nonlinear auto-regressive moving average (NARMA10)
-seed = 0
-np.random.seed(seed)
+# seed = 0
+# np.random.seed(seed)
 data, target = narma10_create(10000)
 
 
@@ -100,9 +101,9 @@ testLen     = 4000
 ##  Define the masking (input weight, choose one of the followings)
 
 # Random Uniform [0, 1]
-# M = np.random.rand(Tp, 1)
-M = np.random.rand(Tp,1) * 2 - 1
-M = np.sign(M) * 0.1
+M = np.random.rand(Tp, 1)
+# M = np.random.rand(Tp,1) * 2 - 1
+# M = np.sign(M) * 0.1
 
 ##  (Training) Initialization of reservoir dynamics
 
@@ -127,6 +128,7 @@ for k in range(0,(initLen + trainLen)):
     masked_input = (M * uTR)
     inputTR[k*Tp:(k+1)*Tp] = masked_input.copy()
 
+MAX_INPUT = np.max(inputTR)
 
 ##  (Training) Initialize the reservoir layer
 # No need to store these values since they won't be used in training
