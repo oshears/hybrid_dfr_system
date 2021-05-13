@@ -40,20 +40,6 @@ def load_mg_vector():
 
 mg_vector = load_mg_vector()
 
-# NARMA10
-def narma10_create(inLen):
-
-    # Compute the random uniform input matrix
-    inp = 0.5*np.random.rand(1, inLen)
-
-    # Compute the target matrix
-    tar = np.zeros(shape=(1, inLen))
-
-    for k in range(10,(inLen - 1)):
-        tar[0,k+1] = 0.3 * tar[0,k] + 0.05 * tar[0,k] * np.sum(tar[0,k-9:k]) + 1.5 * inp[0,k] * inp[0,k - 9] + 0.1
-    
-    return (inp, tar)
-
 # ASIC Mackey-Glass Activation Function
 def mackey_glass(inData):
 
@@ -67,11 +53,11 @@ def mackey_glass(inData):
     return 0
 
 ##	Import dataset
-
-# 10th order nonlinear auto-regressive moving average (NARMA10)
-# seed = 0
-# np.random.seed(seed)
-data, target = narma10_create(10000)
+NOISE = 10
+ANT = 6
+spectrum_vector = np.genfromtxt (f"./data/spectrum/spectrum_-{NOISE}_db_{ANT}_ant.csv", delimiter=",")
+data   = spectrum_vector[:,0].reshape((1,spectrum_vector.shape[0]))
+target = spectrum_vector[:,1].reshape((1,spectrum_vector.shape[0]))
 
 
 ##	Reservoir Parameters
@@ -92,8 +78,8 @@ gamma       = 0.8
 # eta         = 1 - gamma
 eta         = 1/4
 initLen     = 1 
-trainLen	= 5900
-testLen     = 4000
+trainLen	= 3660
+testLen     = 2439
 
 ##  Define the masking (input weight, choose one of the followings)
 
