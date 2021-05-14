@@ -139,19 +139,13 @@ fh.close()
 predicted_target = np.dot(Wout,nodeTS)
 
 # Calculate the MSE through L2 norm
-mse_testing = (((Yt - predicted_target)**2).mean(axis=1))
-
-# Calculate the NMSE
-nmse_testing  = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
-nrmse_testing = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
-# nmse_testing  =         np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size
-# nrmse_testing = np.sqrt(np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size)
+mse   = np.sum(np.power(Yt - predicted_target,2)) / Yt.size
+nrmse = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
 
 print('--------------------------------------------------')
 print('Testing Errors')
-print(f'testing MSE     = {mse_testing[0]}')
-print(f'testing NMSE    = {nmse_testing}')
-# print(f'testing NRMSE    = {nrmse_testing}')
+print(f'testing mse: {mse}')
+print(f'testing nrmse: {nrmse}')
 
 
 # DFR: An Energy-efficient Analog Delay Feedback Reservoir Computing System
