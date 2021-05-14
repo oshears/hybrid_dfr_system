@@ -74,8 +74,6 @@ testLen     = 4000
 
 # Random Uniform [0, 1]
 M = np.random.rand(Tp, 1)
-# M = np.random.rand(Tp,1) * 2 - 1
-# M = np.sign(M) * 0.1
 
 ##  (Training) Initialization of reservoir dynamics
 
@@ -105,13 +103,12 @@ MAX_INPUT = np.max(inputTR)
 ##  (Training) Initialize the reservoir layer
 # No need to store these values since they won't be used in training
 for k in range(0,(initLen * Tp)):
+
     # Compute the new input data for initialization
     initJTR = (inputTR[k,0]) + eta * (nodeC[N-1,0])
     
     # Activation
-    # multiply by 8 to scale 12-bit output to 16 bits (15 bits unsigned)
     nodeN[0,0]	= (mackey_glass(initJTR))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTR[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -120,6 +117,7 @@ for k in range(0,(initLen * Tp)):
 
 ##	(Training) Run data through the reservoir
 for k in range(0,(trainLen * Tp)):
+
     # Define the time step that starts storing node states
     t = initLen * Tp + k
     
@@ -128,7 +126,6 @@ for k in range(0,(trainLen * Tp)):
     
     # Activation
     nodeN[0,0]	= (mackey_glass(trainJ))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTR[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -145,7 +142,6 @@ nodeTR[:,0:trainLen] = nodeE[:, N*np.arange(1,trainLen + 1)-1]
 ##  Train output weights using ridge regression
 
 # Call-out the target outputs
-# Scale to put the data in the same range as input
 Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen)
 
 # Transpose nodeR for matrix claculation
@@ -153,27 +149,33 @@ nodeTR_T = nodeTR.T
 
 # Calculate output weights
 reg = 1e-8
-# Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T))))
 Wout = np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_T)) + reg * np.eye(N)))
 
 ##  Compute training error
 predicted_target = np.dot(Wout,nodeTR)
 
-# Calculate the MSE through L2 norm
-mseTR = (((Yt - predicted_target)**2).mean(axis=1))
-
 # Calculate the NMSE
-nmseTR  = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
-nrmseTR = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
+# nmseTR  = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
+# nrmseTR = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
 # nmseTR  =         np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size
 # nrmseTR = np.sqrt(np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size)
 
+se = np.power(Yt - predicted_target,2)
+mse = np.sum(se) / Yt.size
+rmse = np.sqrt(mse)
+nrmse_m = rmse / np.mean(Yt)
+nrmse_sd = rmse / np.std(Yt)
+nrmse_mm = rmse / (np.max(Yt) - np.min(Yt))
+nrmse_norm = rmse * np.sqrt(Yt.size) / np.linalg.norm(Yt)
+nmse = mse / np.var(Yt)
+
 print('--------------------------------------------------')
 print('Training Errors')
-print(f'training MSE     = {mseTR[0]}')
-print(f'training NMSE    = {nmseTR}')
-# print(f'training NRMSE    = {nrmseTR}')
-
+print(f'training nrmse_m: {nrmse_m}')
+print(f'training nrmse_sd: {nrmse_sd}')
+print(f'training nrmse_mm: {nrmse_mm}')
+print(f'training nmse_norm: {nrmse_norm}')
+print(f'training nmse: {nmse}')
 
 ## (Testing) Initialize the reservoir layer
 
@@ -208,7 +210,6 @@ for k in range(0,(initLen * Tp)):
     
     # Activation
     nodeN[0,0]	= (mackey_glass(initJTS))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTS[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -218,6 +219,7 @@ for k in range(0,(initLen * Tp)):
 
 ##  (Testing) Run data through the reservoir
 for k in range(0,(testLen * Tp)):
+
     # Define the time step that starts storing node states
     t = initLen * Tp + k
     
@@ -226,7 +228,6 @@ for k in range(0,(testLen * Tp)):
     
     # Activation
     nodeN[0,0]	= (mackey_glass(testJ))
-    # nodeN[0,0]  = (1 / (1 + np.exp( 12 * (inputTS[k,0] - 0.75) ) ) ) - eta * nodeC[N-1,0]
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -248,20 +249,29 @@ Yt = target[0,initLen + trainLen + initLen : initLen + trainLen + initLen + test
 
 predicted_target = np.dot(Wout,nodeTS)
 
-# Calculate the MSE through L2 norm
-mse_testing = (((Yt - predicted_target)**2).mean(axis=1))
 
 # Calculate the NMSE
-nmse_testing  = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
-nrmse_testing = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
+# nmse_testing  = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
+# nrmse_testing = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
 # nmse_testing  =         np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size
-# nrmse_testing = np.sqrt(np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size)
+# nrmse_testing_i = np.sqrt(np.sum(np.power(Yt - predicted_target,2)) / (np.var(Yt) * Yt.size))
+
+se = np.power(Yt - predicted_target,2)
+mse = np.sum(se) / Yt.size
+rmse = np.sqrt(mse)
+nrmse_m = rmse / np.mean(Yt)
+nrmse_sd = rmse / np.std(Yt)
+nrmse_mm = rmse / (np.max(Yt) - np.min(Yt))
+nrmse_norm = rmse * np.sqrt(Yt.size) / np.linalg.norm(Yt)
+nmse = mse / np.var(Yt)
 
 print('--------------------------------------------------')
 print('Testing Errors')
-print(f'testing MSE     = {mse_testing[0]}')
-print(f'testing NMSE    = {nmse_testing}')
-# print(f'testing NRMSE    = {nrmse_testing}')
+print(f'testing nrmse_m: {nrmse_m}')
+print(f'testing nrmse_sd: {nrmse_sd}')
+print(f'testing nrmse_mm: {nrmse_mm}')
+print(f'testing nmse_norm: {nrmse_norm}')
+print(f'testing nmse: {nmse}')
 
 
 # DFR: An Energy-efficient Analog Delay Feedback Reservoir Computing System

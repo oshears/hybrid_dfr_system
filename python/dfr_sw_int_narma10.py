@@ -160,20 +160,29 @@ Wout = np.round( np.dot(np.dot(Yt,nodeTR_T),np.linalg.inv((np.dot(nodeTR,nodeTR_
 ##  Compute training error
 predicted_target = np.dot(Wout,nodeTR)
 
-# Calculate the MSE through L2 norm
-mseTR = (((Yt - predicted_target)**2).mean(axis=1))
 
 # Calculate the NMSE
-nmseTR  = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
-nrmseTR = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
+# nmseTR  = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
+# nrmseTR = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
 # nmseTR  =         np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size
 # nrmseTR = np.sqrt(np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size)
 
+se = np.power(Yt - predicted_target,2)
+mse = np.sum(se) / Yt.size
+rmse = np.sqrt(mse)
+nrmse_m = rmse / np.mean(Yt)
+nrmse_sd = rmse / np.std(Yt)
+nrmse_mm = rmse / (np.max(Yt) - np.min(Yt))
+nrmse_norm = rmse * np.sqrt(Yt.size) / np.linalg.norm(Yt)
+nmse = mse / np.var(Yt)
+
 print('--------------------------------------------------')
 print('Training Errors')
-print(f'training MSE     = {mseTR[0]}')
-print(f'training NMSE    = {nmseTR}')
-# print(f'training NRMSE    = {nrmseTR}')
+print(f'training nrmse_m: {nrmse_m}')
+print(f'training nrmse_sd: {nrmse_sd}')
+print(f'training nrmse_mm: {nrmse_mm}')
+print(f'training nmse_norm: {nrmse_norm}')
+print(f'training nmse: {nmse}')
 
 
 ## (Testing) Initialize the reservoir layer
@@ -246,20 +255,30 @@ Yt = target[0,initLen + trainLen + initLen : initLen + trainLen + initLen + test
 
 predicted_target = np.dot(Wout,nodeTS)
 
-# Calculate the MSE through L2 norm
-mse_testing = (((Yt - predicted_target)**2).mean(axis=1))
 
 # Calculate the NMSE
-nmse_testing  = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
-nrmse_testing = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
+# nmse_testing  = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))**2
+# nrmse_testing = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
 # nmse_testing  =         np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size
 # nrmse_testing = np.sqrt(np.sum((Yt - predicted_target)**2 / np.var(Yt)) / Yt.size)
 
+se = np.power(Yt - predicted_target,2)
+mse = np.sum(se) / Yt.size
+rmse = np.sqrt(mse)
+nrmse_m = rmse / np.mean(Yt)
+nrmse_sd = rmse / np.std(Yt)
+nrmse_mm = rmse / (np.max(Yt) - np.min(Yt))
+nrmse_norm = rmse * np.sqrt(Yt.size) / np.linalg.norm(Yt)
+nmse = mse / np.var(Yt)
+
 print('--------------------------------------------------')
 print('Testing Errors')
-print(f'testing MSE     = {mse_testing[0]}')
-print(f'testing NMSE    = {nmse_testing}')
-# print(f'testing NRMSE    = {nrmse_testing}')
+print(f'testing nrmse_m: {nrmse_m}')
+print(f'testing nrmse_sd: {nrmse_sd}')
+print(f'testing nrmse_mm: {nrmse_mm}')
+print(f'testing nmse_norm: {nrmse_norm}')
+print(f'testing nmse: {nmse}')
+
 
 ########################################################################
 ########################################################################

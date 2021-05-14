@@ -18,8 +18,9 @@ localparam RESERVOIR_DATA_WIDTH = 32;
 localparam RESERVOIR_HISTORY_ADDR_WIDTH = 16;
 
 localparam NUM_STEPS_PER_SAMPLE = 100;
-localparam NUM_INIT_SAMPLES = 100;
-localparam NUM_TEST_SAMPLES = 100;
+
+localparam NUM_INIT_SAMPLES = 1;
+localparam NUM_TEST_SAMPLES = 4000;
 
 localparam DFR_INPUT_MEM_ADDR_OFFSET     = 32'h0100_0000;
 localparam DFR_RESERVOIR_ADDR_MEM_OFFSET = 32'h0200_0000;
@@ -165,13 +166,14 @@ initial begin
     integer expected_output_file;
     integer i = 0;
     integer j = 0;
+    integer mem_cntr = 0;
     string line;
     integer readInt;
     reg [31:0] write_addr = 0;
 
-    input_samples_file = $fopen("/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/python/data/dfr_narma10_data.txt","r");
-    weights_file = $fopen("/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/python/data/dfr_narma10_weights.txt","r");
-    expected_output_file = $fopen("/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/python/data/dfr_narma10_fpga_outputs.txt","r");
+    input_samples_file = $fopen("/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/python/data/narma10/dfr_sw_int_narma10_inputs.txt","r");
+    weights_file = $fopen("/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/python/data/narma10/dfr_sw_int_narma10_weights.txt","r");
+    expected_output_file = $fopen("/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/python/data/narma10/dfr_sw_int_narma10_dfr_outputs.txt","r");
 
 
     WAIT(2);
@@ -198,11 +200,13 @@ initial begin
     // Configure Input Samples
     
     i = 0;
-    while(!$feof(input_samples_file) && i < NUM_STEPS_PER_SAMPLE * (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES + NUM_VIRTUAL_NODES)) begin
+    mem_cntr = 0;
+    while(!$feof(input_samples_file) && i < NUM_STEPS_PER_SAMPLE * (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES) && mem_cntr < 2**17) begin
         $fgets(line,input_samples_file);
         readInt = line.atoi();
         AXI_WRITE(DFR_INPUT_MEM_ADDR_OFFSET + (i * 4), readInt, 1);
         i++;
+        mem_cntr++;
     end
 
     // Configure Weights
@@ -221,37 +225,16 @@ initial begin
 
 
     // Read DFR Output Mem
-    for(i = 0; i < NUM_TEST_SAMPLES; i = i + 1) begin
+    mem_cntr = 0;
+    for(i = 0; i < NUM_TEST_SAMPLES &&  mem_cntr < 2**17; i = i + 1) begin
         AXI_READ( .READ_ADDR(DFR_OUTPUT_MEM_ADDR_OFFSET + (i * 4) ), .DECIMAL(1));
+        mem_cntr++;
     end
 
-    /*
-    // DEBUG: Read Reservoir Output
-    $display("Reading reservoir output data");
-    //Select Reservoir Output Mem
-    AXI_WRITE(CTRL_REG_ADDR,32'h0000_0010);
+    $fclose(input_samples_file)
+    $fclose(weights_file)
+    $fclose(expected_output_file)
 
-    // Test Write to Reservoir Output Mem
-    for(i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1) begin
-        $display("Sample: %d",i);
-        AXI_READ( 32'h01_00 + i);
-    end
-    */
-
-    // Clear and Re-Read Input Samples
-    i = 0;
-    while(i < NUM_STEPS_PER_SAMPLE * (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES + NUM_VIRTUAL_NODES)) begin
-        AXI_WRITE(DFR_INPUT_MEM_ADDR_OFFSET + (i * 4), i, 1);
-        AXI_READ( .READ_ADDR(DFR_INPUT_MEM_ADDR_OFFSET + (i * 4) ), .DECIMAL(1));
-        i++;
-    end
-    // Clear and Re-Read Weights
-    i = 0;
-    while(i < NUM_VIRTUAL_NODES) begin
-        AXI_WRITE(DFR_WEIGHT_MEM_ADDR_OFFSET + (i * 4), i, 1);
-        AXI_READ( .READ_ADDR(DFR_WEIGHT_MEM_ADDR_OFFSET + (i * 4) ), .DECIMAL(1));
-        i++;
-    end
 
     $finish;
 
