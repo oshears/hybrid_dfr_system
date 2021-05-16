@@ -261,7 +261,7 @@ fh.close()
 # Save Reservoir Outputs
 fh = open("./data/narma10/dfr_sw_int_narma10_reservoir_outputs.txt","w")
 for input_idx in range(nodeTS.shape[1]):
-    for sample_idx in range(nodeTS.shape[0] - 1, 0,-1):
+    for sample_idx in range(nodeTS.shape[0] - 1, -1,-1):
         fh.write(f"{nodeTS[sample_idx,input_idx]}\n")
 fh.close()
 

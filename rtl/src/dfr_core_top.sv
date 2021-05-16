@@ -5,7 +5,7 @@ module dfr_core_top
     parameter C_S_AXI_ADDR_WIDTH = 30,
     parameter NUM_VIRTUAL_NODES = 100,
     parameter RESERVOIR_DATA_WIDTH = 32,
-    parameter RESERVOIR_HISTORY_ADDR_WIDTH = 14
+    parameter RESERVOIR_HISTORY_ADDR_WIDTH = 17
 )
 (
     input S_AXI_ACLK,   
@@ -315,12 +315,12 @@ init_sample_counter
 
 bram_16k_dual_port input_sample_mem
 (
-    .addra(mem_addr[13:0]),
+    .addra(mem_addr[RESERVOIR_HISTORY_ADDR_WIDTH - 1:0]),
     .clka(S_AXI_ACLK),
     .dina(mem_data_in),
     .douta(input_mem_dout),
     .wea(input_mem_wen),
-    .addrb(sample_cntr[13:0]),
+    .addrb(sample_cntr),
     .clkb(S_AXI_ACLK),
     .dinb(32'h0000_0000),
     .doutb(input_mem_doutb),
@@ -331,12 +331,12 @@ assign reservoir_output_mem_addr = (reservoir_history_en) ? reservoir_history_ad
 
 bram_16k_dual_port reservoir_output_mem
 (
-    .addra(mem_addr[13:0]),
+    .addra(mem_addr[RESERVOIR_HISTORY_ADDR_WIDTH - 1:0]),
     .clka(S_AXI_ACLK),
     .dina(mem_data_in),
     .douta(reservoir_output_mem_data_out),
     .wea(reservoir_output_mem_wen),
-    .addrb(reservoir_output_mem_addr[13:0]),
+    .addrb(reservoir_output_mem_addr),
     .clkb(S_AXI_ACLK),
     .dinb(reservoir_data_out),
     .doutb(reservoir_output_mem_doutb),
@@ -361,12 +361,12 @@ wire [31:0] dfr_output_mem_doutb;
 
 bram_16k_dual_port dfr_output_mem
 (
-    .addra(mem_addr[13:0]),
+    .addra(mem_addr[RESERVOIR_HISTORY_ADDR_WIDTH - 1:0]),
     .clka(S_AXI_ACLK),
     .dina(mem_data_in),
     .douta(dfr_output_mem_data_out),
     .wea(output_weight_mem_wen),
-    .addrb(dfr_output_cntr[13:0]),
+    .addrb(dfr_output_cntr),
     .clkb(S_AXI_ACLK),
     .dinb(dfr_output_data),
     .doutb(dfr_output_mem_doutb),

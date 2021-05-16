@@ -16,10 +16,10 @@ DATA_WIDTH = 32
 
 wire [DATA_WIDTH - 1 : 0] node_outputs [NUM_VIRTUAL_NODES : 0];
 
-wire [DATA_WIDTH - 1 : 0] dout_i = {17'h0,node_outputs[NUM_VIRTUAL_NODES][11:0],3'h0};
+wire [DATA_WIDTH - 1 : 0] dout_i = {16'h0,node_outputs[NUM_VIRTUAL_NODES][11:0],4'h0};
 
 
-wire [DATA_WIDTH - 1 : 0] sum_i = din + dout_i;
+wire [DATA_WIDTH - 1 : 0] sum_i = din + dout_i[15:2];
 
 reg node_en = 0;
 

@@ -15,12 +15,16 @@ localparam C_S_AXI_DATA_WIDTH = 32;
 localparam C_S_AXI_ADDR_WIDTH = 30;
 localparam NUM_VIRTUAL_NODES = 100;
 localparam RESERVOIR_DATA_WIDTH = 32;
-localparam RESERVOIR_HISTORY_ADDR_WIDTH = 16;
+localparam RESERVOIR_HISTORY_ADDR_WIDTH = 17;
 
-localparam NUM_STEPS_PER_SAMPLE = 100;
+localparam NUM_STEPS_PER_SAMPLE = NUM_VIRTUAL_NODES;
 
+localparam MAX_INPUT_SAMPLES_STEPS = 2 ** RESERVOIR_HISTORY_ADDR_WIDTH;
+localparam MAX_INPUT_SAMPLES = MAX_INPUT_SAMPLES_STEPS / NUM_STEPS_PER_SAMPLE;
+
+// NUM_INIT_SAMPLES + NUM_TEST_SAMPLES must be less than MAX_INPUT_SAMPLES - 1 to prevent internal sample_cntr from overflowing  
 localparam NUM_INIT_SAMPLES = 1;
-localparam NUM_TEST_SAMPLES = 4000;
+localparam NUM_TEST_SAMPLES = MAX_INPUT_SAMPLES - NUM_INIT_SAMPLES - 1;
 
 localparam DFR_INPUT_MEM_ADDR_OFFSET     = 32'h0100_0000;
 localparam DFR_RESERVOIR_ADDR_MEM_OFFSET = 32'h0200_0000;
@@ -108,8 +112,11 @@ task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA, input DECIMAL=
         S_AXI_AWVALID = 1'b1;
         S_AXI_WVALID = 1;
         S_AXI_WDATA = WRITE_DATA;
+        @(posedge S_AXI_ACLK);
         S_AXI_BREADY = 1'b1;
-        @(posedge S_AXI_WREADY);
+        while(S_AXI_WREADY != 1) begin
+            @(posedge S_AXI_ACLK);
+        end
         @(posedge S_AXI_ACLK);
         S_AXI_WVALID = 0;
         S_AXI_AWVALID = 0;
@@ -125,7 +132,7 @@ task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA, input DECIMAL=
     end
 endtask
 
-task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [31:0] MASK_DATA = 32'h0, input COMPARE=0, input DECIMAL=0);
+task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [31:0] MASK_DATA = 32'h0, input COMPARE=0, input DECIMAL=0, output [31:0] READ_DATA);
     integer signed read_data_int; 
     begin
         
@@ -148,6 +155,7 @@ task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [
         @(posedge S_AXI_ACLK);
         S_AXI_RREADY = 0;
         S_AXI_ARADDR = 32'h0;
+        READ_DATA = read_data_int;
     end
 endtask
 
@@ -160,6 +168,7 @@ task WAIT( input [31:0] cycles);
 endtask
 
 
+
 initial begin
     integer input_samples_file;
     integer weights_file;
@@ -170,6 +179,7 @@ initial begin
     string line;
     integer readInt;
     reg [31:0] write_addr = 0;
+    integer read_data = 0;
 
     input_samples_file = $fopen("/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/python/data/narma10/dfr_sw_int_narma10_inputs.txt","r");
     weights_file = $fopen("/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/python/data/narma10/dfr_sw_int_narma10_weights.txt","r");
@@ -201,7 +211,7 @@ initial begin
     
     i = 0;
     mem_cntr = 0;
-    while(!$feof(input_samples_file) && i < NUM_STEPS_PER_SAMPLE * (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES) && mem_cntr < 2**17) begin
+    while(!$feof(input_samples_file) && i < NUM_STEPS_PER_SAMPLE * (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES) && mem_cntr < MAX_INPUT_SAMPLES_STEPS) begin
         $fgets(line,input_samples_file);
         readInt = line.atoi();
         AXI_WRITE(DFR_INPUT_MEM_ADDR_OFFSET + (i * 4), readInt, 1);
@@ -226,14 +236,14 @@ initial begin
 
     // Read DFR Output Mem
     mem_cntr = 0;
-    for(i = 0; i < NUM_TEST_SAMPLES &&  mem_cntr < 2**17; i = i + 1) begin
-        AXI_READ( .READ_ADDR(DFR_OUTPUT_MEM_ADDR_OFFSET + (i * 4) ), .DECIMAL(1));
+    for(i = 0; i < NUM_TEST_SAMPLES &&  mem_cntr < MAX_INPUT_SAMPLES; i = i + 1) begin
+        AXI_READ( .READ_ADDR(DFR_OUTPUT_MEM_ADDR_OFFSET + (i * 4) ), .DECIMAL(1), .READ_DATA(read_data));
         mem_cntr++;
     end
 
-    $fclose(input_samples_file)
-    $fclose(weights_file)
-    $fclose(expected_output_file)
+    $fclose(input_samples_file);
+    $fclose(weights_file);
+    $fclose(expected_output_file);
 
 
     $finish;
