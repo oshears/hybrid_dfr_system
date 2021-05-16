@@ -1,8 +1,9 @@
 `timescale 1ns / 1ps
 module reservoir_asic
 # (
-NUM_VIRTUAL_NODES = 10,
-DATA_WIDTH = 32
+    NUM_VIRTUAL_NODES = 10,
+    DATA_WIDTH = 32,
+    NODE_DATA_WIDTH = 12
 )
 (
     input clk,
@@ -15,7 +16,7 @@ DATA_WIDTH = 32
     input  [DATA_WIDTH - 1 : 0] din,
     output [DATA_WIDTH - 1 : 0] dout,
     output reg reservoir_valid = 0,
-    output [NODE_DATA_WIDTH - 1:0] asic_function_out
+    output [NODE_DATA_WIDTH - 1:0] asic_function_out,
 
     // DAC Interface
     output DAC_CS_N,
