@@ -10,6 +10,7 @@ localparam NUM_STEPS_PER_SAMPLE_REG_ADDR = 16'h0014;
 localparam NUM_INIT_STEPS_REG_ADDR = 16'h0018;
 localparam NUM_TRAIN_STEPS_REG_ADDR = 16'h001C;
 localparam NUM_TEST_STEPS_REG_ADDR = 16'h0020;
+localparam RESERVOIR_NODE_REG_ADDR = 16'h0024;
 
 localparam C_S_AXI_DATA_WIDTH = 32;
 localparam C_S_AXI_ADDR_WIDTH = 30;

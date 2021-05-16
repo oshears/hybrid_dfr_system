@@ -2,7 +2,7 @@
 module axi_cfg_regs
 #(
 parameter C_S_AXI_DATA_WIDTH = 32,
-parameter C_S_AXI_ADDR_WIDTH = 30 
+parameter C_S_AXI_ADDR_WIDTH = 30
 )
 (
     input busy,
@@ -45,7 +45,10 @@ parameter C_S_AXI_ADDR_WIDTH = 30
     output [31:0] num_test_steps,
     output [31:0] num_steps_per_sample,
 
-    output [2:0] current_state_out
+    output [2:0] current_state_out,
+
+    output  load_node,
+    input   [11 : 0] node_dout
 );
 
 reg num_train_samples_reg_valid = 0;
@@ -76,6 +79,8 @@ reg [31:0] ctrl_reg;
 reg ctrl_reg_addr_valid = 0;
 
 reg mem_reg_addr_valid = 0;
+
+reg reservoir_node_reg_valid = 0;
 
 reg [2:0] current_state = 0;
 reg [2:0] next_state = 0;
@@ -210,6 +215,8 @@ begin
                 S_AXI_RDATA = num_train_steps_reg;
             16'h0020:
                 S_AXI_RDATA = num_test_steps_reg;
+            16'h0024:
+                S_AXI_RDATA = node_dout;
             default:
                 S_AXI_RDATA = mem_data_out;
         endcase;     
@@ -248,6 +255,7 @@ begin
     num_init_steps_reg_valid = 0;
     num_train_steps_reg_valid = 0;
     num_test_steps_reg_valid = 0;
+    reservoir_node_reg_valid = 0;
 
 
     local_address_valid = 1;
@@ -273,6 +281,8 @@ begin
                 num_train_steps_reg_valid = 1;
             30'h0000_0020:
                 num_test_steps_reg_valid = 1;
+            30'h0000_0024:
+                reservoir_node_reg_valid = 1;
             default:
             begin
                 //mem_reg_addr_valid = 1;
@@ -417,5 +427,7 @@ assign num_steps_per_sample = num_steps_per_sample_reg;
 assign num_init_steps = num_init_steps_reg;
 assign num_train_steps = num_train_steps_reg;
 assign num_test_steps = num_test_steps_reg;
+
+assign load_node = reservoir_node_reg_valid;
 
 endmodule

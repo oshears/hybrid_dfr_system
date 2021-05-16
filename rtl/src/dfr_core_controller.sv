@@ -1,11 +1,4 @@
 module dfr_core_controller
-# (
-    ADDR_WIDTH = 32,
-    DATA_WIDTH = 32,
-    X_ROWS = 5,
-    Y_COLS = 5,
-    X_COLS_Y_ROWS = 5
-)
 (
     input clk,
     input rst,
@@ -15,6 +8,7 @@ module dfr_core_controller
     input matrix_multiply_busy,
     input reservoir_filled,
     input reservoir_valid,
+    input preserve_reservoir,
 
     output reg busy = 0,
     output reg matrix_multiply_start = 0,
@@ -52,7 +46,8 @@ always @(
     reservoir_busy,
     reservoir_filled,
     reservoir_init_busy,
-    reservoir_valid
+    reservoir_valid,
+    preserve_reservoir
 ) begin
 
     matrix_multiply_start = 0;
@@ -76,11 +71,13 @@ always @(
             busy = 0;
             if (start) begin
                 next_state = RESERVOIR_INIT_STAGE;
-                reservoir_rst = 1;
                 matrix_multiply_rst = 1;
                 init_sample_cntr_rst = 1;
                 reservoir_history_rst = 1;
                 sample_cntr_rst = 1;
+
+                if (~preserve_reservoir)
+                    reservoir_rst = 1;
             end
             else begin
                 dfr_done = 1;
@@ -133,12 +130,20 @@ always @(
         begin
             busy = 1;
             if (~matrix_multiply_busy) begin
+                matrix_multiply_rst = 1;
+                init_sample_cntr_rst = 1;
+                reservoir_history_rst = 1;
+                sample_cntr_rst = 1;
                 next_state = DONE;
             end
         end
         default:
         begin
             busy = 1;
+            matrix_multiply_rst = 1;
+            init_sample_cntr_rst = 1;
+            reservoir_history_rst = 1;
+            sample_cntr_rst = 1;
             next_state = DONE;
         end
     endcase

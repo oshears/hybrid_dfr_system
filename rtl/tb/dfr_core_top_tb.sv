@@ -10,6 +10,7 @@ localparam NUM_STEPS_PER_SAMPLE_REG_ADDR = 16'h0014;
 localparam NUM_INIT_STEPS_REG_ADDR = 16'h0018;
 localparam NUM_TRAIN_STEPS_REG_ADDR = 16'h001C;
 localparam NUM_TEST_STEPS_REG_ADDR = 16'h0020;
+localparam RESERVOIR_NODE_REG_ADDR = 16'h0024;
 
 localparam C_S_AXI_DATA_WIDTH = 32;
 localparam C_S_AXI_ADDR_WIDTH = 30;
@@ -17,7 +18,7 @@ localparam NUM_VIRTUAL_NODES = 100;
 localparam RESERVOIR_DATA_WIDTH = 32;
 localparam RESERVOIR_HISTORY_ADDR_WIDTH = 16;
 
-localparam NUM_STEPS_PER_SAMPLE = 100;
+localparam NUM_STEPS_PER_SAMPLE = NUM_VIRTUAL_NODES;
 localparam NUM_INIT_SAMPLES = 1;
 localparam NUM_TEST_SAMPLES = 1;
 
@@ -253,7 +254,7 @@ initial begin
     AXI_WRITE(CTRL_REG_ADDR,32'h0000_0001);
     // @(negedge busy);
     AXI_READ( .READ_ADDR(CTRL_REG_ADDR), .READ_DATA(read_data));
-    while(read_data != 0) begin
+    while(read_data[1] != 0) begin
         AXI_READ( .READ_ADDR(CTRL_REG_ADDR), .READ_DATA(read_data));
         WAIT(1000);
     end
@@ -272,6 +273,23 @@ initial begin
     $display("Reading DFR Output Mem");
     for(i = 0; i < NUM_TEST_SAMPLES; i = i + 1) begin
         AXI_READ( .READ_ADDR(DFR_OUTPUT_MEM_ADDR_OFFSET + i*4), .DECIMAL(1), .READ_DATA(read_data));
+    end
+
+    // Test Read + Write Reservoir Nodes
+    $display("Test Read + Write Reservoir Nodes");
+    for(i = 0; i < NUM_VIRTUAL_NODES; i = i + 1) begin
+        AXI_WRITE(CTRL_REG_ADDR,{21'h0,i[6:0],4'h0});
+        AXI_WRITE(RESERVOIR_NODE_REG_ADDR, i, 1);
+        AXI_READ( .READ_ADDR(RESERVOIR_NODE_REG_ADDR), .DECIMAL(1), .READ_DATA(read_data));
+    end
+
+    // Launch DFR, Preserve Reservoir State
+    AXI_WRITE(CTRL_REG_ADDR,32'h0000_0005);
+    // @(negedge busy);
+    AXI_READ( .READ_ADDR(CTRL_REG_ADDR), .READ_DATA(read_data));
+    while(read_data[1] != 0) begin
+        AXI_READ( .READ_ADDR(CTRL_REG_ADDR), .READ_DATA(read_data));
+        WAIT(1000);
     end
 
    
