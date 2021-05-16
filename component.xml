@@ -232,7 +232,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>dbd141f3</spirit:value>
+            <spirit:value>ca96d10e</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -254,7 +254,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>dbd141f3</spirit:value>
+            <spirit:value>ca96d10e</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -269,7 +269,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>2250ec04</spirit:value>
+            <spirit:value>b9ad966c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -665,11 +665,11 @@
         <spirit:userFileType>coe</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>vivado/dfr_core_project/dfr_core_project.srcs/sources_1/ip/bram_16k_dual_port/bram_16k_dual_port.xci</spirit:name>
+        <spirit:name>vivado/dfr_core_project/dfr_core_project.srcs/sources_1/ip/bram_64k_dual_port/bram_64k_dual_port.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>vivado/dfr_core_project/dfr_core_project.srcs/sources_1/ip/bram_2k_dual_port/bram_2k_dual_port.xci</spirit:name>
+        <spirit:name>vivado/dfr_core_project/dfr_core_project.srcs/sources_1/ip/bram_1k_dual_port/bram_1k_dual_port.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
@@ -711,7 +711,7 @@
       <spirit:file>
         <spirit:name>rtl/src/dfr_core_top.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_e1196ce6</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_9d06ef41</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -741,11 +741,11 @@
         <spirit:userFileType>coe</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>vivado/dfr_core_project/dfr_core_project.srcs/sources_1/ip/bram_16k_dual_port/bram_16k_dual_port.xci</spirit:name>
+        <spirit:name>vivado/dfr_core_project/dfr_core_project.srcs/sources_1/ip/bram_64k_dual_port/bram_64k_dual_port.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>vivado/dfr_core_project/dfr_core_project.srcs/sources_1/ip/bram_2k_dual_port/bram_2k_dual_port.xci</spirit:name>
+        <spirit:name>vivado/dfr_core_project/dfr_core_project.srcs/sources_1/ip/bram_1k_dual_port/bram_1k_dual_port.xci</spirit:name>
         <spirit:userFileType>xci</spirit:userFileType>
       </spirit:file>
       <spirit:file>
@@ -876,19 +876,13 @@
         <xilinx:xpmLibrary>XPM_MEMORY</xilinx:xpmLibrary>
       </xilinx:xpmLibraries>
       <xilinx:coreRevision>1</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2021-05-16T19:57:51Z</xilinx:coreCreationDateTime>
-      <xilinx:tags>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@2845c930_ARCHIVE_LOCATION">/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@76ee3ce8_ARCHIVE_LOCATION">/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@669f757c_ARCHIVE_LOCATION">/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@2c84f01f_ARCHIVE_LOCATION">/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system</xilinx:tag>
-      </xilinx:tags>
+      <xilinx:coreCreationDateTime>2021-05-16T20:17:03Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2020.2</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="e3a8d09c"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="f3d2ff12"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="236af02d"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="5da264ab"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="175e3b7f"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="a5893e35"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="bfee1ede"/>
