@@ -17,7 +17,7 @@ YT_SCALE = 2**32
 
 
 # ASIC Mackey-Glass Activation Function
-mg_vector = np.genfromtxt(f"./data/asic_function_onboard_dac.csv", delimiter=",").T
+mg_vector = np.genfromtxt("./data/asic_function_onboard_dac.csv", delimiter=",").T
 
 def mackey_glass(inData):
 
