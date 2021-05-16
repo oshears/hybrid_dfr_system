@@ -140,7 +140,6 @@ wire [11:0] asic_function_out;
 
 wire [2:0] axi_current_state_out;
 
-
 wire load_node;
 wire [11:0] node_dout;
 
