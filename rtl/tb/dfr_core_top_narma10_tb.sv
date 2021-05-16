@@ -1,6 +1,11 @@
 `timescale 1ns / 1ps
 module dfr_core_top_narma10_tb;
 
+localparam C_S_AXI_DATA_WIDTH = 32;
+localparam C_S_AXI_ADDR_WIDTH = 30;
+localparam RESERVOIR_DATA_WIDTH = 32;
+localparam RESERVOIR_HISTORY_ADDR_WIDTH = 16;
+
 localparam CTRL_REG_ADDR = 16'h0000;
 localparam DEBUG_REG_ADDR = 16'h0004;
 localparam NUM_INIT_SAMPLES_REG_ADDR = 16'h0008;
@@ -12,12 +17,12 @@ localparam NUM_TRAIN_STEPS_REG_ADDR = 16'h001C;
 localparam NUM_TEST_STEPS_REG_ADDR = 16'h0020;
 localparam RESERVOIR_NODE_REG_ADDR = 16'h0024;
 
-localparam C_S_AXI_DATA_WIDTH = 32;
-localparam C_S_AXI_ADDR_WIDTH = 30;
-localparam NUM_VIRTUAL_NODES = 100;
-localparam RESERVOIR_DATA_WIDTH = 32;
-localparam RESERVOIR_HISTORY_ADDR_WIDTH = 17;
+localparam DFR_INPUT_MEM_ADDR_OFFSET     = 32'h0100_0000;
+localparam DFR_RESERVOIR_ADDR_MEM_OFFSET = 32'h0200_0000;
+localparam DFR_WEIGHT_MEM_ADDR_OFFSET    = 32'h0300_0000;
+localparam DFR_OUTPUT_MEM_ADDR_OFFSET    = 32'h0400_0000;
 
+localparam NUM_VIRTUAL_NODES = 100;
 localparam NUM_STEPS_PER_SAMPLE = NUM_VIRTUAL_NODES;
 
 localparam MAX_INPUT_SAMPLES_STEPS = 2 ** RESERVOIR_HISTORY_ADDR_WIDTH;
@@ -25,12 +30,9 @@ localparam MAX_INPUT_SAMPLES = MAX_INPUT_SAMPLES_STEPS / NUM_STEPS_PER_SAMPLE;
 
 // NUM_INIT_SAMPLES + NUM_TEST_SAMPLES must be less than MAX_INPUT_SAMPLES - 1 to prevent internal sample_cntr from overflowing  
 localparam NUM_INIT_SAMPLES = 1;
-localparam NUM_TEST_SAMPLES = MAX_INPUT_SAMPLES - NUM_INIT_SAMPLES - 1;
+// localparam NUM_TEST_SAMPLES = MAX_INPUT_SAMPLES - NUM_INIT_SAMPLES - 1;
+localparam NUM_TEST_SAMPLES = 1
 
-localparam DFR_INPUT_MEM_ADDR_OFFSET     = 32'h0100_0000;
-localparam DFR_RESERVOIR_ADDR_MEM_OFFSET = 32'h0200_0000;
-localparam DFR_WEIGHT_MEM_ADDR_OFFSET    = 32'h0300_0000;
-localparam DFR_OUTPUT_MEM_ADDR_OFFSET    = 32'h0400_0000;
 
 // Inputs
 reg S_AXI_ACLK = 0;
