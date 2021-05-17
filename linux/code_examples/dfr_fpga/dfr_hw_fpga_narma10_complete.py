@@ -193,3 +193,21 @@ print('--------------------------------------------------')
 print('Testing Errors')
 print(f'testing mse: {mse}')
 print(f'testing nrmse: {nrmse}')
+
+
+'''
+Hybrid Tied Low
+Testing Errors
+testing mse: 1.5682356439207892e+18
+testing nrmse: 0.779314985123653
+
+Hybrid Tied High
+Testing Errors
+testing mse: 1.9245828021744352e+17
+testing nrmse: 0.27300818469426197
+
+FPGA Only
+Testing Errors
+testing mse: 1.970835325565766e+17
+testing nrmse: 0.27626924187440033
+'''
