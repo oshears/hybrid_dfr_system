@@ -110,6 +110,8 @@ for k in range(0,(testLen * Tp)):
     
     # Activation
     nodeN[0,0]	= (mackey_glass(testJ))
+    if k >= 200 and k < 300:
+        print(f"State[{k}]: mg({inputTS[t,0]} + eta * {nodeC[N-1,0]}) = {nodeN[0,0]}")
     nodeN[1:N]  = nodeC[0:(N - 1)]
 
     # Update the current node state
