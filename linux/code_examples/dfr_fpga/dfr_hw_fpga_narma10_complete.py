@@ -49,7 +49,7 @@ MAX_INPUT_SAMPLES = int(MAX_INPUT_SAMPLES_STEPS / NUM_STEPS_PER_SAMPLE)
 # NUM_INIT_SAMPLES + NUM_TEST_SAMPLES must be less than MAX_INPUT_SAMPLES - 1 to prevent internal sample_cntr from overflowing  
 NUM_INIT_SAMPLES = 1
 # NUM_TEST_SAMPLES = MAX_INPUT_SAMPLES - NUM_INIT_SAMPLES - 1
-NUM_TEST_SAMPLES = 2
+NUM_TEST_SAMPLES = 1
 
 # Configure Widths
 regs[NUM_INIT_SAMPLES_REG_ADDR : NUM_INIT_SAMPLES_REG_ADDR + 4] = int2bytes(NUM_INIT_SAMPLES)
@@ -132,54 +132,49 @@ for i in range(NUM_TEST_SAMPLES):
 #     print(f"DFR_RESERVOIR_ADDR_MEM_OFFSET[{i}] - Output @ {i}: {output_val}")
 
 
-# Restore reservoir state for the next set of inputs
-i = 0
-node_i = NUM_VIRTUAL_NODES - 1
-reservoir_state = []
-for i in range(NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE - NUM_STEPS_PER_SAMPLE, NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE):
-
-    # Read node state from the reservoir history
-    node_i_state = bytes2int(regs[DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 : DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 + 4])
-    print(f"DFR_RESERVOIR_ADDR_MEM_OFFSET[{i}] = {node_i_state}")
-
-    # Select Corresponding Node
-    # Shift by 4 to write to reservoir node select bits
-    regs[CTRL_REG_ADDR + i*4 : CTRL_REG_ADDR + i*4 + 4] = int2bytes(node_i << 4)
-
-    # Update Node State
-    # Shift by 4 to fit in 12-bit reservoir node
-    regs[RESERVOIR_NODE_REG_ADDR : RESERVOIR_NODE_REG_ADDR + 4] = int2bytes(node_i_state >> 4)
-    node_i_state = bytes2int(regs[RESERVOIR_NODE_REG_ADDR : RESERVOIR_NODE_REG_ADDR + 4])
-    print(f"RESERVOIR_NODE_REG_ADDR[{node_i}] = {node_i_state}")
-
-    # Move to next node
-    node_i -= 1
+# Reconfigure weights
+regs[NUM_INIT_SAMPLES_REG_ADDR : NUM_INIT_SAMPLES_REG_ADDR + 4] = int2bytes(0)
+regs[NUM_INIT_STEPS_REG_ADDR : NUM_INIT_STEPS_REG_ADDR + 4] = int2bytes(0)
 
 
 # Update inputs
 INPUT_START = input_cntr
 input_pos = 0
-for i in range(INPUT_START, INPUT_START + (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES + 1 + 1) * NUM_STEPS_PER_SAMPLE):
+for i in range(INPUT_START, INPUT_START + (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES + 1) * NUM_STEPS_PER_SAMPLE):
     sample_val = int(input_file_lines[i].strip())
     regs[DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 : DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 + 4] = int2bytes(sample_val)
     
     if i < (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES) * NUM_STEPS_PER_SAMPLE:
         input_cntr += 1
 
-    input_pos += 1
 
     # Test Read
-    readback = bytes2int(regs[DFR_INPUT_MEM_ADDR_OFFSET + i*4 : DFR_INPUT_MEM_ADDR_OFFSET + i*4 + 4])
-    print(f"DFR_INPUT_MEM_ADDR_OFFSET[{i}] - Wrote: {readback}")
+    # readback = bytes2int(regs[DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 : DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 + 4])
+    # print(f"DFR_INPUT_MEM_ADDR_OFFSET[{input_pos}] - Wrote: {readback}")
 
-# Reconfigure weights
-regs[NUM_INIT_SAMPLES_REG_ADDR : NUM_INIT_SAMPLES_REG_ADDR + 4] = int2bytes(0)
-regs[NUM_TRAIN_SAMPLES_REG_ADDR : NUM_TRAIN_SAMPLES_REG_ADDR + 4] = int2bytes(0)
-regs[NUM_TEST_SAMPLES_REG_ADDR : NUM_TEST_SAMPLES_REG_ADDR + 4] = int2bytes(NUM_TEST_SAMPLES)
+    input_pos += 1
 
-regs[NUM_INIT_STEPS_REG_ADDR : NUM_INIT_STEPS_REG_ADDR + 4] = int2bytes(0)
-regs[NUM_TRAIN_STEPS_REG_ADDR : NUM_TRAIN_STEPS_REG_ADDR + 4] = int2bytes(0)
-regs[NUM_TEST_STEPS_REG_ADDR : NUM_TEST_STEPS_REG_ADDR + 4] = int2bytes(NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE)
+
+node_i = NUM_VIRTUAL_NODES - 1
+# use the node states from the last set of input samples
+for i in range(NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE - NUM_STEPS_PER_SAMPLE, NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE):
+
+    # Read node state from the reservoir history
+    node_i_state = bytes2int(regs[DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 : DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 + 4])
+
+    # Select Corresponding Node
+    # Shift by 4 to write to reservoir node select bits
+    regs[CTRL_REG_ADDR : CTRL_REG_ADDR + 4] = int2bytes(node_i << 4)
+    
+
+    # Update Node State
+    # Shift by 4 to fit in 12-bit reservoir node
+    regs[RESERVOIR_NODE_REG_ADDR : RESERVOIR_NODE_REG_ADDR + 4] = int2bytes(node_i_state >> 4)
+    output_val = bytes2int(regs[RESERVOIR_NODE_REG_ADDR : RESERVOIR_NODE_REG_ADDR + 4])
+    print(f"DFR_RESERVOIR_ADDR_MEM_OFFSET[{i}] = {node_i_state} => RESERVOIR_NODE_REG_ADDR[{node_i}] = {output_val} ({output_val << 4})")
+
+    # Move to next node
+    node_i -= 1
 
 # Launch DFR
 print("Running DFR")
@@ -215,7 +210,7 @@ for i in range(NUM_TEST_SAMPLES):
 i = 0
 for i in range((NUM_TEST_SAMPLES) * NUM_STEPS_PER_SAMPLE):
     output_val = bytes2int(regs[DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 : DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 + 4])
-    print(f"DFR_RESERVOIR_ADDR_MEM_OFFSET[{i}] - Output @ {i}: {output_val}")
+    print(f"DFR_RESERVOIR_ADDR_MEM_OFFSET[{i}] - Output @ {i}: {output_val >> 4} => {output_val}")
 
 
 # Calculate the MSE through L2 norm

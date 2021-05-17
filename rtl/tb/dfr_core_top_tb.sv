@@ -282,6 +282,9 @@ initial begin
         AXI_WRITE(RESERVOIR_NODE_REG_ADDR, i, 1);
         AXI_READ( .READ_ADDR(RESERVOIR_NODE_REG_ADDR), .DECIMAL(1), .READ_DATA(read_data));
     end
+    
+    AXI_WRITE(NUM_INIT_SAMPLES_REG_ADDR,0);
+    AXI_WRITE(NUM_INIT_STEPS_REG_ADDR,0);
 
     // Launch DFR, Preserve Reservoir State
     AXI_WRITE(CTRL_REG_ADDR,32'h0000_0005);

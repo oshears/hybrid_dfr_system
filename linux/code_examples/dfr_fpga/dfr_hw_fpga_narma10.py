@@ -69,7 +69,6 @@ print("Configuring Input Memory")
 # Write DFR Input Mem
 fh = open("dfr_sw_int_narma10_inputs.txt","r")
 lines = fh.readlines()
-i = 0
 for i in range((NUM_TEST_SAMPLES + NUM_INIT_SAMPLES + 1) * NUM_STEPS_PER_SAMPLE):
     sample_val = int(lines[i].strip())
     regs[DFR_INPUT_MEM_ADDR_OFFSET + i*4 : DFR_INPUT_MEM_ADDR_OFFSET + i*4 + 4] = int2bytes(sample_val)

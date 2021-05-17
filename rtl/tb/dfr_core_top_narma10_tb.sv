@@ -31,7 +31,7 @@ localparam MAX_INPUT_SAMPLES = MAX_INPUT_SAMPLES_STEPS / NUM_STEPS_PER_SAMPLE;
 // NUM_INIT_SAMPLES + NUM_TEST_SAMPLES must be less than MAX_INPUT_SAMPLES - 1 to prevent internal sample_cntr from overflowing  
 localparam NUM_INIT_SAMPLES = 1;
 // localparam NUM_TEST_SAMPLES = MAX_INPUT_SAMPLES - NUM_INIT_SAMPLES - 1;
-localparam NUM_TEST_SAMPLES = 1
+localparam NUM_TEST_SAMPLES = 1;
 
 
 // Inputs
