@@ -33,12 +33,12 @@ set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {10}] [get_bd_cells
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/processing_system7_0/M_AXI_GP0} Slave {/dfr_core_hybrid_system_0/S_AXI} ddr_seg {Auto} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins dfr_core_hybrid_system_0/S_AXI]
 
 # Configure Neuromorphic Bridge IP
-make_bd_pins_external  [get_bd_pins asic_function_system_0/VP]
-make_bd_pins_external  [get_bd_pins asic_function_system_0/VN]
-make_bd_pins_external  [get_bd_pins asic_function_system_0/DAC_CS_N]
-make_bd_pins_external  [get_bd_pins asic_function_system_0/DAC_LDAC_N]
-make_bd_pins_external  [get_bd_pins asic_function_system_0/DAC_DIN]
-make_bd_pins_external  [get_bd_pins asic_function_system_0/DAC_SCLK]
+make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/VP]
+make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/VN]
+make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/DAC_CS_N]
+make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/DAC_LDAC_N]
+make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/DAC_DIN]
+make_bd_pins_external  [get_bd_pins dfr_core_hybrid_system_0/DAC_SCLK]
 
 # # Add Internal Logic Analyzer
 # create_bd_cell -type ip -vlnv xilinx.com:ip:ila:6.2 ila_0
