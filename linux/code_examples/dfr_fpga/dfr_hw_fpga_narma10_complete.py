@@ -48,8 +48,13 @@ MAX_INPUT_SAMPLES = int(MAX_INPUT_SAMPLES_STEPS / NUM_STEPS_PER_SAMPLE)
 
 # NUM_INIT_SAMPLES + NUM_TEST_SAMPLES must be less than MAX_INPUT_SAMPLES - 1 to prevent internal sample_cntr from overflowing  
 NUM_INIT_SAMPLES = 1
-# NUM_TEST_SAMPLES = MAX_INPUT_SAMPLES - NUM_INIT_SAMPLES - 1
-NUM_TEST_SAMPLES = 1
+NUM_TEST_SAMPLES = MAX_INPUT_SAMPLES - NUM_INIT_SAMPLES - 1
+
+TOTAL_STEPS = 400100
+TOTAL_SAMPLES = 4001
+TOTAL_TEST_SAMPLES = TOTAL_SAMPLES - NUM_INIT_SAMPLES
+
+NUM_TEST_INPUT_BATCHES = int(TOTAL_TEST_SAMPLES / MAX_INPUT_SAMPLES)
 
 # Configure Widths
 regs[NUM_INIT_SAMPLES_REG_ADDR : NUM_INIT_SAMPLES_REG_ADDR + 4] = int2bytes(NUM_INIT_SAMPLES)
@@ -64,6 +69,10 @@ regs[NUM_STEPS_PER_SAMPLE_REG_ADDR : NUM_STEPS_PER_SAMPLE_REG_ADDR + 4] = int2by
 
 # Used to persistently keep track of inputs
 input_cntr = 0
+
+# Keep track of DFR predictions
+predicted_target = np.ndarray(shape=(1,NUM_TEST_SAMPLES*NUM_TEST_INPUT_BATCHES))
+dfr_output_cntr = 0
 
 # Configure Input Samples
 print("Configuring Input Memory")
@@ -104,114 +113,77 @@ while(regs[CTRL_REG_ADDR] & 0x2 != 0x0):
     continue
 
 # Read Outputs
-print("Reading Output Memory")
-
-Yt = np.ndarray(shape=(1,NUM_TEST_SAMPLES*2))
-expected_output_cntr = 0
-fh = open("dfr_sw_int_narma10_expected_dfr_outputs.txt","r")
-file_lines = fh.readlines()
-fh.close()
-for file_line in file_lines:
-    if expected_output_cntr < NUM_TEST_SAMPLES:
-        Yt[0,expected_output_cntr] = float(file_line.strip())
-    expected_output_cntr += 1
-
-predicted_target = np.ndarray(shape=(1,NUM_TEST_SAMPLES*2))
-
-# Read DFR Output Mem
-i = 0
+print("Reading DFR Output Memory")
 for i in range(NUM_TEST_SAMPLES):
     output_val = bytes2int(regs[DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 : DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 + 4])
-    predicted_target[0,i] = output_val
-    print(f"DFR_OUTPUT_MEM_ADDR_OFFSET[{i}] - Output @ {i}: {output_val}")
-
-# Read Reservoir Output Mem
-# i = 0
-# for i in range((NUM_TEST_SAMPLES) * NUM_STEPS_PER_SAMPLE):
-#     output_val = bytes2int(regs[DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 : DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 + 4])
-#     print(f"DFR_RESERVOIR_ADDR_MEM_OFFSET[{i}] - Output @ {i}: {output_val}")
+    predicted_target[0,dfr_output_cntr] = output_val
+    dfr_output_cntr += 1
 
 
 # Reconfigure weights
 regs[NUM_INIT_SAMPLES_REG_ADDR : NUM_INIT_SAMPLES_REG_ADDR + 4] = int2bytes(0)
 regs[NUM_INIT_STEPS_REG_ADDR : NUM_INIT_STEPS_REG_ADDR + 4] = int2bytes(0)
 
+for batch in range(1,NUM_TEST_INPUT_BATCHES):
+    print(f"Batch: {batch + 1} / {NUM_TEST_INPUT_BATCHES}")
 
-# Update inputs
-INPUT_START = input_cntr
-input_pos = 0
-for i in range(INPUT_START, INPUT_START + (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES + 1) * NUM_STEPS_PER_SAMPLE):
-    sample_val = int(input_file_lines[i].strip())
-    regs[DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 : DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 + 4] = int2bytes(sample_val)
-    
-    if i < (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES) * NUM_STEPS_PER_SAMPLE:
-        input_cntr += 1
+    # Update inputs
+    INPUT_START = input_cntr
+    input_pos = 0
+    for i in range(INPUT_START, INPUT_START + (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES + 1) * NUM_STEPS_PER_SAMPLE):
+        sample_val = int(input_file_lines[i].strip())
+        regs[DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 : DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 + 4] = int2bytes(sample_val)
+        
+        if i < (NUM_TEST_SAMPLES + NUM_INIT_SAMPLES) * NUM_STEPS_PER_SAMPLE:
+            input_cntr += 1
 
-
-    # Test Read
-    # readback = bytes2int(regs[DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 : DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 + 4])
-    # print(f"DFR_INPUT_MEM_ADDR_OFFSET[{input_pos}] - Wrote: {readback}")
-
-    input_pos += 1
+        input_pos += 1
 
 
-node_i = NUM_VIRTUAL_NODES - 1
-# use the node states from the last set of input samples
-for i in range(NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE - NUM_STEPS_PER_SAMPLE, NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE):
+    node_i = NUM_VIRTUAL_NODES - 1
+    # use the node states from the last set of input samples
+    for i in range(NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE - NUM_STEPS_PER_SAMPLE, NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE):
 
-    # Read node state from the reservoir history
-    node_i_state = bytes2int(regs[DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 : DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 + 4])
+        # Read node state from the reservoir history
+        node_i_state = bytes2int(regs[DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 : DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 + 4])
 
-    # Select Corresponding Node
-    # Shift by 4 to write to reservoir node select bits
-    regs[CTRL_REG_ADDR : CTRL_REG_ADDR + 4] = int2bytes(node_i << 4)
-    
+        # Select Corresponding Node
+        # Shift by 4 to write to reservoir node select bits
+        regs[CTRL_REG_ADDR : CTRL_REG_ADDR + 4] = int2bytes(node_i << 4)
+        
 
-    # Update Node State
-    # Shift by 4 to fit in 12-bit reservoir node
-    regs[RESERVOIR_NODE_REG_ADDR : RESERVOIR_NODE_REG_ADDR + 4] = int2bytes(node_i_state >> 4)
-    output_val = bytes2int(regs[RESERVOIR_NODE_REG_ADDR : RESERVOIR_NODE_REG_ADDR + 4])
-    print(f"DFR_RESERVOIR_ADDR_MEM_OFFSET[{i}] = {node_i_state} => RESERVOIR_NODE_REG_ADDR[{node_i}] = {output_val} ({output_val << 4})")
+        # Update Node State
+        # Shift by 4 to fit in 12-bit reservoir node
+        regs[RESERVOIR_NODE_REG_ADDR : RESERVOIR_NODE_REG_ADDR + 4] = int2bytes(node_i_state >> 4)
 
-    # Move to next node
-    node_i -= 1
+        # Move to next node
+        node_i -= 1
 
-# Launch DFR
-print("Running DFR")
-regs[CTRL_REG_ADDR] = 0x0000_0005
+    # Launch DFR
+    print("Running DFR")
+    regs[CTRL_REG_ADDR] = 0x0000_0005
 
-# Poll until DFR is finished
-while(regs[CTRL_REG_ADDR] & 0x2 != 0x0):
-    continue
+    # Poll until DFR is finished
+    while(regs[CTRL_REG_ADDR] & 0x2 != 0x0):
+        continue
 
-# Read Outputs
-print("Reading Output Memory")
+    # Read Outputs
+    print("Reading DFR Output Memory")
+    for i in range(NUM_TEST_SAMPLES):
+        output_val = bytes2int(regs[DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 : DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 + 4])
+        predicted_target[0,dfr_output_cntr] = output_val
+        dfr_output_cntr += 1
 
-Yt = np.ndarray(shape=(1,NUM_TEST_SAMPLES*2))
-expected_output_cntr = 0
-fh = open("dfr_sw_int_narma10_expected_dfr_outputs.txt","r")
-file_lines = fh.readlines()
-fh.close()
-for file_line in file_lines:
-    if expected_output_cntr < NUM_TEST_SAMPLES:
-        Yt[0,expected_output_cntr] = float(file_line.strip())
-    expected_output_cntr += 1
-
-predicted_target = np.ndarray(shape=(1,NUM_TEST_SAMPLES*2))
-
-# Read DFR Output Mem
-i = 0
-for i in range(NUM_TEST_SAMPLES):
-    output_val = bytes2int(regs[DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 : DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 + 4])
-    predicted_target[0,i] = output_val
-    print(f"DFR_OUTPUT_MEM_ADDR_OFFSET[{i}] - Output @ {i}: {output_val}")
-
-# Read Reservoir Output Mem
-i = 0
-for i in range((NUM_TEST_SAMPLES) * NUM_STEPS_PER_SAMPLE):
-    output_val = bytes2int(regs[DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 : DFR_RESERVOIR_ADDR_MEM_OFFSET + i*4 + 4])
-    print(f"DFR_RESERVOIR_ADDR_MEM_OFFSET[{i}] - Output @ {i}: {output_val >> 4} => {output_val}")
-
+    # Load Expected Data
+    Yt = np.ndarray(shape=(1,NUM_TEST_SAMPLES*NUM_TEST_INPUT_BATCHES))
+    expected_output_cntr = 0
+    fh = open("dfr_sw_int_narma10_expected_dfr_outputs.txt","r")
+    file_lines = fh.readlines()
+    fh.close()
+    for file_line in file_lines:
+        if expected_output_cntr < NUM_TEST_SAMPLES*NUM_TEST_INPUT_BATCHES:
+            Yt[0,expected_output_cntr] = float(file_line.strip())
+        expected_output_cntr += 1
 
 # Calculate the MSE through L2 norm
 mse   = np.sum(np.power(Yt - predicted_target,2)) / Yt.size
