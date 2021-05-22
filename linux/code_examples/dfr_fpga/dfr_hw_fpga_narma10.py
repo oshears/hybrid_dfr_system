@@ -99,7 +99,7 @@ fh.close()
 
 # Launch DFR
 print("Running DFR")
-regs[CTRL_REG_ADDR : CTRL_REG_ADDR + 4] = int2bytes(0x0000_2001)
+regs[CTRL_REG_ADDR : CTRL_REG_ADDR + 4] = int2bytes(0x0000_1001)
 
 # Poll until DFR is finished
 while(regs[CTRL_REG_ADDR] & 0x2 != 0x0):
