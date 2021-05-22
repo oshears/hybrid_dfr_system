@@ -106,7 +106,7 @@ for i in range(NUM_VIRTUAL_NODES):
 
 # Launch DFR
 print("Running DFR")
-regs[CTRL_REG_ADDR] = 0x0000_0001
+regs[CTRL_REG_ADDR : CTRL_REG_ADDR + 4] = int2bytes(0x0000_1005)
 
 # Poll until DFR is finished
 while(regs[CTRL_REG_ADDR] & 0x2 != 0x0):
@@ -161,7 +161,7 @@ for batch in range(1,NUM_TEST_INPUT_BATCHES):
 
     # Launch DFR
     print("Running DFR")
-    regs[CTRL_REG_ADDR] = 0x0000_0005
+    regs[CTRL_REG_ADDR : CTRL_REG_ADDR + 4] = int2bytes(0x0000_1005)
 
     # Poll until DFR is finished
     while(regs[CTRL_REG_ADDR] & 0x2 != 0x0):
