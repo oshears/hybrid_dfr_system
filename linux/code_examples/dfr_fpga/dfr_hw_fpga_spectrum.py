@@ -47,7 +47,7 @@ MAX_INPUT_SAMPLES_STEPS = 2 ** 16
 MAX_INPUT_SAMPLES = int(MAX_INPUT_SAMPLES_STEPS / NUM_STEPS_PER_SAMPLE)
 
 # NUM_INIT_SAMPLES + NUM_TEST_SAMPLES must be less than MAX_INPUT_SAMPLES - 1 to prevent internal sample_cntr from overflowing  
-NUM_INIT_SAMPLES = 100
+NUM_INIT_SAMPLES = 20
 # NUM_TEST_SAMPLES = MAX_INPUT_SAMPLES - NUM_INIT_SAMPLES - 1
 NUM_TEST_SAMPLES = 10
 
@@ -67,7 +67,7 @@ regs[NUM_STEPS_PER_SAMPLE_REG_ADDR : NUM_STEPS_PER_SAMPLE_REG_ADDR + 4] = int2by
 print("Configuring Input Memory")
 
 # Write DFR Input Mem
-fh = open("dfr_sw_int_narma10_inputs.txt","r")
+fh = open("dfr_sw_int_spectrum_inputs.txt","r")
 lines = fh.readlines()
 for i in range((NUM_TEST_SAMPLES + NUM_INIT_SAMPLES + 1) * NUM_STEPS_PER_SAMPLE):
     sample_val = int(lines[i].strip())
@@ -83,7 +83,7 @@ fh.close()
 print("Configuring Weight Memory")
 
 # Write DFR Weight Mem
-fh = open("dfr_sw_int_narma10_weights.txt","r")
+fh = open("dfr_sw_int_spectrum_weights.txt","r")
 lines = fh.readlines()
 for i in range(NUM_VIRTUAL_NODES):
     
@@ -99,7 +99,7 @@ fh.close()
 
 # Launch DFR
 print("Running DFR")
-regs[CTRL_REG_ADDR : CTRL_REG_ADDR + 4] = int2bytes(0x0000_2001)
+regs[CTRL_REG_ADDR : CTRL_REG_ADDR + 4] = int2bytes(0x0000_4001)
 
 # Poll until DFR is finished
 while(regs[CTRL_REG_ADDR] & 0x2 != 0x0):
@@ -110,7 +110,7 @@ print("Reading Output Memory")
 
 Yt = np.ndarray(shape=(1,NUM_TEST_SAMPLES))
 expected_output_cntr = 0
-fh = open("dfr_sw_int_narma10_expected_dfr_outputs.txt","r")
+fh = open("dfr_sw_int_spectrum_expected_dfr_outputs.txt","r")
 file_lines = fh.readlines()
 for file_line in file_lines:
     if expected_output_cntr < NUM_TEST_SAMPLES:
@@ -136,6 +136,7 @@ for i in range(NUM_TEST_SAMPLES):
 
 
 # Calculate the MSE through L2 norm
+predicted_target = predicted_target > 2**15
 mse   = np.sum(np.power(Yt - predicted_target,2)) / Yt.size
 nrmse = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
 
