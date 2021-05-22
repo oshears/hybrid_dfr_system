@@ -251,7 +251,7 @@ initial begin
     end
 
     // Launch DFR
-    AXI_WRITE(CTRL_REG_ADDR,32'h0000_0001);
+    AXI_WRITE(CTRL_REG_ADDR,32'h0000_2001);
     // @(negedge busy);
     AXI_READ( .READ_ADDR(CTRL_REG_ADDR), .READ_DATA(read_data));
     while(read_data[1] != 0) begin

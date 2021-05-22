@@ -189,7 +189,8 @@ always @(send_read_data_to_AXI,
         num_steps_per_sample_reg,
         num_train_steps_reg,
         num_test_steps_reg,
-        num_init_steps_reg
+        num_init_steps_reg,
+        node_dout
         )
 begin
     S_AXI_RDATA = 32'b0;

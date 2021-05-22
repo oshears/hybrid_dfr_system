@@ -293,7 +293,8 @@ reservoir_asic
     .DAC_DIN(DAC_DIN),
     .DAC_SCLK(DAC_SCLK),
     .VP_IN(VP_IN),
-    .VN_IN(VN_IN)
+    .VN_IN(VN_IN),
+    .eta(ctrl[15:12])
 );
 
 assign reservoir_rst = rst || reservoir_rst_i;

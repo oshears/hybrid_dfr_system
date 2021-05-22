@@ -278,7 +278,8 @@ reservoir
     .node_dout(node_dout),
     .reservoir_valid(reservoir_valid),
     .en(reservoir_en),
-    .asic_function_out(asic_function_out)
+    .asic_function_out(asic_function_out),
+    .eta(ctrl[15:12])
 );
 
 assign reservoir_rst = rst || reservoir_rst_i;

@@ -17,6 +17,7 @@ module reservoir_asic
     output [DATA_WIDTH - 1 : 0] dout,
     output reg reservoir_valid = 0,
     output [NODE_DATA_WIDTH - 1:0] asic_function_out,
+    input [3:0] eta,
 
     // DAC Interface
     output DAC_CS_N,
@@ -33,7 +34,15 @@ wire [NODE_DATA_WIDTH - 1 : 0] node_outputs [NUM_VIRTUAL_NODES : 0];
 
 wire [DATA_WIDTH - 1 : 0] dout_i = {16'h0,node_outputs[NUM_VIRTUAL_NODES],4'h0};
 
-wire [DATA_WIDTH - 1 : 0] sum_i = din + dout_i[15:2];
+wire [DATA_WIDTH - 1 : 0] sum_i =   (eta == 4'h1) ? (din + dout_i[15:1]) :
+                                    (eta == 4'h2) ? (din + dout_i[15:2]) :
+                                    (eta == 4'h3) ? (din + dout_i[15:3]) :
+                                    (eta == 4'h4) ? (din + dout_i[15:4]) :
+                                    (eta == 4'h5) ? (din + dout_i[15:5]) :
+                                    (eta == 4'h6) ? (din + dout_i[15:6]) :
+                                    (eta == 4'h7) ? (din + dout_i[15:7]) :
+                                    (eta == 4'h8) ? (din + dout_i[15:8]) :
+                                                    (din + dout_i[15:0]);
 
 reg node_en = 0;
 

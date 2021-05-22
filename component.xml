@@ -235,7 +235,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>9cb5ad49</spirit:value>
+            <spirit:value>0126b00a</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -260,7 +260,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>9cb5ad49</spirit:value>
+            <spirit:value>0126b00a</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -803,7 +803,7 @@
       <spirit:file>
         <spirit:name>rtl/src/dfr_core_hybrid_top.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_bcd9db9b</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_1877aa28</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -1019,13 +1019,13 @@
         <xilinx:xpmLibrary>XPM_MEMORY</xilinx:xpmLibrary>
       </xilinx:xpmLibraries>
       <xilinx:coreRevision>1</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2021-05-17T16:09:58Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2021-05-22T14:31:59Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2020.2</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="e3a8d09c"/>
       <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="f3d2ff12"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="0954d393"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="513231b9"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="604d4517"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="a5893e35"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="8d3ea030"/>
