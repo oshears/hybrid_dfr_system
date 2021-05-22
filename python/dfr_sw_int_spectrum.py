@@ -227,14 +227,14 @@ nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
 ##  Compute testing errors
 
 # Call-out the target outputs
-Yt = target[0,initLen + trainLen + initLen : initLen + trainLen + initLen + testLen].reshape(1,testLen) * YT_SCALE
+Yt = target[0,initLen + trainLen + initLen : initLen + trainLen + initLen + testLen].reshape(1,testLen)
 
 
 # Calculate the NMSE
 predicted_target = np.dot(Wout,nodeTS)
-predicted_target = (predicted_target > YT_SCALE / 2) * YT_SCALE
-mse   = np.sum(np.power(Yt - predicted_target,2)) / Yt.size
-nrmse = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
+predicted_target_binary = (predicted_target > YT_SCALE / 2)
+mse   = np.sum(np.power(Yt - predicted_target_binary,2)) / Yt.size
+nrmse = (np.linalg.norm(Yt - predicted_target_binary) / np.linalg.norm(Yt))
 
 print('--------------------------------------------------')
 print('Testing Errors')
@@ -289,6 +289,6 @@ import matplotlib.pyplot as plt
 SAMPLES = 100
 x = np.linspace(0,SAMPLES-1,SAMPLES)
 plt.plot(x,Yt[0,0:SAMPLES],label="Yt")
-plt.plot(x,predicted_target[0,0:SAMPLES],'--',label="Predicted Target")
+plt.plot(x,predicted_target_binary[0,0:SAMPLES],'--',label="Predicted Target")
 plt.legend()
 plt.savefig("./data/spectrum/dfr_sw_int_spectrum_fig.png")

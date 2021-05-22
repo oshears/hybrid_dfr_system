@@ -51,6 +51,8 @@ NUM_INIT_SAMPLES = 20
 # NUM_TEST_SAMPLES = MAX_INPUT_SAMPLES - NUM_INIT_SAMPLES - 1
 NUM_TEST_SAMPLES = 10
 
+YT_SCALE = 2**32
+
 
 # Configure Widths
 regs[NUM_INIT_SAMPLES_REG_ADDR : NUM_INIT_SAMPLES_REG_ADDR + 4] = int2bytes(NUM_INIT_SAMPLES)
@@ -125,8 +127,8 @@ predicted_target = np.ndarray(shape=(1,NUM_TEST_SAMPLES))
 i = 0
 for i in range(NUM_TEST_SAMPLES):
     output_val = bytes2int(regs[DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 : DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 + 4])
-    predicted_target[0,i] = output_val
-    print(f"DFR_OUTPUT_MEM_ADDR_OFFSET[{i}] - Output @ {i}: {output_val}")
+    predicted_target[0,i] = YT_SCALE if (output_val > YT_SCALE / 2) else 0
+    print(f"DFR_OUTPUT_MEM_ADDR_OFFSET[{i}] - Output @ {i}: {output_val} Class: {predicted_target[0,i]}")
 
 # Read Reservoir Output Mem
 # i = 0
@@ -136,7 +138,6 @@ for i in range(NUM_TEST_SAMPLES):
 
 
 # Calculate the MSE through L2 norm
-predicted_target = predicted_target > 2**15
 mse   = np.sum(np.power(Yt - predicted_target,2)) / Yt.size
 nrmse = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
 
