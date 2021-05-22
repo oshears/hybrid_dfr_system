@@ -46,7 +46,7 @@ def narma10_create(inLen):
 # 10th order nonlinear auto-regressive moving average (NARMA10)
 # seed = 0
 # np.random.seed(seed)
-data, target = narma10_create(10000)
+data, target = narma10_create(10100)
 
 
 ##	Reservoir Parameters
@@ -66,7 +66,7 @@ theta       = Tp / N
 gamma       = 0.8
 # eta         = 1 - gamma
 eta         = 1/4
-initLen     = 1 
+initLen     = 100 
 trainLen	= 5900
 testLen     = 4000
 

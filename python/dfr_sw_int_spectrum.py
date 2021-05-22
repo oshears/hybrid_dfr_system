@@ -23,7 +23,8 @@ def mackey_glass(inData):
 
     # scaled the input based on the max MG function input (MG_FUNCTION_RESOLUTION)
     # and the max input data value
-    scaled_input = int( MG_FUNCTION_RESOLUTION * ( inData / MAX_INPUT ) )
+    # scaled_input = int( MG_FUNCTION_RESOLUTION * ( inData / MAX_INPUT ) )
+    scaled_input = int(inData) & (MG_FUNCTION_RESOLUTION - 1)
 
     # if the scaled result is in the range of the MG function
     if scaled_input < MG_FUNCTION_RESOLUTION and scaled_input >= 0:
@@ -41,6 +42,8 @@ NOISE = 10
 ANT = 6
 spectrum_vector = np.genfromtxt(f"./data/spectrum/spectrum_-{NOISE}_db_{ANT}_ant.csv", delimiter=",")
 data   = spectrum_vector[:,0].reshape((1,spectrum_vector.shape[0]))
+# normalize the data
+data = data / np.max(data)
 target = spectrum_vector[:,1].reshape((1,spectrum_vector.shape[0]))
 
 
@@ -59,9 +62,9 @@ NUM_SAMPLES = 6102
 Tp          = 100
 N           = Tp
 theta       = Tp / N
-gamma       = 0.8
+gamma       = 1
 # eta         = 1 - gamma
-eta         = 1/4
+eta         = 1/16
 initLen     = 20 
 trainLen	= 49 * initLen 
 testLen     = NUM_SAMPLES - (trainLen + initLen + initLen)
@@ -153,9 +156,9 @@ mse   = np.sum(np.power(Yt - predicted_target,2)) / Yt.size
 nrmse = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
 
 print('--------------------------------------------------')
-print('Testing Errors')
-print(f'testing mse: {mse}')
-print(f'testing nrmse: {nrmse}')
+print('Training Errors')
+print(f'training mse: {mse}')
+print(f'training nrmse: {nrmse}')
 
 
 ## (Testing) Initialize the reservoir layer

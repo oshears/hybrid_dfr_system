@@ -23,7 +23,7 @@ def mackey_glass(inData):
 
     # scaled the input based on the max MG function input (MG_FUNCTION_RESOLUTION)
     # and the max input data value
-    scaled_input = int( MG_FUNCTION_RESOLUTION * ( inData / MAX_INPUT ) )
+    scaled_input = int(inData) & (MG_FUNCTION_RESOLUTION - 1)
 
     # if the scaled result is in the range of the MG function
     if scaled_input < MG_FUNCTION_RESOLUTION and scaled_input >= 0:
@@ -53,7 +53,7 @@ def narma10_create(inLen):
 # 10th order nonlinear auto-regressive moving average (NARMA10)
 seed = 0
 np.random.seed(seed)
-data, target = narma10_create(10000)
+data, target = narma10_create(10100)
 
 
 ##	Reservoir Parameters
@@ -70,10 +70,10 @@ data, target = narma10_create(10000)
 Tp          = 100
 N           = Tp
 theta       = Tp / N
-gamma       = 0.8
+gamma       = 1
 # eta         = 1 - gamma
-eta         = 1/4
-initLen     = 1 
+eta         = 1/2
+initLen     = 100 
 trainLen	= 5900
 testLen     = 4000
 
@@ -164,9 +164,9 @@ mse   = np.sum(np.power(Yt - predicted_target,2)) / Yt.size
 nrmse = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
 
 print('--------------------------------------------------')
-print('Testing Errors')
-print(f'testing mse: {mse}')
-print(f'testing nrmse: {nrmse}')
+print('Training Errors')
+print(f'training mse: {mse}')
+print(f'training nrmse: {nrmse}')
 
 
 ## (Testing) Initialize the reservoir layer

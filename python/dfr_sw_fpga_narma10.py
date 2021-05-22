@@ -40,10 +40,10 @@ def mackey_glass(inData):
 Tp          = 100
 N           = Tp
 theta       = Tp / N
-gamma       = 0.8
+gamma       = 1
 # eta         = 1 - gamma
-eta         = 1/4
-initLen     = 1 
+eta         = 1/2
+initLen     = 100 
 trainLen	= 5900
 testLen     = 4000
 
