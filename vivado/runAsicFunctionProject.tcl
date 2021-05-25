@@ -122,4 +122,4 @@ ipx::save_core [ipx::current_core]
 set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
 update_ip_catalog
 
-# exit
+exit
