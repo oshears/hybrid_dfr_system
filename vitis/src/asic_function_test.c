@@ -55,6 +55,7 @@
 #define CTRL_REG_ADDR 0x43C00000
 #define ASIC_DATA_OUT_REG_ADDR 0x43C00004
 #define ASIC_DATA_IN_REG_ADDR 0x43C00008
+#define DEBUG_REG_ADDR 0x43C0000C
 
 int main1()
 {
@@ -86,6 +87,9 @@ int main1()
             Xil_Out32(CTRL_REG_ADDR, 0x1);
 
             while(read_data == 0){
+                read_data = Xil_In32(DEBUG_REG_ADDR);
+                printf("Reading from DEBUG_REG_ADDR\n\r");
+                printf("Read: %x\n\r",read_data);
                 read_data = Xil_In32(CTRL_REG_ADDR);
             }
             printf("Reading from CTRL_REG_ADDR\n\r");

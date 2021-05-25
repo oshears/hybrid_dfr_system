@@ -46,6 +46,8 @@ wire done;
 
 wire rst = ~S_AXI_ARESETN;
 
+wire [31:0] debug_in;
+
 assign asic_data_in[31:16] = 16'h0000;
 
 asic_function_interface_top_axi_regs 
@@ -60,6 +62,7 @@ asic_function_interface_top_axi_regs
     .asic_data_in(asic_data_in),
     .asic_data_out(asic_data_out),
     .ctrl(ctrl),
+    .debug_in(debug_in),
     .done(done),
     
     //AXI Signals
@@ -104,8 +107,17 @@ asic_function_interface asic_function_interface
     .dac_cs_n(DAC_CS_N),
     .dac_ldac_n(DAC_LDAC_N),
     .dac_din(DAC_DIN),
-    .dac_sclk(DAC_SCLK)
+    .dac_sclk(DAC_SCLK),
+
+    //Debug
+    .current_state_out(debug_in[2:0]),
+    .avg_cntr_out(debug_in[12:4]),
+    .dbg(debug_in[17:16])
 );
+
+assign debug_in[31:18] = 0;
+assign debug_in[15:13] = 0;
+assign debug_in[3] = 0;
 
 
 

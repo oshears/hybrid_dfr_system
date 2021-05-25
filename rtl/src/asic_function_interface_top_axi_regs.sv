@@ -30,7 +30,8 @@ parameter C_S_AXI_ADDR_WIDTH = 9
     input [31:0] asic_data_in,
     input done,
     output [31:0] asic_data_out,
-    output [31:0] ctrl
+    output [31:0] ctrl,
+    input [31:0] debug_in
 );
 
 reg [31:0] asic_data_in_reg = 0;
@@ -41,6 +42,9 @@ reg asic_data_out_reg_addr_valid = 0;
 
 reg [31:0] ctrl_reg;
 reg ctrl_reg_addr_valid = 0;
+
+reg [31:0] debug_reg;
+reg debug_reg_addr_valid = 0;
 
 reg [2:0] current_state = 0;
 reg [2:0] next_state = 0;
@@ -134,7 +138,8 @@ always @(send_read_data_to_AXI,
         local_address_valid, 
         asic_data_in_reg, 
         asic_data_out_reg,
-        ctrl_reg
+        ctrl_reg,
+        debug_reg
         )
 begin
     S_AXI_RDATA = 32'b0;
@@ -148,6 +153,8 @@ begin
                 S_AXI_RDATA = asic_data_out_reg;
             16'h0008:
                 S_AXI_RDATA = asic_data_in_reg;
+            16'h000C:
+                S_AXI_RDATA = debug_reg;
             default:
                 S_AXI_RDATA = 32'h0;
         endcase;     
@@ -180,6 +187,7 @@ begin
     ctrl_reg_addr_valid = 0;
     asic_data_out_reg_addr_valid = 0;
     asic_data_in_reg_addr_valid = 0;
+    debug_reg_addr_valid = 0;
 
     local_address_valid = 1;
 
@@ -192,6 +200,8 @@ begin
                 asic_data_out_reg_addr_valid = 1;
             16'h0008:
                 asic_data_in_reg_addr_valid = 1;
+            16'h000C:
+                debug_reg_addr_valid = 1;
             default:
             begin
                 local_address_valid = 0;
@@ -242,6 +252,11 @@ begin
     begin
         asic_data_in_reg = asic_data_in;
     end
+end
+
+always @(posedge S_AXI_ACLK)
+begin
+   debug_reg = debug_in; 
 end
 
 assign asic_data_out = asic_data_out_reg;

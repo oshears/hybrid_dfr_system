@@ -117,7 +117,7 @@ task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA, input DECIMAL=
     end
 endtask
 
-task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [31:0] MASK_DATA = 32'h0, input COMPARE=0, input DECIMAL=0, output [31:0] READ_DATA);
+task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [31:0] MASK_DATA = 32'h0, input COMPARE=0, input DECIMAL=0, input SILENT=0, output [31:0] READ_DATA);
     integer signed read_data_int; 
     begin
         
@@ -130,13 +130,15 @@ task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [
         S_AXI_ARVALID = 0;
         S_AXI_RREADY = 1'b1;
         read_data_int = S_AXI_RDATA;
-        if (((EXPECT_DATA | MASK_DATA) == (S_AXI_RDATA | MASK_DATA)) || ~COMPARE) 
-            if (DECIMAL)
-                $display("%t: Read Data: %d",$time,read_data_int);
-            else
-                $display("%t: Read Data: %h",$time,read_data_int);
-        else 
-            $display("%t: ERROR: %h != %h",$time,S_AXI_RDATA,EXPECT_DATA);
+        if (~SILENT) begin
+            if (((EXPECT_DATA | MASK_DATA) == (S_AXI_RDATA | MASK_DATA)) || ~COMPARE) 
+                if (DECIMAL)
+                    $display("%t: Read Data: %d",$time,read_data_int);
+                else
+                    $display("%t: Read Data: %h",$time,read_data_int);
+            else 
+                $display("%t: ERROR: %h != %h",$time,S_AXI_RDATA,EXPECT_DATA);
+        end
         @(posedge S_AXI_ACLK);
         S_AXI_RREADY = 0;
         S_AXI_ARADDR = 32'h0;
@@ -167,14 +169,18 @@ initial begin
     for (i = 0; i <= 32'hFFFF; i = i + 32'h1000) begin
         AXI_WRITE(ASIC_DATA_OUT_REG_ADDR,i);
         AXI_WRITE(CTRL_REG_ADDR,32'h1);
-        AXI_READ( .READ_ADDR(CTRL_REG_ADDR), .READ_DATA(read_data));
+        AXI_READ( .READ_ADDR(CTRL_REG_ADDR), .READ_DATA(read_data), .SILENT(1));
         while(read_data[1] == 0) begin
-            AXI_READ( .READ_ADDR(CTRL_REG_ADDR), .READ_DATA(read_data));
+            AXI_READ( .READ_ADDR(CTRL_REG_ADDR), .READ_DATA(read_data), .SILENT(1));
         end
         AXI_READ( .READ_ADDR(ASIC_DATA_IN_REG_ADDR), .READ_DATA(read_data));
     end
 
     $finish;
 end
+
+// always @(negedge DAC_CS_N) begin
+//     $display("%t: DAC_CS_N Deasserted",$time);
+// end
 
 endmodule

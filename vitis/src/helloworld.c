@@ -52,26 +52,10 @@
 #include "xil_io.h"
 #include "sleep.h"
 
-#define CTRL_REG_ADDR 0x40000000
-#define DEBUG_REG_ADDR 0x40000004
-#define NUM_INIT_SAMPLES_REG_ADDR 0x40000008
-#define NUM_TRAIN_SAMPLES_REG_ADDR 0x4000000C
-#define NUM_TEST_SAMPLES_REG_ADDR 0x40000010
-#define NUM_STEPS_PER_SAMPLE_REG_ADDR 0x40000014
-#define NUM_INIT_STEPS_REG_ADDR 0x40000018
-#define NUM_TRAIN_STEPS_REG_ADDR 0x4000001C
-#define NUM_TEST_STEPS_REG_ADDR 0x40000020
-
-#define DFR_INPUT_MEM_ADDR_OFFSET 0x41000000
-#define DFR_RESERVOIR_ADDR_MEM_OFFSET 0x42000000
-#define DFR_WEIGHT_MEM_ADDR_OFFSET 0x43000000
-#define DFR_OUTPUT_MEM_ADDR_OFFSET 0x44000000
-
-#define NUM_STEPS_PER_SAMPLE 100
-#define NUM_INIT_SAMPLES 1
-#define NUM_TEST_SAMPLES 1
-
-#define NUM_VIRTUAL_NODES 100
+#define CTRL_REG_ADDR 0x43C00000
+#define ASIC_DATA_OUT_REG_ADDR 0x43C00004
+#define ASIC_DATA_IN_REG_ADDR 0x43C00008
+#define DEBUG_REG_ADDR 0x43C0000C
 
 int main()
 {
@@ -80,79 +64,47 @@ int main()
 
     init_platform();
 
-    printf("==============================================================\n\r");
-    printf("DFR FPGA Test Project\n\r");
+    printf("Test Project\n\r");
 
 
-    // Configure Widths
-    Xil_Out32(NUM_INIT_SAMPLES_REG_ADDR,NUM_INIT_SAMPLES);
-    read_data = Xil_In32(NUM_INIT_SAMPLES_REG_ADDR);
-    printf("NUM_INIT_SAMPLES_REG_ADDR: %d\n\r",read_data);
-    Xil_Out32(NUM_TRAIN_SAMPLES_REG_ADDR,0);
-    read_data = Xil_In32(NUM_TRAIN_SAMPLES_REG_ADDR);
-    printf("NUM_TRAIN_SAMPLES_REG_ADDR: %d\n\r",read_data);
-    Xil_Out32(NUM_TEST_SAMPLES_REG_ADDR,NUM_TEST_SAMPLES);
-    read_data = Xil_In32(NUM_TEST_SAMPLES_REG_ADDR);
-    printf("NUM_TEST_SAMPLES_REG_ADDR: %d\n\r",read_data);
+    while(1){
+        // printf("Writing to CTLR_REG\n\r");
+        // Xil_Out32(CTRL_REG_ADDR, 0xBEEF);
 
-    Xil_Out32(NUM_INIT_STEPS_REG_ADDR,NUM_INIT_SAMPLES * NUM_STEPS_PER_SAMPLE);
-    read_data = Xil_In32(NUM_INIT_STEPS_REG_ADDR);
-    printf("NUM_INIT_STEPS_REG_ADDR: %d\n\r",read_data);
-    Xil_Out32(NUM_TRAIN_STEPS_REG_ADDR,0);
-    read_data = Xil_In32(NUM_TRAIN_STEPS_REG_ADDR);
-    printf("NUM_TRAIN_STEPS_REG_ADDR: %d\n\r",read_data);
-    Xil_Out32(NUM_TEST_STEPS_REG_ADDR,NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE);
-    read_data = Xil_In32(NUM_TEST_STEPS_REG_ADDR);
-    printf("NUM_TEST_STEPS_REG_ADDR: %d\n\r",read_data);
+        // printf("Writing to ASIC_DATA_OUT_REG\n\r");
+        // Xil_Out32(ASIC_DATA_OUT_REG_ADDR, 0xBEEF);
+
+        // printf("Writing to ASIC_DATA_IN_REG\n\r");
+        // Xil_Out32(ASIC_DATA_IN_REG_ADDR, 0xBEEF);
+
+        int i;
+        for (i = 0; i < 0x10000; i = i + 0x1000){
+            
+            printf("Writing %x to ASIC_DATA_OUT_REG\n\r",i);
+            Xil_Out32(ASIC_DATA_OUT_REG_ADDR, i);
+
+            printf("Writing to CTLR_REG\n\r");
+            Xil_Out32(CTRL_REG_ADDR, 0x1);
+
+            while(read_data == 0){
+                read_data = Xil_In32(DEBUG_REG_ADDR);
+                printf("Reading from DEBUG_REG_ADDR\n\r");
+                printf("Read: %x\n\r",read_data);
+                read_data = Xil_In32(CTRL_REG_ADDR);
+            }
+            printf("Reading from CTRL_REG_ADDR\n\r");
+            printf("Read: %x\n\r",read_data);
+
+            printf("Reading from ASIC_DATA_IN_REG\n\r");
+            read_data = Xil_In32(ASIC_DATA_IN_REG_ADDR);
+            printf("Read: %x\n\r",read_data);
+
+            sleep(1);
+        }
+
+    }
     
-    Xil_Out32(NUM_STEPS_PER_SAMPLE_REG_ADDR,NUM_STEPS_PER_SAMPLE);
-    read_data = Xil_In32(NUM_STEPS_PER_SAMPLE_REG_ADDR);
-    printf("NUM_STEPS_PER_SAMPLE_REG_ADDR: %d\n\r",read_data);
 
-    int i = 0;
-
-    // Configure Input Mem
-    printf("Configuring Input Mem\n\r");
-    for (i = 0; i < (NUM_INIT_SAMPLES + NUM_TEST_SAMPLES) * NUM_STEPS_PER_SAMPLE; i = i + 1){
-        Xil_Out32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4, i*300);
-        read_data = Xil_In32(DFR_INPUT_MEM_ADDR_OFFSET + i * 4);
-        printf("Read Input: %d\n\r",read_data);
-    }
-
-    // Configure Weights
-    printf("Configuring Weights\n\r");
-    for (i = 0; i < NUM_VIRTUAL_NODES; i = i + 1){
-        Xil_Out32(DFR_WEIGHT_MEM_ADDR_OFFSET + i * 4, i);
-        read_data = Xil_In32(DFR_WEIGHT_MEM_ADDR_OFFSET + i * 4);
-        printf("Read Weight: %d\n\r",read_data);
-    }
-
-    // Launch DFR
-    printf("Launching DFR\n\r");
-    Xil_Out32(CTRL_REG_ADDR,0x1);
-
-    read_data = Xil_In32(CTRL_REG_ADDR);
-    while(read_data & 0x2 != 0){
-        read_data = Xil_In32(CTRL_REG_ADDR);
-        printf("CTRL_REG: %x\n\r",read_data);
-    }
-
-    read_data = Xil_In32(DEBUG_REG_ADDR);
-    printf("Read Debug Reg: %x\n\r",read_data);
-
-    for (i = 0; i < NUM_TEST_SAMPLES * NUM_STEPS_PER_SAMPLE; i = i + 1){
-        read_data = Xil_In32(DFR_RESERVOIR_ADDR_MEM_OFFSET + i * 4);
-        printf("Read Reservoir Output: %d\n\r",read_data);
-    }
-
-    for (i = 0; i < NUM_TEST_SAMPLES; i = i + 1){
-        read_data = Xil_In32(DFR_OUTPUT_MEM_ADDR_OFFSET + i * 4);
-        printf("Read DFR Output: %d\n\r",read_data);
-    }
-
-
-    printf("Done...\n\r");
-    
     cleanup_platform();
     return 0;
 }

@@ -15,13 +15,24 @@ module asic_function_interface
     output reg dac_cs_n,
     output reg dac_ldac_n,
     output reg dac_din,
-    output reg dac_sclk
+    output reg dac_sclk,
 
     // output reg [15:0] asic_outputs [2 ** 15 - 1: 0]
+    // Debug
+    output wire [2:0] current_state_out,
+    output wire [8:0] avg_cntr_out,
+    output wire [1:0] dbg
 );
 
 
-localparam IDLE = 0, DAC_PHASE = 1, XADC_CONVERT_PHASE_START = 2, XADC_CONVERT_PHASE_WAIT = 3, XADC_CONVERT_PHASE_DONE = 4, XADC_READ_REQ_PHASE = 5, XADC_READ_WAIT_PHASE = 6;
+localparam  IDLE = 0, 
+            DAC_PHASE = 1, 
+            SETTLING_PHASE = 2, 
+            XADC_CONVERT_PHASE_START = 3, 
+            XADC_CONVERT_PHASE_WAIT = 4, 
+            XADC_CONVERT_PHASE_DONE = 5, 
+            XADC_READ_REQ_PHASE = 6, 
+            XADC_READ_WAIT_PHASE = 7;
 
 reg [2:0] current_state;
 reg [2:0] next_state;
@@ -57,7 +68,17 @@ reg avg_cntr_rst = 0;
 reg avg_cntr_en = 0;
 wire avg_cntr_done = (avg_cntr == 9'h100) ? 1'b1 : 1'b0;
 
-counter #(9) xadc_avg_counter
+reg eoc_out_reg = 0;
+reg eoc_out_rst = 0;
+reg eos_out_reg = 0;
+reg eos_out_rst = 0;
+
+assign current_state_out = current_state;
+assign avg_cntr_out = avg_cntr;
+assign dbg = {eoc_out_reg,eos_out_reg};
+
+
+counter #(9) xadc_avg_and_settling_counter
 (
     .clk(clk),
     .en(avg_cntr_en),
@@ -76,7 +97,8 @@ always @(
     current_state,
     start,
     pmod_dac_busy,
-    eoc_out,
+    eoc_out_reg,
+    eos_out_reg,
     drdy_out,
     busy_out,
     avg_cntr_done
@@ -92,6 +114,9 @@ always @(
     avg_cntr_rst = 0;
 
     xadc_data_valid = 0;
+
+    eos_out_rst = 0;
+    eoc_out_rst = 0;
 
     next_state = current_state;
 
@@ -110,6 +135,17 @@ always @(
             next_state = XADC_CONVERT_PHASE_START;
         end
     end
+    SETTLING_PHASE:
+    begin
+        if (avg_cntr_done) begin
+            avg_cntr_rst = 1;
+            next_state = XADC_CONVERT_PHASE_START;
+        end
+        else begin
+            avg_cntr_en = 1;
+            next_state = SETTLING_PHASE;
+        end
+    end
     XADC_CONVERT_PHASE_START:
     begin
         convst_in = 1;
@@ -118,19 +154,22 @@ always @(
     end
     XADC_CONVERT_PHASE_WAIT:
     begin
+        // Wait for XADC to go busy
         next_state = XADC_CONVERT_PHASE_DONE;
     end
     XADC_CONVERT_PHASE_DONE:
     begin
-        if (eoc_out || eos_out || ~busy_out) begin
-            if (avg_cntr_done) begin
-                avg_cntr_rst = 1;
-                next_state = XADC_READ_REQ_PHASE;
-            end
-            else begin
-                next_state = XADC_CONVERT_PHASE_START;
-            end
+        if (eoc_out_reg || eos_out_reg) begin
+            avg_cntr_rst = 1;
+            eoc_out_rst = 1;
+            eos_out_rst = 1;
+            next_state = XADC_READ_REQ_PHASE;
         end
+        else if (~busy_out && ~avg_cntr_done) begin
+            next_state = XADC_CONVERT_PHASE_START;
+        end
+        else
+            next_state = XADC_CONVERT_PHASE_DONE;
     end
     XADC_READ_REQ_PHASE:
     begin
@@ -149,6 +188,24 @@ always @(
         next_state = IDLE;
     end
     endcase
+end
+
+always @(posedge clk) begin
+    if (eos_out_rst) begin
+        eos_out_reg = 0;
+    end
+    else if (eos_out) begin
+        eos_out_reg = 1;
+    end
+end
+
+always @(posedge clk) begin
+    if (eoc_out_rst) begin
+        eoc_out_reg = 0;
+    end
+    else if (eoc_out) begin
+        eoc_out_reg = 1;
+    end
 end
 
 counter #(16) delay_counter

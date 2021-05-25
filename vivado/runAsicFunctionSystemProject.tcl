@@ -5,6 +5,8 @@ set_param general.maxThreads 8
 # Create Project
 create_project asic_function_system_project ./asic_function_system_project -part xc7z020clg484-1 -force
 
+set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
+
 # Add Custom IP
 set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
 update_ip_catalog
@@ -33,8 +35,8 @@ set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {10}] [get_bd_cells
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/processing_system7_0/M_AXI_GP0} Slave {/asic_function_system_0/S_AXI} ddr_seg {Auto} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins asic_function_system_0/S_AXI]
 
 # Configure Neuromorphic Bridge IP
-make_bd_pins_external  [get_bd_pins asic_function_system_0/VP]
-make_bd_pins_external  [get_bd_pins asic_function_system_0/VN]
+make_bd_pins_external  [get_bd_pins asic_function_system_0/VP_IN]
+make_bd_pins_external  [get_bd_pins asic_function_system_0/VN_IN]
 make_bd_pins_external  [get_bd_pins asic_function_system_0/DAC_CS_N]
 make_bd_pins_external  [get_bd_pins asic_function_system_0/DAC_LDAC_N]
 make_bd_pins_external  [get_bd_pins asic_function_system_0/DAC_DIN]
