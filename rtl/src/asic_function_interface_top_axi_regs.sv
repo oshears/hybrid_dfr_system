@@ -28,6 +28,7 @@ parameter C_S_AXI_ADDR_WIDTH = 9
     output reg S_AXI_BVALID,  
 
     input [31:0] asic_data_in,
+    input done,
     output [31:0] asic_data_out,
     output [31:0] ctrl
 );
@@ -210,9 +211,11 @@ begin
     begin
         if(ctrl_reg_addr_valid) begin
             ctrl_reg[31:2] = S_AXI_WDATA[31:2];
+            ctrl_reg[1] = done;
             ctrl_reg[0] = S_AXI_WDATA[0];
         end
         else begin
+            ctrl_reg[1] = done;
             ctrl_reg[0] = 0;
         end
     end

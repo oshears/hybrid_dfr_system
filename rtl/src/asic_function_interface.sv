@@ -21,7 +21,7 @@ module asic_function_interface
 );
 
 
-localparam IDLE = 0, DAC_PHASE = 1, XADC_CONVERT_PHASE = 2, XADC_READ_REQ_PHASE = 3, XADC_READ_WAIT_PHASE = 4;
+localparam IDLE = 0, DAC_PHASE = 1, XADC_CONVERT_PHASE_START = 2, XADC_CONVERT_PHASE_WAIT = 3, XADC_CONVERT_PHASE_DONE = 4, XADC_READ_REQ_PHASE = 5, XADC_READ_WAIT_PHASE = 6;
 
 reg [2:0] current_state;
 reg [2:0] next_state;
@@ -52,6 +52,19 @@ wire eos_out;
 wire alarm_out;
 wire busy_out;
 
+wire [8:0] avg_cntr;
+reg avg_cntr_rst = 0;
+reg avg_cntr_en = 0;
+wire avg_cntr_done = (avg_cntr == 9'h100) ? 1'b1 : 1'b0;
+
+counter #(9) xadc_avg_counter
+(
+    .clk(clk),
+    .en(avg_cntr_en),
+    .rst(avg_cntr_rst),
+    .dout(avg_cntr)
+);
+
 always @(posedge clk, posedge rst) begin
     if (rst)
         current_state <= IDLE;
@@ -65,7 +78,8 @@ always @(
     pmod_dac_busy,
     eoc_out,
     drdy_out,
-    busy_out
+    busy_out,
+    avg_cntr_done
 ) begin
     pmod_dac_start = 0;
 
@@ -73,6 +87,9 @@ always @(
     den_in = 0;
     di_in = 0;
     convst_in = 0;
+
+    avg_cntr_en = 0;
+    avg_cntr_rst = 0;
 
     xadc_data_valid = 0;
 
@@ -90,14 +107,29 @@ always @(
     DAC_PHASE:
     begin
         if (~pmod_dac_busy && ~busy_out) begin
-            convst_in = 1;
-            next_state = XADC_CONVERT_PHASE;
+            next_state = XADC_CONVERT_PHASE_START;
         end
     end
-    XADC_CONVERT_PHASE:
+    XADC_CONVERT_PHASE_START:
     begin
-        if (eoc_out) begin
-            next_state = XADC_READ_REQ_PHASE;
+        convst_in = 1;
+        avg_cntr_en = 1;
+        next_state = XADC_CONVERT_PHASE_WAIT;
+    end
+    XADC_CONVERT_PHASE_WAIT:
+    begin
+        next_state = XADC_CONVERT_PHASE_DONE;
+    end
+    XADC_CONVERT_PHASE_DONE:
+    begin
+        if (eoc_out || eos_out || ~busy_out) begin
+            if (avg_cntr_done) begin
+                avg_cntr_rst = 1;
+                next_state = XADC_READ_REQ_PHASE;
+            end
+            else begin
+                next_state = XADC_CONVERT_PHASE_START;
+            end
         end
     end
     XADC_READ_REQ_PHASE:
@@ -166,7 +198,7 @@ xadc_wiz_0 xadc_inst (// Connect up instance IO. See UG480 for port descriptions
     .busy_out   (busy_out),
     .do_out     (do_out),
     .drdy_out   (drdy_out),
-    .eos_out    (),
+    .eos_out    (eos_out),
     .vn_in     (vn_in),
     .vp_in     (vp_in),
     .alarm_out(),

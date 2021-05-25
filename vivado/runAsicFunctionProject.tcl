@@ -1,123 +1,125 @@
-# usage: vivado -mode tcl -source createTopProject.tcl
+# usage: vivado -mode tcl -source createBridgeProject.tcl
+
+# rm *.jou
+# rm *.log
+# rm .Xil
 
 set_param general.maxThreads 8
 
-# Create Project
-create_project asic_function_system_project ./asic_function_system_project -part xc7z020clg484-1 -force
+create_project asic_function_project ./asic_function_project -part xc7z020clg484-1 -force
 
-# Add Custom IP
+set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
+
+add_files {
+    ../rtl/src/register.sv 
+    ../rtl/src/reservoir_node.sv 
+    ../rtl/src/counter.sv 
+    ../rtl/src/reservoir_asic.sv 
+    ../rtl/src/axi_cfg_regs.sv 
+    ../rtl/src/matrix_multiplier_v2.sv 
+    ../rtl/src/pmod_dac_block.sv
+    ../rtl/src/asic_function_interface.sv 
+    ../rtl/src/asic_function_interface_top.sv
+    ../rtl/src/asic_function_interface_top_axi_regs.sv
+    ../rtl/tb/asic_function_interface_top_tb.sv
+    }
+
+
+move_files -fileset sim_1 [get_files  ../rtl/tb/asic_function_interface_top_tb.sv]
+
+add_files -fileset sim_1 -norecurse ../rtl/tb/xadc_inputs_asic_function.txt
+
+set_property top asic_function_interface_top_tb [get_filesets sim_1]
+set_property top_lib xil_defaultlib [get_filesets sim_1]
+
+# XADC IP
+create_ip -name xadc_wiz -vendor xilinx.com -library ip -version 3.3 -module_name xadc_wiz_0
+set_property -dict [list CONFIG.SIM_FILE_NAME {xadc_inputs_asic_function} CONFIG.DCLK_FREQUENCY {10} CONFIG.ADC_CONVERSION_RATE {193} CONFIG.INTERFACE_SELECTION {ENABLE_DRP} CONFIG.TIMING_MODE {Event} CONFIG.OT_ALARM {false} CONFIG.USER_TEMP_ALARM {false} CONFIG.VCCINT_ALARM {false} CONFIG.VCCAUX_ALARM {false} CONFIG.ENABLE_VCCPINT_ALARM {false} CONFIG.ENABLE_VCCPAUX_ALARM {false} CONFIG.ENABLE_VCCDDRO_ALARM {false} CONFIG.SINGLE_CHANNEL_SELECTION {VP_VN} CONFIG.ADC_OFFSET_CALIBRATION {true} CONFIG.SENSOR_OFFSET_CALIBRATION {true}] [get_ips xadc_wiz_0]
+set_property -dict [list CONFIG.SINGLE_CHANNEL_SELECTION {VP_VN} CONFIG.CHANNEL_AVERAGING {256}] [get_ips xadc_wiz_0]
+generate_target all [get_files  /home/oshears/Documents/vt/research/code/verilog/neuromorphic_asic_bridge/vivado/neuromorphic_asic_bridge_project/neuromorphic_asic_bridge_project.srcs/sources_1/ip/xadc_wiz_0/xadc_wiz_0.xci]
+catch { config_ip_cache -export [get_ips -all xadc_wiz_0] }
+export_ip_user_files -of_objects [get_files /home/oshears/Documents/vt/research/code/verilog/neuromorphic_asic_bridge/vivado/neuromorphic_asic_bridge_project/neuromorphic_asic_bridge_project.srcs/sources_1/ip/xadc_wiz_0/xadc_wiz_0.xci] -no_script -sync -force -quiet
+create_ip_run [get_files -of_objects [get_fileset sources_1] /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/xadc_wiz_0/xadc_wiz_0.xci]
+launch_runs xadc_wiz_0_synth_1 -jobs 16
+export_simulation -of_objects [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/xadc_wiz_0/xadc_wiz_0.xci] -directory /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files/sim_scripts -ip_user_files_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files -ipstatic_source_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files/ipstatic -lib_map_path [list {modelsim=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/modelsim} {questa=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/questa} {ies=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/ies} {xcelium=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/xcelium} {vcs=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/vcs} {riviera=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet
+
+
+
+# BRAM 64k Dual Port IP
+create_ip -name blk_mem_gen -vendor xilinx.com -library ip -version 8.4 -module_name bram_64k_dual_port
+set_property -dict [list CONFIG.Component_Name {bram_64k_dual_port} CONFIG.Memory_Type {Simple_Dual_Port_RAM} CONFIG.Write_Width_A {32} CONFIG.Write_Depth_A {65536} CONFIG.Read_Width_A {32} CONFIG.Operating_Mode_A {NO_CHANGE} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {32} CONFIG.Read_Width_B {32} CONFIG.Enable_B {Always_Enabled} CONFIG.Register_PortA_Output_of_Memory_Primitives {false} CONFIG.Register_PortB_Output_of_Memory_Primitives {true} CONFIG.Port_B_Clock {100} CONFIG.Port_B_Write_Rate {0} CONFIG.Port_B_Enable_Rate {100}] [get_ips bram_64k_dual_port]
+set_property -dict [list CONFIG.Memory_Type {True_Dual_Port_RAM} CONFIG.Enable_B {Always_Enabled} CONFIG.Register_PortA_Output_of_Memory_Primitives {true} CONFIG.Port_B_Write_Rate {50}] [get_ips bram_64k_dual_port]
+set_property -dict [list CONFIG.Assume_Synchronous_Clk {true}] [get_ips bram_64k_dual_port]
+generate_target {instantiation_template} [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_64k_dual_port/bram_64k_dual_port.xci]
+update_compile_order -fileset sources_1
+generate_target all [get_files  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_64k_dual_port/bram_64k_dual_port.xci]
+catch { config_ip_cache -export [get_ips -all bram_64k_dual_port] }
+export_ip_user_files -of_objects [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_64k_dual_port/bram_64k_dual_port.xci] -no_script -sync -force -quiet
+create_ip_run [get_files -of_objects [get_fileset sources_1] /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_64k_dual_port/bram_64k_dual_port.xci]
+launch_runs bram_64k_dual_port_synth_1 -jobs 16
+export_simulation -of_objects [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_64k_dual_port/bram_64k_dual_port.xci] -directory /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files/sim_scripts -ip_user_files_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files -ipstatic_source_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files/ipstatic -lib_map_path [list {modelsim=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/modelsim} {questa=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/questa} {ies=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/ies} {xcelium=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/xcelium} {vcs=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/vcs} {riviera=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet
+
+# BRAM 1k Dual Port IP
+create_ip -name blk_mem_gen -vendor xilinx.com -library ip -version 8.4 -module_name bram_1k_dual_port
+set_property -dict [list CONFIG.Component_Name {bram_1k_dual_port} CONFIG.Memory_Type {Simple_Dual_Port_RAM} CONFIG.Write_Width_A {32} CONFIG.Write_Depth_A {1024} CONFIG.Read_Width_A {32} CONFIG.Operating_Mode_A {NO_CHANGE} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {32} CONFIG.Read_Width_B {32} CONFIG.Enable_B {Always_Enabled} CONFIG.Register_PortA_Output_of_Memory_Primitives {false} CONFIG.Register_PortB_Output_of_Memory_Primitives {true} CONFIG.Port_B_Clock {100} CONFIG.Port_B_Write_Rate {0} CONFIG.Port_B_Enable_Rate {100}] [get_ips bram_1k_dual_port]
+set_property -dict [list CONFIG.Memory_Type {True_Dual_Port_RAM} CONFIG.Enable_B {Always_Enabled} CONFIG.Register_PortA_Output_of_Memory_Primitives {true} CONFIG.Port_B_Write_Rate {50}] [get_ips bram_1k_dual_port]
+set_property -dict [list CONFIG.Assume_Synchronous_Clk {true}] [get_ips bram_1k_dual_port]
+generate_target {instantiation_template} [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_1k_dual_port/bram_1k_dual_port.xci]
+update_compile_order -fileset sources_1
+generate_target all [get_files  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_1k_dual_port/bram_1k_dual_port.xci]
+catch { config_ip_cache -export [get_ips -all bram_1k_dual_port] }
+export_ip_user_files -of_objects [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_1k_dual_port/bram_1k_dual_port.xci] -no_script -sync -force -quiet
+create_ip_run [get_files -of_objects [get_fileset sources_1] /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_1k_dual_port/bram_1k_dual_port.xci]
+launch_runs bram_1k_dual_port_synth_1 -jobs 16
+export_simulation -of_objects [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_1k_dual_port/bram_1k_dual_port.xci] -directory /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files/sim_scripts -ip_user_files_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files -ipstatic_source_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files/ipstatic -lib_map_path [list {modelsim=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/modelsim} {questa=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/questa} {ies=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/ies} {xcelium=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/xcelium} {vcs=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/vcs} {riviera=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet
+
+# BRAM 128 Dual Port
+create_ip -name blk_mem_gen -vendor xilinx.com -library ip -version 8.4 -module_name bram_128_dual_port
+set_property -dict [list CONFIG.Component_Name {bram_128_dual_port} CONFIG.Memory_Type {Simple_Dual_Port_RAM} CONFIG.Write_Width_A {32} CONFIG.Write_Depth_A {128} CONFIG.Read_Width_A {32} CONFIG.Operating_Mode_A {NO_CHANGE} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {32} CONFIG.Read_Width_B {32} CONFIG.Enable_B {Always_Enabled} CONFIG.Register_PortA_Output_of_Memory_Primitives {false} CONFIG.Register_PortB_Output_of_Memory_Primitives {true} CONFIG.Port_B_Clock {100} CONFIG.Port_B_Enable_Rate {100}] [get_ips bram_128_dual_port]
+set_property -dict [list CONFIG.Memory_Type {True_Dual_Port_RAM} CONFIG.Enable_B {Always_Enabled} CONFIG.Register_PortA_Output_of_Memory_Primitives {true} CONFIG.Port_B_Write_Rate {50}] [get_ips bram_128_dual_port]
+set_property -dict [list CONFIG.Assume_Synchronous_Clk {true}] [get_ips bram_128_dual_port]
+generate_target {instantiation_template} [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_128_dual_port/bram_128_dual_port.xci]
+generate_target all [get_files  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_128_dual_port/bram_128_dual_port.xci]
+catch { config_ip_cache -export [get_ips -all bram_128_dual_port] }
+export_ip_user_files -of_objects [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_128_dual_port/bram_128_dual_port.xci] -no_script -sync -force -quiet
+create_ip_run [get_files -of_objects [get_fileset sources_1] /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_128_dual_port/bram_128_dual_port.xci]
+launch_runs bram_128_dual_port_synth_1 -jobs 16
+export_simulation -of_objects [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/bram_128_dual_port/bram_128_dual_port.xci] -directory /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files/sim_scripts -ip_user_files_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files -ipstatic_source_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files/ipstatic -lib_map_path [list {modelsim=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/modelsim} {questa=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/questa} {ies=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/ies} {xcelium=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/xcelium} {vcs=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/vcs} {riviera=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet
+
+# Multiplier IP
+create_ip -name mult_gen -vendor xilinx.com -library ip -version 12.0 -module_name multiplier
+set_property -dict [list CONFIG.Component_Name {multiplier} CONFIG.PortAWidth {32} CONFIG.PortBWidth {32} CONFIG.OutputWidthHigh {63}] [get_ips multiplier]
+set_property -dict [list CONFIG.Multiplier_Construction {Use_Mults}] [get_ips multiplier]
+set_property -dict [list CONFIG.PipeStages {6}] [get_ips multiplier]
+generate_target {instantiation_template} [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/multiplier/multiplier.xci]
+generate_target all [get_files  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/multiplier/multiplier.xci]
+catch { config_ip_cache -export [get_ips -all multiplier] }
+export_ip_user_files -of_objects [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/multiplier/multiplier.xci] -no_script -sync -force -quiet
+create_ip_run [get_files -of_objects [get_fileset sources_1] /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/multiplier/multiplier.xci]
+launch_runs multiplier_synth_1 -jobs 16
+export_simulation -of_objects [get_files /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.srcs/sources_1/ip/multiplier/multiplier.xci] -directory /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files/sim_scripts -ip_user_files_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files -ipstatic_source_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.ip_user_files/ipstatic -lib_map_path [list {modelsim=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/modelsim} {questa=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/questa} {ies=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/ies} {xcelium=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/xcelium} {vcs=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/vcs} {riviera=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_project/asic_function_project.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet
+
+
+update_compile_order -fileset sources_1
+update_compile_order -fileset sim_1
+
+set_property -name {xsim.simulate.log_all_signals} -value {true} -objects [get_filesets sim_1]
+set_property -name {xsim.simulate.runtime} -value {all} -objects [get_filesets sim_1]
+
+launch_simulation
+
+
+# package ASIC Interface Top IP
+set_property top asic_function_interface_top [get_filesets sources_1]
+update_compile_order -fileset sources_1
+ipx::package_project -root_dir /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ -vendor user.org -library user -taxonomy /UserIP -force
+set_property taxonomy {/Embedded_Processing/AXI_Peripheral/Low_Speed_Peripheral /UserIP} [ipx::current_core]
+set_property core_revision 1 [ipx::current_core]
+ipx::create_xgui_files [ipx::current_core]
+ipx::update_checksums [ipx::current_core]
+ipx::check_integrity [ipx::current_core]
+ipx::save_core [ipx::current_core]
 set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]
 update_ip_catalog
 
-# Create Block Design and Add Zynq Processing System
-create_bd_design "asic_function_system"
-update_compile_order -fileset sources_1
-create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0
-
-# Add Custom Neuromorphic Bridge IP
-create_bd_cell -type ip -vlnv user.org:user:asic_function_interface_top:1.0 asic_function_system_0
-
-# Apply Block Automation
-apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_external "FIXED_IO, DDR" Master "Disable" Slave "Disable" }  [get_bd_cells processing_system7_0]
-
-# Configure Zynq PS with ZedBoard defaults
-set_property -dict [list CONFIG.preset {ZedBoard}] [get_bd_cells processing_system7_0]
-
-# Configure AXI CLK to 10MHz
-set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {10}] [get_bd_cells processing_system7_0]
-# Create slow clock for pwm_clk
-# set_property -dict [list CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {1} CONFIG.PCW_EN_CLK1_PORT {1}] [get_bd_cells processing_system7_0]
-# connect_bd_net [get_bd_pins processing_system7_0/FCLK_CLK1] [get_bd_pins asic_function_system_0/pwm_clk]
-
-# Apply Connection Automation (Connect Clocks)
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/processing_system7_0/M_AXI_GP0} Slave {/asic_function_system_0/S_AXI} ddr_seg {Auto} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins asic_function_system_0/S_AXI]
-
-# Configure Neuromorphic Bridge IP
-make_bd_pins_external  [get_bd_pins asic_function_system_0/VP]
-make_bd_pins_external  [get_bd_pins asic_function_system_0/VN]
-make_bd_pins_external  [get_bd_pins asic_function_system_0/DAC_CS_N]
-make_bd_pins_external  [get_bd_pins asic_function_system_0/DAC_LDAC_N]
-make_bd_pins_external  [get_bd_pins asic_function_system_0/DAC_DIN]
-make_bd_pins_external  [get_bd_pins asic_function_system_0/DAC_SCLK]
-
-# # Add Internal Logic Analyzer
-# create_bd_cell -type ip -vlnv xilinx.com:ip:ila:6.2 ila_0
-# set_property -dict [list CONFIG.C_PROBE0_WIDTH {16} CONFIG.C_NUM_OF_PROBES {1} CONFIG.C_ENABLE_ILA_AXI_MON {false} CONFIG.C_MONITOR_TYPE {Native}] [get_bd_cells ila_0]
-# connect_bd_net [get_bd_pins asic_function_system_0/digit] [get_bd_pins ila_0/probe0]
-# # connect_bd_net [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins ila_0/clk]
-# connect_bd_net [get_bd_pins processing_system7_0/FCLK_CLK1] [get_bd_pins ila_0/clk]
-# # create_bd_port -dir I GCLK
-# # connect_bd_net [get_bd_ports GCLK] [get_bd_pins ila_0/clk]
-
-# Save Block Design
-save_bd_design
-
-# Validate Block Design
-validate_bd_design -force
-
-# Make a top level wrapper
-make_wrapper -files [get_files ./asic_function_system_project/asic_function_system_project.srcs/sources_1/bd/asic_function_system/asic_function_system.bd] -top
-add_files -norecurse ./asic_function_system_project/asic_function_system_project.gen/sources_1/bd/asic_function_system/hdl/asic_function_system_wrapper.v
-
-# Update Compile Order
-update_compile_order -fileset sources_1
-
-# Load Constraints
-read_xdc ../xdc/asic_function_system_constraints.xdc
-import_files -fileset constrs_1 ../xdc/asic_function_system_constraints.xdc
-set_property target_constrs_file ../xdc/asic_function_system_constraints.xdc [current_fileset -constrset]
-
-# Generate Output Products
-generate_target all [get_files ./asic_function_system_project/asic_function_system_project.srcs/sources_1/bd/asic_function_system/asic_function_system.bd]
-
-# Open Elaborated Design
-# create_ip_run [get_files -of_objects [get_fileset sources_1] ./asic_function_system_project/asic_function_system_project.srcs/sources_1/bd/asic_function_system/asic_function_system.bd]
-# launch_runs asic_function_system_processing_system7_0_0_synth_1 -jobs 16
-# wait_on_run asic_function_system_processing_system7_0_0_synth_1
-# launch_runs asic_function_system_asic_function_system_0_0_synth_1 -jobs 16
-# wait_on_run asic_function_system_asic_function_system_0_0_synth_1
-# launch_runs asic_function_system_rst_ps7_0_100M_0_synth_1 -jobs 16
-# wait_on_run asic_function_system_rst_ps7_0_100M_0_synth_1
-# launch_runs asic_function_system_auto_pc_0_synth_1 -jobs 16
-# wait_on_run asic_function_system_auto_pc_0_synth_1
-# launch_runs asic_function_system_ila_0_0_synth_1 -jobs 16
-# wait_on_run asic_function_system_ila_0_0_synth_1
-
-# synth_design -rtl -rtl_skip_mlo -name rtl_1
-
-# Run Synthesis
-launch_runs synth_1 -jobs 16
-wait_on_run synth_1
-# open_run synth_1 -name synth_1
-# report_timing_summary -delay_type min_max -report_unconstrained -check_timing_verbose -max_paths 10 -input_pins -routable_nets -name timing_1
-## Add ILA
-# create_debug_core u_ila_0 ila
-# set_property C_DATA_DEPTH 1024 [get_debug_cores u_ila_0]
-# set_property C_TRIGIN_EN false [get_debug_cores u_ila_0]
-# set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
-# set_property C_ADV_TRIGGER false [get_debug_cores u_ila_0]
-# set_property C_INPUT_PIPE_STAGES 0 [get_debug_cores u_ila_0]
-# set_property C_EN_STRG_QUAL false [get_debug_cores u_ila_0]
-# set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
-# set_property ALL_PROBE_SAME_MU_CNT 1 [get_debug_cores u_ila_0]
-# connect_debug_port u_ila_0/clk [get_nets [list asic_function_system_i/processing_system7_0/inst/FCLK_CLK1 ]]
-# set_property port_width 16 [get_debug_ports u_ila_0/probe0]
-# set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe0]
-# connect_debug_port u_ila_0/probe0 [get_nets [list {digit_0_OBUF[0]} {digit_0_OBUF[1]} {digit_0_OBUF[2]} {digit_0_OBUF[3]} {digit_0_OBUF[4]} {digit_0_OBUF[5]} {digit_0_OBUF[6]} {digit_0_OBUF[7]} {digit_0_OBUF[8]} {digit_0_OBUF[9]} {digit_0_OBUF[10]} {digit_0_OBUF[11]} {digit_0_OBUF[12]} {digit_0_OBUF[13]} {digit_0_OBUF[14]} {digit_0_OBUF[15]} ]]
-
-# Run Implementation
-# launch_runs impl_1 -jobs 16
-# wait_on_run impl_1
-
-# Generate Bitstream
-launch_runs impl_1 -to_step write_bitstream -jobs 16 -verbose
-wait_on_run impl_1
-
-# Open Implemented Design for Hardware Export
-open_run impl_1
-
-# Export Hardware for Vitis
-# write_hw_platform -fixed -include_bit -force -file ./asic_function_system_project/asic_function_system.xsa
-write_hw_platform -fixed -include_bit -force -file ./asic_function_system_project/asic_function_system_wrapper.xsa
-
-exit
+# exit

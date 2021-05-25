@@ -42,6 +42,8 @@ wire [31:0] asic_data_in;
 wire [31:0] asic_data_out;
 wire [31:0] ctrl;
 
+wire done;
+
 wire rst = ~S_AXI_ARESETN;
 
 assign asic_data_in[31:16] = 16'h0000;
@@ -58,6 +60,7 @@ asic_function_interface_top_axi_regs
     .asic_data_in(asic_data_in),
     .asic_data_out(asic_data_out),
     .ctrl(ctrl),
+    .done(done),
     
     //AXI Signals
     .S_AXI_ACLK(S_AXI_ACLK),     
@@ -90,7 +93,7 @@ asic_function_interface asic_function_interface
     .data_in(asic_data_out[15:0]),
     
     // XADC Output
-    .xadc_data_valid(ctrl[1]),
+    .xadc_data_valid(done),
     .xadc_data_out(asic_data_in[15:0]),
     
     // XADC Interface

@@ -88,14 +88,20 @@ end
 
 
 task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA, input DECIMAL=0);
+    integer signed write_data_int; 
     begin
+        
+
         @(posedge S_AXI_ACLK);
         S_AXI_AWADDR = WRITE_ADDR;
         S_AXI_AWVALID = 1'b1;
         S_AXI_WVALID = 1;
         S_AXI_WDATA = WRITE_DATA;
+        @(posedge S_AXI_ACLK);
         S_AXI_BREADY = 1'b1;
-        @(posedge S_AXI_WREADY);
+        while(S_AXI_WREADY != 1) begin
+            @(posedge S_AXI_ACLK);
+        end
         @(posedge S_AXI_ACLK);
         S_AXI_WVALID = 0;
         S_AXI_AWVALID = 0;
@@ -103,15 +109,19 @@ task AXI_WRITE( input [31:0] WRITE_ADDR, input [31:0] WRITE_DATA, input DECIMAL=
         @(posedge S_AXI_ACLK);
         S_AXI_AWADDR = 32'h0;
         S_AXI_WDATA = 32'h0;
+        write_data_int = WRITE_DATA;
         if (DECIMAL)
-            $display("%t: Wrote Data: %d",$time,WRITE_DATA);
+            $display("%t: Wrote Data: %d",$time,write_data_int);
         else
-            $display("%t: Wrote Data: %h",$time,WRITE_DATA);
+            $display("%t: Wrote Data: %h",$time,write_data_int);
     end
 endtask
 
-task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [31:0] MASK_DATA = 32'h0, input COMPARE=0, input DECIMAL=0);
+task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [31:0] MASK_DATA = 32'h0, input COMPARE=0, input DECIMAL=0, output [31:0] READ_DATA);
+    integer signed read_data_int; 
     begin
+        
+
         @(posedge S_AXI_ACLK);
         S_AXI_ARADDR = READ_ADDR;
         S_AXI_ARVALID = 1'b1;
@@ -119,16 +129,18 @@ task AXI_READ( input [31:0] READ_ADDR, input [31:0] EXPECT_DATA = 32'h0, input [
         @(posedge S_AXI_ACLK);
         S_AXI_ARVALID = 0;
         S_AXI_RREADY = 1'b1;
+        read_data_int = S_AXI_RDATA;
         if (((EXPECT_DATA | MASK_DATA) == (S_AXI_RDATA | MASK_DATA)) || ~COMPARE) 
             if (DECIMAL)
-                $display("%t: Read Data: %d",$time,S_AXI_RDATA);
+                $display("%t: Read Data: %d",$time,read_data_int);
             else
-                $display("%t: Read Data: %h",$time,S_AXI_RDATA);
+                $display("%t: Read Data: %h",$time,read_data_int);
         else 
             $display("%t: ERROR: %h != %h",$time,S_AXI_RDATA,EXPECT_DATA);
         @(posedge S_AXI_ACLK);
         S_AXI_RREADY = 0;
         S_AXI_ARADDR = 32'h0;
+        READ_DATA = read_data_int;
     end
 endtask
 
@@ -143,17 +155,23 @@ endtask
 
 initial begin
     integer i;
+    integer read_data;
 
     WAIT(2);
 
     S_AXI_ARESETN = 1;
 
+    // Wait for XADC to boot
+    WAIT(100);
+
     for (i = 0; i <= 32'hFFFF; i = i + 32'h1000) begin
         AXI_WRITE(ASIC_DATA_OUT_REG_ADDR,i);
         AXI_WRITE(CTRL_REG_ADDR,32'h1);
-        WAIT(50);
-        AXI_WRITE(CTRL_REG_ADDR,32'h1);
-        AXI_READ(ASIC_DATA_IN_REG_ADDR,32'h0,0);
+        AXI_READ( .READ_ADDR(CTRL_REG_ADDR), .READ_DATA(read_data));
+        while(read_data[1] == 0) begin
+            AXI_READ( .READ_ADDR(CTRL_REG_ADDR), .READ_DATA(read_data));
+        end
+        AXI_READ( .READ_ADDR(ASIC_DATA_IN_REG_ADDR), .READ_DATA(read_data));
     end
 
     $finish;
