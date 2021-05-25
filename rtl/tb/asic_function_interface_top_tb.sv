@@ -179,8 +179,8 @@ initial begin
     $finish;
 end
 
-// always @(negedge DAC_CS_N) begin
-//     $display("%t: DAC_CS_N Deasserted",$time);
-// end
+always @(negedge DAC_CS_N) begin
+    $display("%t: DAC_CS_N Deasserted",$time);
+end
 
 endmodule

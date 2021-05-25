@@ -32,6 +32,8 @@ set_property top_lib xil_defaultlib [get_filesets sim_1]
 create_ip -name xadc_wiz -vendor xilinx.com -library ip -version 3.3 -module_name xadc_wiz_0
 set_property -dict [list CONFIG.SIM_FILE_NAME {xadc_inputs_asic_function} CONFIG.DCLK_FREQUENCY {10} CONFIG.ADC_CONVERSION_RATE {193} CONFIG.INTERFACE_SELECTION {ENABLE_DRP} CONFIG.TIMING_MODE {Event} CONFIG.OT_ALARM {false} CONFIG.USER_TEMP_ALARM {false} CONFIG.VCCINT_ALARM {false} CONFIG.VCCAUX_ALARM {false} CONFIG.ENABLE_VCCPINT_ALARM {false} CONFIG.ENABLE_VCCPAUX_ALARM {false} CONFIG.ENABLE_VCCDDRO_ALARM {false} CONFIG.SINGLE_CHANNEL_SELECTION {VP_VN} CONFIG.ADC_OFFSET_CALIBRATION {true} CONFIG.SENSOR_OFFSET_CALIBRATION {true}] [get_ips xadc_wiz_0]
 set_property -dict [list CONFIG.SINGLE_CHANNEL_SELECTION {VP_VN} CONFIG.CHANNEL_AVERAGING {256}] [get_ips xadc_wiz_0]
+# Added to circumvent event-triggering issues
+set_property -dict [list CONFIG.TIMING_MODE {Continuous} CONFIG.ACQUISITION_TIME {10} CONFIG.EXTERNAL_MUX_CHANNEL {VP_VN} CONFIG.SINGLE_CHANNEL_SELECTION {VP_VN} CONFIG.SINGLE_CHANNEL_ACQUISITION_TIME {true}] [get_ips xadc_wiz_0]
 generate_target all [get_files  /home/oshears/Documents/vt/research/code/verilog/neuromorphic_asic_bridge/vivado/neuromorphic_asic_bridge_project/neuromorphic_asic_bridge_project.srcs/sources_1/ip/xadc_wiz_0/xadc_wiz_0.xci]
 catch { config_ip_cache -export [get_ips -all xadc_wiz_0] }
 export_ip_user_files -of_objects [get_files /home/oshears/Documents/vt/research/code/verilog/neuromorphic_asic_bridge/vivado/neuromorphic_asic_bridge_project/neuromorphic_asic_bridge_project.srcs/sources_1/ip/xadc_wiz_0/xadc_wiz_0.xci] -no_script -sync -force -quiet
