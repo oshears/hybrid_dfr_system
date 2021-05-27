@@ -60,12 +60,12 @@ data, target = narma10_create(10100)
 # trainLen	= number of samples used in training
 # testLen	= number of samples used in testing
 
-Tp          = 100
+# Using Appeltant Parameters
+Tp          = 400
 N           = Tp
 theta       = Tp / N
-gamma       = 0.8
-# eta         = 1 - gamma
-eta         = 1/4
+gamma       = 0.05
+eta         = 0.15
 initLen     = 100 
 trainLen	= 5900
 testLen     = 4000
@@ -105,7 +105,7 @@ MAX_INPUT = np.max(inputTR)
 for k in range(0,(initLen * Tp)):
 
     # Compute the new input data for initialization
-    initJTR = (inputTR[k,0]) + eta * (nodeC[N-1,0])
+    initJTR = gamma * (inputTR[k,0]) + eta * (nodeC[N-1,0])
     
     # Activation
     nodeN[0,0]	= (mackey_glass(initJTR))
@@ -122,7 +122,7 @@ for k in range(0,(trainLen * Tp)):
     t = initLen * Tp + k
     
     # Compute the new input data for training
-    trainJ = (inputTR[t,0]) + eta * (nodeC[N-1,0])
+    trainJ = gamma * (inputTR[t,0]) + eta * (nodeC[N-1,0])
     
     # Activation
     nodeN[0,0]	= (mackey_glass(trainJ))
@@ -190,7 +190,7 @@ for k in range(0,(initLen + testLen)):
 for k in range(0,(initLen * Tp)):
 
     # Compute the new input data for initialization
-    initJTS = (inputTS[k,0]) + eta * (nodeC[N-1,0])
+    initJTS = gamma * (inputTS[k,0]) + eta * (nodeC[N-1,0])
     
     # Activation
     nodeN[0,0]	= (mackey_glass(initJTS))
@@ -208,7 +208,7 @@ for k in range(0,(testLen * Tp)):
     t = initLen * Tp + k
     
     # Compute the new input data for training
-    testJ = (inputTS[t,0]) + eta * (nodeC[N-1,0])
+    testJ = gamma * (inputTS[t,0]) + eta * (nodeC[N-1,0])
     
     # Activation
     nodeN[0,0]	= (mackey_glass(testJ))

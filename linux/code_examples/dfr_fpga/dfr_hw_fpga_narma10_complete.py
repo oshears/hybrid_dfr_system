@@ -127,6 +127,10 @@ print("Reading DFR Output Memory")
 for i in range(NUM_TEST_SAMPLES):
     output_val = bytes2int(regs[DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 : DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 + 4])
     predicted_target[0,dfr_output_cntr] = output_val
+
+    if dfr_output_cntr < NUM_VIRTUAL_NODES:
+        print(f"Output[{dfr_output_cntr}]: {predicted_target[0,dfr_output_cntr]}")
+
     dfr_output_cntr += 1
 
 
@@ -135,7 +139,7 @@ regs[NUM_INIT_SAMPLES_REG_ADDR : NUM_INIT_SAMPLES_REG_ADDR + 4] = int2bytes(0)
 regs[NUM_INIT_STEPS_REG_ADDR : NUM_INIT_STEPS_REG_ADDR + 4] = int2bytes(0)
 
 for batch in range(1,NUM_TEST_INPUT_BATCHES+1):
-    print(f"Batch: {batch + 1} / {NUM_TEST_INPUT_BATCHES}")
+    print(f"Batch: {batch} / {NUM_TEST_INPUT_BATCHES}")
 
     # Update inputs
     input_pos = 0
@@ -147,6 +151,9 @@ for batch in range(1,NUM_TEST_INPUT_BATCHES+1):
         sample_val = int(input_file_lines[input_addr].strip())
         regs[DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 : DFR_INPUT_MEM_ADDR_OFFSET + input_pos*4 + 4] = int2bytes(sample_val)
         
+        if i == 0:
+            print(f"Input[{input_addr}] = {sample_val}")
+
         input_addr += 1
         input_pos += 1
 
@@ -193,9 +200,13 @@ for batch in range(1,NUM_TEST_INPUT_BATCHES+1):
             break
         output_val = bytes2int(regs[DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 : DFR_OUTPUT_MEM_ADDR_OFFSET + i*4 + 4])
         predicted_target[0,dfr_output_cntr] = output_val
+        
+        if dfr_output_cntr > TOTAL_TEST_SAMPLES - NUM_VIRTUAL_NODES:
+            print(f"Output[{dfr_output_cntr}]: {predicted_target[0,dfr_output_cntr]}")
+
+        
+
         dfr_output_cntr += 1
-        if i == NUM_TEST_SAMPLES - 1:
-            print(f"Last Output: {output_val}")
 
 # Load Expected Data
 Yt = np.ndarray(shape=(1,TOTAL_TEST_SAMPLES))
@@ -216,21 +227,3 @@ print('--------------------------------------------------')
 print('Testing Errors')
 print(f'testing mse: {mse}')
 print(f'testing nrmse: {nrmse}')
-
-
-'''
-Hybrid Tied Low
-Testing Errors
-testing mse: 1.5682356439207892e+18
-testing nrmse: 0.779314985123653
-
-Hybrid Tied High
-Testing Errors
-testing mse: 1.9245828021744352e+17
-testing nrmse: 0.27300818469426197
-
-FPGA Only
-Testing Errors
-testing mse: 1.970835325565766e+17
-testing nrmse: 0.27626924187440033
-'''
