@@ -24,7 +24,6 @@ for i in range(0x10000):
 
     regs[ASIC_OUT_REG_ADDR : ASIC_OUT_REG_ADDR + 4] = encoded_dac_data
     regs[CTRL_REG_ADDR] = 0x1
-
     while(regs[CTRL_REG_ADDR] != ASIC_DONE):
         continue
 

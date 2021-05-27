@@ -72,21 +72,19 @@ for i in range(NUM_VIRTUAL_NODES):
     # regs[DFR_INPUT_MEM_ADDR_OFFSET + i*4: DFR_INPUT_MEM_ADDR_OFFSET + i*4 + 4] = int2bytes(2**16 - 1)
     # regs[DFR_INPUT_MEM_ADDR_OFFSET + i*4: DFR_INPUT_MEM_ADDR_OFFSET + i*4 + 4] = int2bytes(2**8)
     debug_out = bytes2int(regs[DFR_INPUT_MEM_ADDR_OFFSET + i*4: DFR_INPUT_MEM_ADDR_OFFSET + i*4 + 4])
-    print(f"INPUT[{i}]: {hex(debug_out)}")
+    print(f"INPUT[{i}]: {hex(debug_out)} = {debug_out}")
 
-for i in range(NUM_VIRTUAL_NODES, NUM_VIRTUAL_NODES*3):
+for i in range(NUM_VIRTUAL_NODES, NUM_VIRTUAL_NODES*2):
     # regs[DFR_INPUT_MEM_ADDR_OFFSET + i*4: DFR_INPUT_MEM_ADDR_OFFSET + i*4 + 4] = int2bytes(2**16 - 1)
     # regs[DFR_INPUT_MEM_ADDR_OFFSET + i*4: DFR_INPUT_MEM_ADDR_OFFSET + i*4 + 4] = int2bytes(2**8)
     regs[DFR_INPUT_MEM_ADDR_OFFSET + i*4: DFR_INPUT_MEM_ADDR_OFFSET + i*4 + 4] = int2bytes(0)
     debug_out = bytes2int(regs[DFR_INPUT_MEM_ADDR_OFFSET + i*4: DFR_INPUT_MEM_ADDR_OFFSET + i*4 + 4])
-    print(f"INPUT[{i}]: {hex(debug_out)}")
 
 # node regs
 for i in range(NUM_VIRTUAL_NODES):
     regs[CTRL_REG_ADDR : CTRL_REG_ADDR + 4] = int2bytes(i << 4)
     regs[RESERVOIR_NODE_REG_ADDR : RESERVOIR_NODE_REG_ADDR + 4] = int2bytes(0)
     debug_out = bytes2int(regs[RESERVOIR_NODE_REG_ADDR : RESERVOIR_NODE_REG_ADDR + 4])
-    print(f"Node[{i}]: {hex(debug_out)}")
 
 # Configure Weights
 print("Configuring Weight Memory")

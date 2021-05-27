@@ -81,23 +81,23 @@ int main()
         for (i = 0; i < 0x10000; i = i + 0x1000){
             
             printf("Writing %x to ASIC_DATA_OUT_REG\n\r",i);
+            float voltage = (2.5 * i) / 65536.0;
+            printf("Voltage: %f V\n\r",voltage);
             Xil_Out32(ASIC_DATA_OUT_REG_ADDR, i);
 
             printf("Writing to CTLR_REG\n\r");
             Xil_Out32(CTRL_REG_ADDR, 0x1);
 
             while(read_data == 0){
-                read_data = Xil_In32(DEBUG_REG_ADDR);
-                printf("Reading from DEBUG_REG_ADDR\n\r");
-                printf("Read: %x\n\r",read_data);
                 read_data = Xil_In32(CTRL_REG_ADDR);
             }
-            printf("Reading from CTRL_REG_ADDR\n\r");
-            printf("Read: %x\n\r",read_data);
 
             printf("Reading from ASIC_DATA_IN_REG\n\r");
             read_data = Xil_In32(ASIC_DATA_IN_REG_ADDR);
             printf("Read: %x\n\r",read_data);
+            voltage = (2.5 * read_data) / 65536.0;
+            printf("Voltage: %fV",voltage);
+            printf("-----------------------");
 
             sleep(1);
         }

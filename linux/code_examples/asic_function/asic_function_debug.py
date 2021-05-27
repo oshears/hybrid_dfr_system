@@ -1,5 +1,6 @@
 import os
 import mmap
+import math
 import time
 
 
@@ -14,28 +15,30 @@ ASIC_IN_REG_ADDR = 0x8
 
 ASIC_DONE = 0x2
 
-dac_data = 0
-for i in range(16):
+LOOPS = 1
 
-    print(f"Writing: {hex(dac_data)}; {(dac_data * 2.5) / (2**16)} V")
+voltage_val = 0
+for i in range(11):
+
+    dac_data = int( (voltage_val  * 2**16) / 2.5 )
+    print(f"Writing: {voltage_val} V")
     encoded_dac_data = bytes([dac_data & 0xFF, (dac_data >> 8) & 0xFF, 0x00, 0x00])
     regs[ASIC_OUT_REG_ADDR : ASIC_OUT_REG_ADDR + 4] = encoded_dac_data
     results = []
-    for j in range(16):
-        
 
+    for j in range(LOOPS):
         regs[CTRL_REG_ADDR] = 0x1
 
         while(regs[CTRL_REG_ADDR] != ASIC_DONE):
+            time.sleep(1)
             continue
 
         results_bytes = regs[ASIC_IN_REG_ADDR : ASIC_IN_REG_ADDR + 4]
         results.append(int.from_bytes(results_bytes,"little"))
 
-    
-    for j in range(16):
-        print(f"Result {hex(results[j] >> 4)}; {(results[j] >> 4) / (2**12)} V @ {times[j] - start_time}")
+    for j in range(LOOPS):
+        print(f"Result {round((results[j] >> 4) / (2**12),2)} V")
 
     print("============================")
 
-    dac_data = (i+1) * 0x1111
+    voltage_val += 0.1

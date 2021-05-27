@@ -31,11 +31,13 @@ localparam  IDLE = 0,
             XADC_CONVERT_PHASE_START = 3, 
             XADC_CONVERT_PHASE_WAIT = 4, 
             XADC_CONVERT_PHASE_DONE = 5, 
-            XADC_READ_REQ_PHASE = 6, 
-            XADC_READ_WAIT_PHASE = 7;
+            XADC_READY_PHASE = 6,
+            XADC_READ_REQ_PHASE = 7, 
+            XADC_READ_WAIT_PHASE = 8,
+            XADC_READ_DONE_PHASE = 9;
 
-reg [2:0] current_state;
-reg [2:0] next_state;
+reg [3:0] current_state;
+reg [3:0] next_state;
 
 // ASIC Delay Counter
 wire delay_cntr_rst;
@@ -99,6 +101,8 @@ always @(
     pmod_dac_busy,
     eoc_out_reg,
     eos_out_reg,
+    eoc_out,
+    eos_out,
     drdy_out,
     busy_out,
     avg_cntr_done
@@ -132,7 +136,7 @@ always @(
     DAC_PHASE:
     begin
         if (~pmod_dac_busy && ~busy_out) begin
-            next_state = XADC_CONVERT_PHASE_START;
+            next_state = SETTLING_PHASE;
         end
     end
     SETTLING_PHASE:
@@ -148,36 +152,52 @@ always @(
     end
     XADC_CONVERT_PHASE_START:
     begin
-        convst_in = 1;
-        avg_cntr_en = 1;
-        next_state = XADC_CONVERT_PHASE_WAIT;
+        // convst_in = 1;
+        // avg_cntr_en = 1;
+        if (eoc_out || eos_out) begin
+            next_state = XADC_CONVERT_PHASE_WAIT;
+        end
     end
     XADC_CONVERT_PHASE_WAIT:
     begin
         // Wait for XADC to go busy
-        next_state = XADC_CONVERT_PHASE_DONE;
+        if (eoc_out || eos_out) begin
+            pmod_dac_start = 1;
+            next_state = XADC_CONVERT_PHASE_DONE;
+        end
     end
     XADC_CONVERT_PHASE_DONE:
     begin
-        if (eoc_out_reg || eos_out_reg) begin
+        if (avg_cntr_done) begin
             avg_cntr_rst = 1;
-            eoc_out_rst = 1;
-            eos_out_rst = 1;
+            next_state = XADC_READY_PHASE;
+        end
+        else begin
+            avg_cntr_en = 1;
+            next_state = XADC_CONVERT_PHASE_DONE;
+        end
+    end
+    XADC_READY_PHASE:
+    begin
+        if (eoc_out || eos_out) begin
+            pmod_dac_start = 1;
             next_state = XADC_READ_REQ_PHASE;
         end
-        else if (~busy_out && ~avg_cntr_done) begin
-            next_state = XADC_CONVERT_PHASE_START;
-        end
-        else
-            next_state = XADC_CONVERT_PHASE_DONE;
     end
     XADC_READ_REQ_PHASE:
     begin
-        daddr_in = 7'h03;
-        den_in = 1;
-        next_state = XADC_READ_WAIT_PHASE;
+        if (eoc_out || eos_out) begin
+            pmod_dac_start = 1;
+            next_state = XADC_READ_WAIT_PHASE;
+        end
     end
     XADC_READ_WAIT_PHASE:
+    begin
+        daddr_in = 7'h03;
+        den_in = 1;
+        next_state = XADC_READ_DONE_PHASE;
+    end
+    XADC_READ_DONE_PHASE:
     begin
         if (drdy_out) begin
             next_state = IDLE;
@@ -251,7 +271,7 @@ xadc_wiz_0 xadc_inst (// Connect up instance IO. See UG480 for port descriptions
     .di_in     (di_in),
     .dwe_in    (dwe_in),
     .reset_in  (rst),
-    .convst_in(convst_in),
+    // .convst_in(convst_in),
     .busy_out   (busy_out),
     .do_out     (do_out),
     .drdy_out   (drdy_out),
