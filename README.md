@@ -1,5 +1,29 @@
 # Hybrid DFR System
-The FPGA design for MICS' Hybrid DFR System
+This repository contains the FPGA design for MICS' Hybrid DFR System. 
+The logic here is implemented on a Zynq-7000 XC7Z020 System-on-Chip (SoC).
+PetaLinux is used to boot the Zynq's embedded ARM processor and interface with the DFR hardware.
+
+## System Architecture
+![Hybrid DFR System Architecture](./misc/images/hybrid_dfr_system.png)
+
+## System Specifications
+| Spec | Estimate
+| --------------- | ------------- |
+| PL Clock Frequency |   10 MHz          |
+| Dynamic Power      |   130 mW     |
+
+
+## Logic Utilization
+
+
+| Logic Type | Elements Used | Utilization Percentage
+| --------------- | --------------- | --------------- |
+| Slices          |   1319          | 9.92%
+| Slice LUTs      |   2328          | 4.37%
+| Slice Registers |   1934          | 1.82%
+| DSPs            |   3             | 1.36%
+| Block RAM Tiles |   118           | 84.29%
+
 
 ## Directory Organization
 ```
@@ -28,6 +52,32 @@ The FPGA design for MICS' Hybrid DFR System
 │ 
 ├── xdc                     # contains the constraints for the Vivado projects
 ```
+
+## Generating the Bitstream and XSA Files
+There different Vivado projects can be created with the `.tcl` scripts in the `vivado` directory:
+
+### ASIC Activation Function Project
+To create the hardware project for evaluating only the ASIC activation function, the following scripts should be run:
+```
+vivado -mode tcl -source runAsicFunctionProject.tcl # generates an IP core for interfacing with the ASIC
+vivado -mode tcl -source runAsicFunctionSystemProject.tcl # generates a .bit and .xsa file for impelemnting the ASIC function hardware
+```
+
+### DFR FPGA Standalone Project
+To create the hardware project for evaluating the DFR with an embedded ROM that mimics the behavior of the ASIC, the following scripts should be run:
+```
+vivado -mode tcl -source runDFRCoreProject.tcl # generates an IP core for the standalone FPGA DFR accelerator
+vivado -mode tcl -source runDFRCoreSystemProject.tcl # generates a .bit and .xsa file for impelemnting the standalone FPGA DFR accelerator hardware
+```
+
+### DFR FPGA Hybrid Project
+To create the hardware project for evaluating the DFR with the ASIC, the following scripts should be run:
+```
+vivado -mode tcl -source runDFRCoreHybridProject.tcl # generates an IP core for the complete FPGA DFR accelerator
+vivado -mode tcl -source runDFRCoreHybridSystemProject.tcl # generates a .bit and .xsa file for impelemnting the complete FPGA DFR accelerator hardware
+```
+
+## Running the Software Models
 
 
 ## PMOD DAC Information
