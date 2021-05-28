@@ -122,6 +122,17 @@ To test the FPGA DFR model against a spectrum sensing dataset:
 python3 dfr_sw_fpga_spectrum.py
 ```
 
+## Using the Hardware Accelerator
+To use the hardware accelerator, the source files from `linux/code_examples/dfr_fpga` must be copied to the PetaLinux filesystem.
+Additionally, the test data must be copied to the filesystem from `python/data/narma10` and `python/data/spectrum`.
+Once copied, the accelerator can be tested with the maximum number of samples for the NARMA10 task by calling:
+```
+python3 dfr_hw_fpga_narma10.py
+```
+The accelerator can be tested with the maximum number of samples for the spectrum sensing task by calling:
+```
+python3 dfr_hw_fpga_spectrum.py
+```
 ## PMOD DAC Information
 - Reference Voltage: 2.5V
 - Resolution: 16 Bits
