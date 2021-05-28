@@ -3,6 +3,15 @@ This repository contains the FPGA design for MICS' Hybrid DFR System.
 The logic here is implemented on a Zynq-7000 XC7Z020 System-on-Chip (SoC).
 PetaLinux is used to boot the Zynq's embedded ARM processor and interface with the DFR hardware.
 
+## Dependencies
+- Vivado
+- Vitis
+- PetaLinux
+- Python3
+    - NumPy
+    - Scikit-learn
+    - Matplotlib
+
 ## System Architecture
 ![Hybrid DFR System Architecture](./misc/images/hybrid_dfr_system.png)
 
@@ -78,7 +87,40 @@ vivado -mode tcl -source runDFRCoreHybridSystemProject.tcl # generates a .bit an
 ```
 
 ## Running the Software Models
+In the `python` directory, several scripts exist to evaluate software DFR models against various applications. 
+Each of the DFR models uses a pre-recorded value of the ASIC's Mackey-Glass function characteristics.
 
+### NARMA10
+To test a floating point DFR model against the NARMA10 dataset:
+```
+python3 dfr_sw_float_narma10.py
+```
+To test a fixed-point, integer DFR model against the NARMA10 dataset:
+```
+python3 dfr_sw_int_narma10.py
+```
+To test the FPGA DFR model against the NARMA10 dataset:
+```
+python3 dfr_sw_fpga_narma10.py
+```
+
+### Spectrum Sensing
+To test a floating point DFR model against a spectrum sensing dataset:
+```
+python3 dfr_sw_float_spectrum.py
+```
+To test a fixed-point, integer DFR model against a spectrum sensing dataset:
+```
+python3 dfr_sw_int_spectrum.py
+```
+To test a fixed-point, integer DFR model against all of the spectrum sensing datasets:
+```
+python3 dfr_sw_int_spectrum_batch.py
+```
+To test the FPGA DFR model against a spectrum sensing dataset:
+```
+python3 dfr_sw_fpga_spectrum.py
+```
 
 ## PMOD DAC Information
 - Reference Voltage: 2.5V
