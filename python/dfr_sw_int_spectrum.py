@@ -6,6 +6,10 @@
 ############################################################
 
 import numpy as np
+import sklearn
+from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
 
 MG_FUNCTION_RESOLUTION = 2**16
 
@@ -227,12 +231,13 @@ nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
 ##  Compute testing errors
 
 # Call-out the target outputs
-Yt = target[0,initLen + trainLen + initLen : initLen + trainLen + initLen + testLen].reshape(1,testLen)
-
+Yt = (target[0,initLen + trainLen + initLen : initLen + trainLen + initLen + testLen].reshape(1,testLen))
+Yt = Yt.astype(int)
 
 # Calculate the NMSE
 predicted_target = np.dot(Wout,nodeTS)
 predicted_target_binary = (predicted_target > YT_SCALE / 2)
+predicted_target_probs = predicted_target / (YT_SCALE)
 mse   = np.sum(np.power(Yt - predicted_target_binary,2)) / Yt.size
 nrmse = (np.linalg.norm(Yt - predicted_target_binary) / np.linalg.norm(Yt))
 
@@ -285,10 +290,25 @@ fh.close()
 # (Ortín and Pesquera2017)  DFR     /                       0.17                    59.8%
 # This Work                 DFR     0.0849                  0.0683                  /
 
-import matplotlib.pyplot as plt
 SAMPLES = 100
 x = np.linspace(0,SAMPLES-1,SAMPLES)
 plt.plot(x,Yt[0,0:SAMPLES],label="Yt")
 plt.plot(x,predicted_target_binary[0,0:SAMPLES],'--',label="Predicted Target")
 plt.legend()
 plt.savefig("./data/spectrum/dfr_sw_int_spectrum_fig.png")
+
+
+print(Yt)
+print(predicted_target_binary)
+auc = roc_auc_score(Yt[0], predicted_target_probs[0])
+print('AUC: %.3f' % auc)
+
+plt.clf()
+fpr, tpr, _ = roc_curve(Yt[0], predicted_target_probs[0])
+plt.plot(fpr, tpr, marker='.', label='Logistic')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+# show the legend
+plt.legend()
+# show the plot
+plt.show()

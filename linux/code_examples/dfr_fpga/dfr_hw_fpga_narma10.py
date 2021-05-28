@@ -43,13 +43,13 @@ NUM_STEPS_PER_SAMPLE = 100
 
 NUM_VIRTUAL_NODES = 100
 NUM_STEPS_PER_SAMPLE = NUM_VIRTUAL_NODES
-MAX_INPUT_SAMPLES_STEPS = 2 ** 16
-MAX_INPUT_SAMPLES = int(MAX_INPUT_SAMPLES_STEPS / NUM_STEPS_PER_SAMPLE)
+MAX_INPUT_SAMPLES_STEPS = 655 * NUM_STEPS_PER_SAMPLE
+MAX_INPUT_SAMPLES = 655
 
 # NUM_INIT_SAMPLES + NUM_TEST_SAMPLES must be less than MAX_INPUT_SAMPLES - 1 to prevent internal sample_cntr from overflowing  
 NUM_INIT_SAMPLES = 100
 # NUM_TEST_SAMPLES = MAX_INPUT_SAMPLES - NUM_INIT_SAMPLES - 1
-NUM_TEST_SAMPLES = 10
+NUM_TEST_SAMPLES = 555
 
 
 # Configure Widths
@@ -102,8 +102,11 @@ print("Running DFR")
 regs[CTRL_REG_ADDR : CTRL_REG_ADDR + 4] = int2bytes(0x0000_1001)
 
 # Poll until DFR is finished
+start_time = time.time_ns()
 while(regs[CTRL_REG_ADDR] & 0x2 != 0x0):
     continue
+total_time = time.time_ns() - start_time
+print(f"Total Time: {total_time}")
 
 # Read Outputs
 print("Reading Output Memory")
