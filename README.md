@@ -148,9 +148,9 @@ python3 dfr_hw_fpga_spectrum.py
 
 ## PetaLinux Configuration
 ```
-petalinux-config --get-hw-description=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_system_project/asic_function_system_wrapper.xsa
+petalinux-config --get-hw-description=/home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/dfr_core_hybrid_system_project/dfr_core_hybrid_system_wrapper.xsa
 petalinux-build
-petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/asic_function_system_project/asic_function_system_project.runs/impl_1/asic_function_system_wrapper.bit --u-boot --force
+petalinux-package --boot --fsbl ./images/linux/zynq_fsbl.elf --fpga /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vivado/dfr_core_hybrid_system_project/dfr_core_hybrid_system_project.runs/impl_1/dfr_core_hybrid_system_wrapper.bit --u-boot --force
 sudo rm -rf /media/oshears/ROOTFS/*
 sudo rm -rf /media/oshears/BOOT/*
 cp images/linux/BOOT.BIN /media/oshears/BOOT/
