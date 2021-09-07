@@ -120,6 +120,10 @@ for k in range(0,(testLen * Tp)):
     # Updete all node states
     nodeE[:, k] = nodeC[:,0]
 
+    # if k > 432 * Tp - 1 and k < 434 * Tp:
+    #     print(f"{nodeN[0,0]} = {inputTS[t,0]} + {nodeC[N-1,0]}")
+    #     print(f"[{k}] reservoir[{t}] = {nodeN[0,0]}")
+
 
 
 # Consider the data just once everytime it loops around
@@ -143,6 +147,17 @@ predicted_target = np.dot(Wout,nodeTS)
 predicted_target_binary = (predicted_target > YT_SCALE / 2)
 mse   = np.sum(np.power(Yt - predicted_target_binary,2)) / Yt.size
 nrmse = (np.linalg.norm(Yt - predicted_target_binary) / np.linalg.norm(Yt))
+
+output_sum = 0
+for i in range(N):
+    print(f"weights[{i}] = {Wout[0,i]}")
+    print(f"reservoir_history[{i}][443] = {nodeTS[i,443]}")
+    output_sum = output_sum + Wout[0,i] * nodeTS[i,443]
+    print(f"output = {output_sum}")
+# print(f"output = {np.dot(Wout,nodeTS[:,1])}")
+print(f"output = {output_sum}")
+for i in range(440,450):
+    print(f"outputs[{i}] = {predicted_target[0,i]}")
 
 print('--------------------------------------------------')
 print('Testing Errors')
