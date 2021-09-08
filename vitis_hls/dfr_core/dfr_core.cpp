@@ -25,13 +25,17 @@ https://www.xilinx.com/html_docs/xilinx2021_1/vitis_doc/hls_pragmas.html
 
 #include "dfr_core.h"
 
+#ifndef __SYNTHESIS__
+#include <stdio.h>
+#endif
+
 void dfr_inference(volatile int *inputs, volatile int *weights, volatile long *outputs)
 {
+#pragma HLS INTERFACE s_axilite port=return
+#pragma HLS INTERFACE m_axi port=inputs  depth=510200 max_widen_bitwidth=32
+#pragma HLS INTERFACE m_axi port=weights depth=100    max_widen_bitwidth=32
+#pragma HLS INTERFACE m_axi port=outputs depth=5082   max_widen_bitwidth=64
 
-#pragma HLS INTERFACE m_axi port=inputs  depth=508200 max_widen_bitwidth=32
-#pragma HLS INTERFACE m_axi port=weights depth=100  max_widen_bitwidth=32
-#pragma HLS INTERFACE m_axi port=outputs depth=5082   max_widen_bitwidth=32
-// #pragma HLS loop_merge
 
     int i = 0;
 
@@ -108,7 +112,6 @@ void dfr_inference(volatile int *inputs, volatile int *weights, volatile long *o
       long output_sum = 0;
       for (weight_idx = 0; weight_idx < VIRTUAL_NODES; weight_idx++){
         output_sum = output_sum + ((long) weights[weight_idx]) * ((long) reservoir_history[output_idx][(VIRTUAL_NODES - 1) - weight_idx]);
-
       }
       outputs[output_idx] = output_sum;
 

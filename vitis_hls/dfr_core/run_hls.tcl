@@ -29,8 +29,10 @@ set_top dfr_inference
 # Create a solution
 open_solution -reset dfr_core_solution
 # Define technology and clock rate
-set_part  {xcvu9p-flga2104-2-i}
-create_clock -period "200MHz"
+set_part  {xc7z020clg484-1}
+create_clock -period "10MHz"
+
+config_interface -default_slave_interface s_axilite
 
 # Source x_hls.tcl to determine which steps to execute
 source x_hls.tcl
@@ -51,7 +53,8 @@ if {$hls_exec == 1} {
 	# Run Synthesis, RTL Simulation, RTL implementation and Exit
 	csynth_design
 	
-	cosim_design
+	cosim_design -tool xsim -rtl verilog
+	
 	# Generate pcore
 	export_design -format ip_catalog
 } else {

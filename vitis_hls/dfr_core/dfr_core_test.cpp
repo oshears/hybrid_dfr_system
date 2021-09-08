@@ -37,27 +37,43 @@ int main()
   ifstream inFile;
 
   // Read Inputs from File
-  inFile.open("/home/oshears/Documents/copia/code/colvin_run_soc/hls/dfr_core/data/spectrum/dfr_sw_int_spectrum_inputs.txt");
+  printf("Reading data from files...\n");
+  inFile.open("../../../../data/spectrum/dfr_sw_int_spectrum_inputs.txt");
+  if(!inFile.is_open()){
+    printf("Could not open \"../../../../data/spectrum/dfr_sw_int_spectrum_inputs.txt\"\n");
+    return 1;
+  }
   for(i = 0; i < (2 * INIT_LEN + TEST_LEN + TRAIN_LEN) * TP; i++){
     inFile >> inputs[i];
   }
   inFile.close();
 
   // Read Weights from File
-  inFile.open("/home/oshears/Documents/copia/code/colvin_run_soc/hls/dfr_core/data/spectrum/dfr_sw_int_spectrum_weights.txt");
+  inFile.open("../../../../data/spectrum/dfr_sw_int_spectrum_weights.txt");
+  if(!inFile.is_open()){
+    printf("Could not open \"../../../../data/spectrum/dfr_sw_int_spectrum_weights.txt\"\n");
+    return 1;
+  }
   for(i = 0; i < VIRTUAL_NODES; i++){
     inFile >> weights[i];
   }
   inFile.close();
 
   //Call the hardware function
+  printf("Running HLS Code...\n");
   dfr_inference(inputs,weights,outputs);
   // dfr_inference_sw(inputs,weights,outputs);
+  dfr_inference_sw(inputs,weights,expected_outputs);
 
   // Read Expected Outputs from File
-  inFile.open("/home/oshears/Documents/copia/code/colvin_run_soc/hls/dfr_core/data/spectrum/dfr_sw_int_spectrum_dfr_outputs.txt");
+  printf("Comparing results to expected outputs...\n");
+  inFile.open("../../../../data/spectrum/dfr_sw_int_spectrum_dfr_outputs.txt");
+  if(!inFile.is_open()){
+    printf("Could not open \"../../../../data/spectrum/dfr_sw_int_spectrum_dfr_outputs.txt\"\n");
+    return 1;
+  }
   for(i = 0; i < TEST_LEN; i++){
-    inFile >> expected_outputs[i];
+    // inFile >> expected_outputs[i];
     if (expected_outputs[i] != outputs[i]){
       printf("i = %d Expected = %ld Actual = %ld\n",i,expected_outputs[i],outputs[i]);
       printf("ERROR HW and SW results mismatch\n");
@@ -149,7 +165,6 @@ void dfr_inference_sw(volatile int *inputs, volatile int *weights, volatile long
       long output_sum = 0;
       for (weight_idx = 0; weight_idx < VIRTUAL_NODES; weight_idx++){
         output_sum = output_sum + ((long) weights[weight_idx]) * ((long) reservoir_history[output_idx][(VIRTUAL_NODES - 1) - weight_idx]);
-
       }
       outputs[output_idx] = output_sum;
 
