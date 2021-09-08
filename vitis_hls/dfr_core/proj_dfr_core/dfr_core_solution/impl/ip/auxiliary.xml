@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xd:acceleratorMap xmlns:xd="http://www.xilinx.com/xidane" xd:functionName="dfr_inference" xd:componentRef="dfr_inference" xd:initiationInterval="120205229" xd:clockPeriod="100.000" xd:sequential="true" xd:hostMachine="64" xd:reset="control">
+  <xd:controlReg xd:name="control" xd:interfaceRef="s_axi_control" xd:busTypeRef="axilite" xd:type="generic_axi_lite" xd:offset="0x0"/>
+  <xd:arg xd:name="*(inputs)" xd:originalName="inputs" xd:direction="inout" xd:interfaceRef="m_axi_inputs" xd:busTypeRef="aximm" xd:dataWidth="1" xd:bufferDirection="in"/>
+  <xd:arg xd:name="*(weights)" xd:originalName="weights" xd:direction="inout" xd:interfaceRef="m_axi_weights" xd:busTypeRef="aximm" xd:dataWidth="1" xd:bufferDirection="in"/>
+  <xd:arg xd:name="*(outputs)" xd:originalName="outputs" xd:direction="inout" xd:interfaceRef="m_axi_outputs" xd:busTypeRef="aximm" xd:dataWidth="1" xd:bufferDirection="out"/>
+  <xd:latencyEstimates xd:best-case="67352428" xd:worst-case="120205228" xd:average-case="93778828"/>
+  <xd:resourceEstimates xd:LUT="7070" xd:FF="2974" xd:BRAM="569" xd:DSP="16"/>
+</xd:acceleratorMap>

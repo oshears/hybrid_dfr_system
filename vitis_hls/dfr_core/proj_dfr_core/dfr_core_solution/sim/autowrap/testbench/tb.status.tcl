@@ -1,0 +1,1 @@
+set ::AESL_AUTOSIM::gTopFileName /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/vitis_hls/dfr_core/proj_dfr_core/dfr_core_solution/./sim/autowrap/testbench/dfr_core.cpp_pre.cpp.tb.cpp

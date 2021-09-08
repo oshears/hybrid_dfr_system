@@ -1,0 +1,54 @@
+<profile>
+
+<section name = "Vitis HLS Report for 'dfr_inference'" level="0">
+<item name = "Date">Tue Sep  7 15:36:15 2021
+</item>
+<item name = "Version">2020.2 (Build 3064766 on Wed Nov 18 09:12:47 MST 2020)</item>
+<item name = "Project">proj_dfr_core</item>
+<item name = "Solution">dfr_core_solution (Vivado IP Flow Target)</item>
+<item name = "Product family">zynq</item>
+<item name = "Target device">xc7z020-clg484-1</item>
+</section>
+
+<section name = "Performance Estimates" level="0">
+<item name = "Timing">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="4">Clock, Target, Estimated, Uncertainty</keys>
+<column name="ap_clk">0.10 us, 73.000 ns, 27.00 ns</column>
+</table>
+</item>
+</section>
+</item>
+<item name = "Latency">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="8">, min, max, min, max, min, max, Type</keys>
+<column name="">67352428, 120205228, 6.735 sec, 12.021 sec, 67352429, 120205229, none</column>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="0">
+<keys size="9">Instance, Module, min, max, min, max, min, max, Type</keys>
+</table>
+</item>
+<item name = "Loop"><table name="" hasTotal="0">
+<keys size="8">Loop Name, min, max, Latency, achieved, target, Count, Pipelined</keys>
+<column name="- Loop 1">100, 100, 1, 1, 1, 100, yes</column>
+<column name="- Loop 2">508200, 508200, 1, 1, 1, 508200, yes</column>
+<column name="- VITIS_LOOP_51_1">214000, 214000, 107, -, -, 2000, no</column>
+<column name=" + VITIS_LOOP_61_2">99, 99, 2, 1, 1, 99, yes</column>
+<column name="- VITIS_LOOP_70_3">66066000, 118918800, 130 ~ 234, -, -, 508200, no</column>
+<column name=" + VITIS_LOOP_84_4">99, 99, 2, 1, 1, 99, yes</column>
+<column name=" + VITIS_LOOP_97_5">100, 100, 2, 1, 1, 100, yes</column>
+<column name="- VITIS_LOOP_111_6">564103, 564103, 111, -, -, 5082, no</column>
+<column name=" + VITIS_LOOP_113_7">101, 101, 3, 1, 1, 100, yes</column>
+</table>
+</item>
+</section>
+</item>
+</section>
+</item>
+</section>
+</profile>
