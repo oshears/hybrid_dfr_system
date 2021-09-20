@@ -81,6 +81,23 @@ testLen     = 4000
 
 # Random Uniform [0, MAX_INPUT]
 M = np.random.rand(Tp, 1) * MAX_INPUT
+print(M)
+
+# LFSR Mask
+M = np.zeros((Tp,1))
+start_lfsr_state = 0xACE1
+lfsr = start_lfsr_state
+bit = 0
+count = 0
+while (count < N):
+    bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5))
+    lfsr = (lfsr >> 1) | (bit << 15) & 0xFFFF
+    M[count] = lfsr
+    count += 1
+M = M / 0.5
+print(M)
+# Constant Mask
+# M = np.ones((Tp,1)) * (0xFFFF / 0.5)
 
 ##  (Training) Initialization of reservoir dynamics
 
@@ -104,6 +121,9 @@ for k in range(0,(initLen + trainLen)):
     # multiply input by mask and convert to int
     masked_input = (M * uTR)
     inputTR[k*Tp:(k+1)*Tp] = masked_input.copy()
+
+# print(data)
+# print(inputTR)
 
 ##  (Training) Initialize the reservoir layer
 # No need to store these values since they won't be used in training

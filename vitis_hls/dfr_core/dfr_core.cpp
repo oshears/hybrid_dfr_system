@@ -29,10 +29,18 @@ https://www.xilinx.com/html_docs/xilinx2021_1/vitis_doc/hls_pragmas.html
 #include <stdio.h>
 #endif
 
-void dfr_inference(volatile int *inputs, volatile int *weights, volatile long *outputs)
+void dfr_inference(volatile float *inputs, volatile int *weights, volatile long *outputs, int virtual_nodes, int num_samples, int init_len, int train_len, int test_len, int gamma, int eta, int max_input)
 {
-#pragma HLS INTERFACE s_axilite port=return
-#pragma HLS INTERFACE m_axi port=inputs  depth=510200 max_widen_bitwidth=32
+// #pragma HLS INTERFACE s_axilite port=return
+#pragma HLS INTERFACE s_axilite port=num_virtual_nodes
+#pragma HLS INTERFACE s_axilite port=num_samples
+#pragma HLS INTERFACE s_axilite port=init_len
+#pragma HLS INTERFACE s_axilite port=train_len
+#pragma HLS INTERFACE s_axilite port=test_len
+#pragma HLS INTERFACE s_axilite port=gamma
+#pragma HLS INTERFACE s_axilite port=eta
+#pragma HLS INTERFACE s_axilite port=max_input
+#pragma HLS INTERFACE m_axi port=inputs  depth=5102   max_widen_bitwidth=32
 #pragma HLS INTERFACE m_axi port=weights depth=100    max_widen_bitwidth=32
 #pragma HLS INTERFACE m_axi port=outputs depth=5082   max_widen_bitwidth=64
 
@@ -40,48 +48,71 @@ void dfr_inference(volatile int *inputs, volatile int *weights, volatile long *o
     int i = 0;
 
     int buff[SAMPLES] = {};
-    int reservoir[VIRTUAL_NODES] = {};
-    int reservoir_history[TEST_LEN][VIRTUAL_NODES] = {};
+    int* reservoir = new int[virtual_nodes];
+    int** reservoir_history = new int*[test_len];
+    for (int i = 0; i < test_len; i++)
+        reservoir_history[i] = new int[virtual_nodes];
 
     int sample_idx = 0;
 
     int reservoir_history_idx = 0;
 
+    // create mask (might be better to hard code this)
+    int lfsr_start_state = 0xACE1;
+    int* input_mask = new int[virtual_nodes];
+    int lfsr = lfsr_start_state;
+    int bit = 0;
+    for(int i = 0; i < virtual_nodes; i++){
+        bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5));
+        lfsr = (lfsr >> 1) | (bit << 15) & 0xFFFF;
+        input_mask[i] = lfsr / max_input;
+    } 
+    
+
     // reservoir initialization
+    int input_idx = 1;
     for (int k = 0; k < INIT_LEN * TP; k++)
     {
 
         int node_idx = 0;
 
+        int masked_input = inputs[input_idx] * input_mask[k % virtual_nodes];
+
         // calculate the next reservoir value and store in the first reservoir node
-        int mg_input = GAMMA * inputs[k] + ETA * reservoir[VIRTUAL_NODES - 1];
+        int mg_input = (1 / gamma) * masked_input + (1 / eta) * reservoir[virtual_nodes - 1];
         int mg_output = ( MAX_INPUT * mackey_glass(mg_input) ) / MAX_MG_OUTPUT;
 
         // for each node, copy the current data to the next node
-        for (node_idx = VIRTUAL_NODES - 1; node_idx >= 1; node_idx--)
+        for (node_idx = virtual_nodes - 1; node_idx >= 1; node_idx--)
         {
             reservoir[node_idx] = reservoir[node_idx - 1];
         }
 
         reservoir[0] = mg_output;
+
+        // determine if the next input sample should be processed
+        if(k % virtual_nodes == 0) input_idx++;
     }
 
     // for each input sample
-    for (int k = 0; k < TEST_LEN * TP; k++)
+    for (int k = 0; k < test_len * TP; k++)
     {
+
+        
 
         int node_idx = 0;
 
         int t = INIT_LEN * TP + k;
 
+        int masked_input = inputs[input_idx] * input_mask[k % virtual_nodes];
         
 
         // calculate the next reservoir value and store in the first reservoir node
-        int mg_input = GAMMA * inputs[t] + ETA * reservoir[VIRTUAL_NODES - 1];
+        int mg_input = GAMMA * masked_input + ETA * reservoir[virtual_nodes - 1];
         int mg_output = ( MAX_INPUT * mackey_glass(mg_input) ) / MAX_MG_OUTPUT;
 
         // for each node, copy the current data to the next node
-        for (node_idx = VIRTUAL_NODES - 1; node_idx >= 1; node_idx--)
+        for (node_idx = virtual_nodes - 1; node_idx >= 1; node_idx--)
         {
             reservoir[node_idx] = reservoir[node_idx - 1];
         }
@@ -89,29 +120,32 @@ void dfr_inference(volatile int *inputs, volatile int *weights, volatile long *o
         reservoir[0] = mg_output;
 
         // after every 100 samples, store the complete reservoir state for the matrix multiplication
-        if ((k + 1) % VIRTUAL_NODES == 0)
+        if ((k + 1) % virtual_nodes == 0)
         {
             int reservoir_node_idx = 0;
 
             // store all 100 reservoir nodes in reservoir history array
-            for (reservoir_node_idx = 0; reservoir_node_idx < VIRTUAL_NODES; reservoir_node_idx++)
+            for (reservoir_node_idx = 0; reservoir_node_idx < virtual_nodes; reservoir_node_idx++)
             {
                 
-                reservoir_history[reservoir_history_idx][reservoir_node_idx] = reservoir[(VIRTUAL_NODES - 1) - reservoir_node_idx];
+                reservoir_history[reservoir_history_idx][reservoir_node_idx] = reservoir[(virtual_nodes - 1) - reservoir_node_idx];
             }
 
             reservoir_history_idx++;
         }
+
+        // determine if the next input sample should be processed
+        if(k % virtual_nodes == 0) input_idx++;
     }
 
     // matrix multiplication with weights
     int output_idx = 0;
     int weight_idx = 0;
 
-    for (output_idx = 0; output_idx < TEST_LEN; output_idx++){
+    for (output_idx = 0; output_idx < test_len; output_idx++){
       long output_sum = 0;
-      for (weight_idx = 0; weight_idx < VIRTUAL_NODES; weight_idx++){
-        output_sum = output_sum + ((long) weights[weight_idx]) * ((long) reservoir_history[output_idx][(VIRTUAL_NODES - 1) - weight_idx]);
+      for (weight_idx = 0; weight_idx < virtual_nodes; weight_idx++){
+        output_sum = output_sum + ((long) weights[weight_idx]) * ((long) reservoir_history[output_idx][(virtual_nodes - 1) - weight_idx]);
       }
       outputs[output_idx] = output_sum;
 

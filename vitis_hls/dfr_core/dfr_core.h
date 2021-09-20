@@ -16,4 +16,4 @@
 
 int mackey_glass(int x);
 
-void dfr_inference(volatile int *inputs, volatile int *weights, volatile long *outputs);
+void dfr_inference(volatile float *inputs, volatile int *weights, volatile long *outputs, int virtual_nodes, int num_samples, int init_len, int train_len, int test_len, int gamma, int eta, int max_input);

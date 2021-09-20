@@ -47,7 +47,7 @@ ANT = 6
 spectrum_vector = np.genfromtxt(f"./data/spectrum/spectrum_-{NOISE}_db_{ANT}_ant.csv", delimiter=",")
 data   = spectrum_vector[:,0].reshape((1,spectrum_vector.shape[0]))
 # normalize the data
-data = data / np.max(data)
+# data = data / np.max(data)
 target = spectrum_vector[:,1].reshape((1,spectrum_vector.shape[0]))
 
 
@@ -78,6 +78,19 @@ testLen     = NUM_SAMPLES - (trainLen + initLen + initLen)
 # Random Uniform [0, MAX_INPUT]
 M = np.random.rand(Tp, 1) * MAX_INPUT
 
+# LFSR Mask
+M = np.zeros((Tp,1))
+start_lfsr_state = 0xACE1
+lfsr = start_lfsr_state
+bit = 0
+count = 0
+while (count < N):
+    bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5))
+    lfsr = (lfsr >> 1) | (bit << 15) & 0xFFFF
+    M[count] = lfsr
+    count += 1
+M = M / 200
+
 ##  (Training) Initialization of reservoir dynamics
 
 # nodeC     = reservoir dynamic at the current cycle
@@ -91,7 +104,6 @@ nodeN   = np.zeros(shape=(N, 1),dtype=int)
 nodeE	= np.zeros(shape=(N , trainLen * Tp),dtype=int)
 nodeTR	= np.zeros(shape=(N , trainLen),dtype=int)
 
-
 ##  (Training) Apply masking to training data
 inputTR = np.ndarray(shape=((initLen + trainLen) * Tp,1),dtype=int)
 
@@ -100,6 +112,7 @@ for k in range(0,(initLen + trainLen)):
     # multiply input by mask and convert to int
     masked_input = (M * uTR)
     inputTR[k*Tp:(k+1)*Tp] = masked_input.copy()
+
 
 ##  (Training) Initialize the reservoir layer
 # No need to store these values since they won't be used in training
@@ -187,7 +200,6 @@ for k in range(0,(initLen + testLen)):
     masked_input = (M * uTS)
     inputTS[k*Tp:(k+1)*Tp] = masked_input.copy()
 
-
 ## (Testing) Initialize the reservoir layer
 
 # No need to store these values since they won't be used in testing
@@ -252,8 +264,11 @@ print(f'testing nrmse: {nrmse}')
 ### Write Data for Hybrid System Simulation ###
 # Save Inputs
 fh = open("./data/spectrum/dfr_sw_int_spectrum_inputs.txt","w")
-for i in range(inputTS.size):
-    fh.write(f"{inputTS[i,0]}\n")
+# for i in range(inputTS.size):
+#     fh.write(f"{inputTS[i,0]}\n")
+# fh.close()
+for i in range(initLen + testLen):
+    fh.write(f"{data[0,initLen + trainLen + i]}\n")
 fh.close()
 
 # Save Reservoir Outputs

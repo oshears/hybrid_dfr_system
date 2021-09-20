@@ -23,13 +23,13 @@
 
 using namespace std;
 
-void dfr_inference_sw(volatile int *inputs, volatile int *weights, volatile long *outputs);
+// void dfr_inference_sw(volatile int *inputs, volatile int *weights, volatile long *outputs);
 
 int main()
 {
   int i;
 
-  int inputs[(INIT_LEN + TEST_LEN) * TP] = {};
+  float inputs[(INIT_LEN + TEST_LEN) * TP] = {};
   int weights[VIRTUAL_NODES] = {};
   long outputs[TEST_LEN] = {};
   long expected_outputs[TEST_LEN] = {};
@@ -61,9 +61,9 @@ int main()
 
   //Call the hardware function
   printf("Running HLS Code...\n");
-  dfr_inference(inputs,weights,outputs);
+  dfr_inference(inputs,weights,outputs,VIRTUAL_NODES,SAMPLES,INIT_LEN,TRAIN_LEN,TEST_LEN,16,1,200);
   // dfr_inference_sw(inputs,weights,outputs);
-  dfr_inference_sw(inputs,weights,expected_outputs);
+  // dfr_inference_sw(inputs,weights,expected_outputs);
 
   // Read Expected Outputs from File
   printf("Comparing results to expected outputs...\n");
@@ -73,7 +73,7 @@ int main()
     return 1;
   }
   for(i = 0; i < TEST_LEN; i++){
-    // inFile >> expected_outputs[i];
+    inFile >> expected_outputs[i];
     if (expected_outputs[i] != outputs[i]){
       printf("i = %d Expected = %ld Actual = %ld\n",i,expected_outputs[i],outputs[i]);
       printf("ERROR HW and SW results mismatch\n");
@@ -87,7 +87,7 @@ int main()
   return 0;
 }
 
-  
+/*
 void dfr_inference_sw(volatile int *inputs, volatile int *weights, volatile long *outputs)
 {
     int i = 0;
@@ -171,3 +171,4 @@ void dfr_inference_sw(volatile int *inputs, volatile int *weights, volatile long
     }
 
 }
+*/

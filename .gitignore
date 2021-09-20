@@ -20,8 +20,8 @@ logs
 vivado_pid*
 
 # Vitis HLS Files
-# dfr_core_solution
-# proj_dfr_core
+dfr_core_solution
+proj_dfr_core
 
 # Vitis Files
 .metadata
