@@ -36,7 +36,7 @@ int* generate_lfsr_input_mask(int mask_length,int mask_scale){
 	int bit = 0;
 	for(int i = 0; i < mask_length; i++){
 		bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5));
-		lfsr = (lfsr >> 1) | (bit << 15) & 0xFFFF;
+		lfsr = ((lfsr >> 1) | (bit << 15)) & 0xFFFF;
 		input_mask[i] = lfsr / mask_scale;
 	}
 	return input_mask;
