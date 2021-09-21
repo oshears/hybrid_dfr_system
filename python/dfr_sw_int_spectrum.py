@@ -79,7 +79,7 @@ testLen     = NUM_SAMPLES - (trainLen + initLen + initLen)
 M = np.random.rand(Tp, 1) * MAX_INPUT
 
 # LFSR Mask
-M = np.zeros((Tp,1))
+M = np.zeros((Tp,1),dtype=int)
 start_lfsr_state = 0xACE1
 lfsr = start_lfsr_state
 bit = 0
@@ -89,7 +89,7 @@ while (count < N):
     lfsr = (lfsr >> 1) | (bit << 15) & 0xFFFF
     M[count] = lfsr
     count += 1
-M = M / 200
+M = np.floor_divide(M,200)
 
 ##  (Training) Initialization of reservoir dynamics
 
@@ -122,7 +122,7 @@ for k in range(0,(initLen * Tp)):
     
     # Activation
     # multiply by 8 to scale 12-bit output to 16 bits (15 bits unsigned)
-    nodeN[0,0]	= (mackey_glass(initJTR))
+    nodeN[0,0]	= mackey_glass(initJTR)
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -138,7 +138,7 @@ for k in range(0,(trainLen * Tp)):
     trainJ = (inputTR[t,0]) + eta * (nodeC[N-1,0])
     
     # Activation
-    nodeN[0,0]	= (mackey_glass(trainJ))
+    nodeN[0,0]	= mackey_glass(trainJ)
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
@@ -200,6 +200,7 @@ for k in range(0,(initLen + testLen)):
     masked_input = (M * uTS)
     inputTS[k*Tp:(k+1)*Tp] = masked_input.copy()
 
+
 ## (Testing) Initialize the reservoir layer
 
 # No need to store these values since they won't be used in testing
@@ -209,12 +210,11 @@ for k in range(0,(initLen * Tp)):
     initJTS = (inputTS[k,0]) + eta * (nodeC[N-1,0])
     
     # Activation
-    nodeN[0,0]	= (mackey_glass(initJTS))
+    nodeN[0,0]	= mackey_glass(initJTS)
     nodeN[1:N]  = nodeC[0:(N - 1)]
     
     # Update the current node state
     nodeC       = nodeN.copy()
-
 
 
 ##  (Testing) Run data through the reservoir
@@ -224,18 +224,17 @@ for k in range(0,(testLen * Tp)):
     
     # Compute the new input data for training
     testJ = (inputTS[t,0]) + eta * (nodeC[N-1,0])
-    
+
     # Activation
-    nodeN[0,0]	= (mackey_glass(testJ))
+    nodeN[0,0]	= mackey_glass(testJ)
     nodeN[1:N]  = nodeC[0:(N - 1)]
-    
+
+
     # Update the current node state
     nodeC       = nodeN.copy()
     
     # Updete all node states
     nodeE[:, k] = nodeC[:,0]
-
-
 
 # Consider the data just once everytime it loops around
 nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
@@ -266,6 +265,9 @@ print(f'testing nrmse: {nrmse}')
 fh = open("./data/spectrum/dfr_sw_int_spectrum_inputs.txt","w")
 # for i in range(inputTS.size):
 #     fh.write(f"{inputTS[i,0]}\n")
+# fh.close()
+# for i in range(data.size):
+#     fh.write(f"{data[0,i]}\n")
 # fh.close()
 for i in range(initLen + testLen):
     fh.write(f"{data[0,initLen + trainLen + i]}\n")

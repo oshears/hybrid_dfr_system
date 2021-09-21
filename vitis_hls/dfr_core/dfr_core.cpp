@@ -29,7 +29,20 @@ https://www.xilinx.com/html_docs/xilinx2021_1/vitis_doc/hls_pragmas.html
 #include <stdio.h>
 #endif
 
-void dfr_inference(volatile float *inputs, volatile int *weights, volatile long *outputs, int virtual_nodes, int num_samples, int init_len, int train_len, int test_len, int gamma, int eta, int max_input)
+int* generate_lfsr_input_mask(int mask_length,int mask_scale){
+	int lfsr_start_state = 0xACE1;
+	int* input_mask = new int[mask_length];
+	int lfsr = lfsr_start_state;
+	int bit = 0;
+	for(int i = 0; i < mask_length; i++){
+		bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5));
+		lfsr = (lfsr >> 1) | (bit << 15) & 0xFFFF;
+		input_mask[i] = lfsr / mask_scale;
+	}
+	return input_mask;
+}
+
+void dfr_inference(volatile float *inputs, volatile int *weights, volatile unsigned long *outputs, unsigned int virtual_nodes, unsigned int num_samples, unsigned int init_len, unsigned int train_len, unsigned int test_len, unsigned int gamma, unsigned int eta, unsigned int max_input)
 {
 // #pragma HLS INTERFACE s_axilite port=return
 #pragma HLS INTERFACE s_axilite port=num_virtual_nodes
@@ -47,108 +60,95 @@ void dfr_inference(volatile float *inputs, volatile int *weights, volatile long 
 
     int i = 0;
 
-    int buff[SAMPLES] = {};
-    int* reservoir = new int[virtual_nodes];
+    int* reservoir = new int[virtual_nodes]();
     int** reservoir_history = new int*[test_len];
     for (int i = 0; i < test_len; i++)
-        reservoir_history[i] = new int[virtual_nodes];
+        reservoir_history[i] = new int[virtual_nodes]();
 
     int sample_idx = 0;
+    int input_idx = 0;
 
-    int reservoir_history_idx = 0;
 
-    // create mask (might be better to hard code this)
-    int lfsr_start_state = 0xACE1;
-    int* input_mask = new int[virtual_nodes];
-    int lfsr = lfsr_start_state;
-    int bit = 0;
-    for(int i = 0; i < virtual_nodes; i++){
-        bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5));
-        lfsr = (lfsr >> 1) | (bit << 15) & 0xFFFF;
-        input_mask[i] = lfsr / max_input;
-    } 
+    int* input_mask = generate_lfsr_input_mask(virtual_nodes,max_input);
     
-
     // reservoir initialization
-    int input_idx = 1;
-    for (int k = 0; k < INIT_LEN * TP; k++)
+    input_idx = 0;
+    for (int k = 0; k < init_len * virtual_nodes; k++)
     {
 
         int node_idx = 0;
 
+        // apply input mask to current sample
         int masked_input = inputs[input_idx] * input_mask[k % virtual_nodes];
 
         // calculate the next reservoir value and store in the first reservoir node
-        int mg_input = (1 / gamma) * masked_input + (1 / eta) * reservoir[virtual_nodes - 1];
-        int mg_output = ( MAX_INPUT * mackey_glass(mg_input) ) / MAX_MG_OUTPUT;
+        int mg_input = (masked_input >> gamma) + (reservoir[virtual_nodes - 1] >> eta);
+        int mg_output = mackey_glass(mg_input);
 
         // for each node, copy the current data to the next node
         for (node_idx = virtual_nodes - 1; node_idx >= 1; node_idx--)
-        {
             reservoir[node_idx] = reservoir[node_idx - 1];
-        }
 
+        // store mg output in the first reservoir node
         reservoir[0] = mg_output;
 
         // determine if the next input sample should be processed
-        if(k % virtual_nodes == 0) input_idx++;
+        if((k + 1) % virtual_nodes == 0) input_idx++;
     }
+
 
     // for each input sample
-    for (int k = 0; k < test_len * TP; k++)
+    input_idx = init_len;
+    int output_idx = 0;
+    bool reservoir_filled = false;
+    for (int k = 0; k < test_len * virtual_nodes; k++)
     {
-
-        
 
         int node_idx = 0;
 
-        int t = INIT_LEN * TP + k;
+        //int t = init_len * virtual_nodes + k;
 
+        // apply input mask to current sample
         int masked_input = inputs[input_idx] * input_mask[k % virtual_nodes];
         
-
         // calculate the next reservoir value and store in the first reservoir node
-        int mg_input = GAMMA * masked_input + ETA * reservoir[virtual_nodes - 1];
-        int mg_output = ( MAX_INPUT * mackey_glass(mg_input) ) / MAX_MG_OUTPUT;
+        int mg_input = (masked_input >> gamma) + (reservoir[virtual_nodes - 1] >> eta);
+        int mg_output = mackey_glass(mg_input);
 
         // for each node, copy the current data to the next node
         for (node_idx = virtual_nodes - 1; node_idx >= 1; node_idx--)
-        {
             reservoir[node_idx] = reservoir[node_idx - 1];
-        }
 
+        // store mg output in the first reservoir node
         reservoir[0] = mg_output;
 
-        // after every 100 samples, store the complete reservoir state for the matrix multiplication
-        if ((k + 1) % virtual_nodes == 0)
-        {
-            int reservoir_node_idx = 0;
+        reservoir_history[output_idx][k % virtual_nodes] = reservoir[0];
 
-            // store all 100 reservoir nodes in reservoir history array
-            for (reservoir_node_idx = 0; reservoir_node_idx < virtual_nodes; reservoir_node_idx++)
-            {
-                
-                reservoir_history[reservoir_history_idx][reservoir_node_idx] = reservoir[(virtual_nodes - 1) - reservoir_node_idx];
-            }
-
-            reservoir_history_idx++;
-        }
 
         // determine if the next input sample should be processed
-        if(k % virtual_nodes == 0) input_idx++;
+        // increment input index
+        if((k + 1) % virtual_nodes == 0){
+        	input_idx++;
+        	output_idx++;
+        }
     }
 
+
+
+
     // matrix multiplication with weights
-    int output_idx = 0;
+    output_idx = 0;
     int weight_idx = 0;
 
     for (output_idx = 0; output_idx < test_len; output_idx++){
-      long output_sum = 0;
-      for (weight_idx = 0; weight_idx < virtual_nodes; weight_idx++){
-        output_sum = output_sum + ((long) weights[weight_idx]) * ((long) reservoir_history[output_idx][(virtual_nodes - 1) - weight_idx]);
-      }
-      outputs[output_idx] = output_sum;
 
+    	long output_sum = 0;
+
+		for (weight_idx = 0; weight_idx < virtual_nodes; weight_idx++){
+			output_sum = output_sum + ((long) weights[weight_idx]) * ((long) reservoir_history[output_idx][(virtual_nodes - 1) - weight_idx]);
+		}
+
+		outputs[output_idx] = output_sum;
     }
 
 }

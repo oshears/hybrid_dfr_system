@@ -65537,8 +65537,6 @@ static int mg_data[65536] = {
 227
 };
 
-int mackey_glass(int x)
-{
-    x = x & 0xFFFF;
-    return mg_data[x];
+int mackey_glass(int x){
+	return mg_data[x & 0xFFFF] << 4;
 }
