@@ -79,7 +79,7 @@ int main()
     inFile >> expected_outputs[i];
     if (expected_outputs[i] != outputs[i]){
       printf("i = %d Expected = %ld Actual = %ld\n",i,expected_outputs[i],outputs[i]);
-      printf("ERROR HW and SW results mismatch\n");
+//      printf("ERROR HW and SW results mismatch\n");
 //      return 1;
     }
   }
