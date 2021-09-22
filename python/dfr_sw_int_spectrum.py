@@ -283,7 +283,7 @@ fh.close()
 # Save Weights
 fh = open("./data/spectrum/dfr_sw_int_spectrum_weights.txt","w")
 for i in range(Wout.size):
-    fh.write(f"{int(Wout[0,i])}\n")
+    fh.write(f"{int(Wout[0,(Wout.size - 1) - i])}\n")
 fh.close()
 
 # Save DFR Outputs

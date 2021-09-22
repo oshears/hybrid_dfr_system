@@ -31,8 +31,8 @@ int main()
 
   float inputs[(INIT_LEN + TEST_LEN) * TP] = {};
   int weights[VIRTUAL_NODES] = {};
-  unsigned long outputs[TEST_LEN] = {};
-  unsigned long expected_outputs[TEST_LEN] = {};
+  long outputs[TEST_LEN] = {};
+  long expected_outputs[TEST_LEN] = {};
 
   ifstream inFile;
 
@@ -64,7 +64,7 @@ int main()
   int gamma = 0;
   int eta = 4;
   int max_input = 200;
-  dfr_inference(inputs,weights,outputs,VIRTUAL_NODES,SAMPLES,INIT_LEN,TRAIN_LEN,TEST_LEN,gamma,eta,max_input);
+  dfr_core(inputs,weights,outputs,VIRTUAL_NODES,SAMPLES,INIT_LEN,TRAIN_LEN,TEST_LEN,gamma,eta,max_input);
   // dfr_inference_sw(inputs,weights,outputs);
   // dfr_inference_sw(inputs,weights,expected_outputs);
 

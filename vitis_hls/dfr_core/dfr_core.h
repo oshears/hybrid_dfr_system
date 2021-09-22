@@ -18,4 +18,4 @@
 
 int mackey_glass(int x);
 
-void dfr_inference(float *inputs, int *weights, unsigned long *outputs, unsigned int num_virtual_nodes, unsigned int num_samples, unsigned int init_len, unsigned int train_len, unsigned int test_len, unsigned int gamma, unsigned int eta, unsigned int max_input);
+void dfr_core(float *inputs, int *weights, long *outputs, unsigned int num_virtual_nodes, unsigned int num_samples, unsigned int init_len, unsigned int train_len, unsigned int test_len, unsigned int gamma, unsigned int eta, unsigned int max_input);

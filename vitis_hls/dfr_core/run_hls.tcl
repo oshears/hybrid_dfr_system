@@ -23,7 +23,7 @@ add_files mackey_glass.cpp
 add_files -tb dfr_core_test.cpp
 
 # Set the top-level function
-set_top dfr_inference
+set_top dfr_core
 
 # ########################################################
 # Create a solution
@@ -33,6 +33,8 @@ set_part  {xc7z020clg484-1}
 create_clock -period "10MHz"
 
 config_interface -default_slave_interface s_axilite
+# config_interface -m_axi_max_widen_bitwidth 512
+# config_interface -m_axi_alignment_byte_size=64
 
 # Source x_hls.tcl to determine which steps to execute
 source x_hls.tcl
