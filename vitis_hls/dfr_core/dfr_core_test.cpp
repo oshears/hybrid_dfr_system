@@ -23,7 +23,7 @@
 
 using namespace std;
 
-// void dfr_inference_sw(volatile int *inputs, volatile int *weights, volatile long *outputs);
+void dfr_core_sw(float *inputs, int *weights, long *outputs, unsigned int num_virtual_nodes, unsigned int num_samples, unsigned int init_len, unsigned int train_len, unsigned int test_len, unsigned int gamma, unsigned int eta, unsigned int max_input);
 
 int main()
 {
@@ -64,9 +64,9 @@ int main()
   int gamma = 0;
   int eta = 4;
   int max_input = 200;
+
   dfr_core(inputs,weights,outputs,VIRTUAL_NODES,SAMPLES,INIT_LEN,TRAIN_LEN,TEST_LEN,gamma,eta,max_input);
-  // dfr_inference_sw(inputs,weights,outputs);
-  // dfr_inference_sw(inputs,weights,expected_outputs);
+  dfr_core_sw(inputs,weights,expected_outputs,VIRTUAL_NODES,SAMPLES,INIT_LEN,TRAIN_LEN,TEST_LEN,gamma,eta,max_input);
 
   // Read Expected Outputs from File
   printf("Comparing results to expected outputs...\n");
@@ -76,11 +76,11 @@ int main()
     return 1;
   }
   for(i = 0; i < TEST_LEN; i++){
-    inFile >> expected_outputs[i];
+    // inFile >> expected_outputs[i];
     if (expected_outputs[i] != outputs[i]){
       printf("i = %d Expected = %ld Actual = %ld\n",i,expected_outputs[i],outputs[i]);
-//      printf("ERROR HW and SW results mismatch\n");
-//      return 1;
+     printf("ERROR HW and SW results mismatch\n");
+     return 1;
     }
   }
   inFile.close();
@@ -90,88 +90,76 @@ int main()
   return 0;
 }
 
-/*
-void dfr_inference_sw(volatile int *inputs, volatile int *weights, volatile long *outputs)
+
+void dfr_core_sw(float* inputs, int* weights, long* outputs, unsigned int num_virtual_nodes, unsigned int num_samples, unsigned int init_len, unsigned int train_len, unsigned int test_len, unsigned int gamma, unsigned int eta, unsigned int max_input)
 {
-    int i = 0;
 
-    int buff[SAMPLES] = {};
-    int reservoir[VIRTUAL_NODES] = {};
-    int reservoir_history[TEST_LEN][VIRTUAL_NODES] = {};
+  int*  const reservoir = new int[MAX_VIRTUAL_NODES]();
+  int** const reservoir_history = new int*[test_len]();
+  for (int i = 0; i < MAX_TEST_LEN; i++)
+      reservoir_history[i] = new int[MAX_VIRTUAL_NODES]();
 
-    int sample_idx = 0;
 
-    int reservoir_history_idx = 0;
 
+    int* input_mask = generate_lfsr_input_mask(num_virtual_nodes,max_input);
+    
     // reservoir initialization
-    for (int k = 0; k < INIT_LEN * TP; k++)
-    {
+    bool reservoir_filled = false;
+    RESERVOIR_INIT_INPUT_LOOP:
+    for (int input_idx = 0; input_idx < init_len; input_idx++){
+        RESERVOIR_INIT_NODE_LOOP:
+        for (int node_idx = 0; node_idx < num_virtual_nodes; node_idx++){
+            // apply input mask to current sample
+            int masked_input = inputs[input_idx] * input_mask[node_idx];
 
-        int node_idx = 0;
+            // calculate the next reservoir value and store in the first reservoir node
+            int reservoir_feedback = reservoir_filled ? reservoir[num_virtual_nodes - 1] : 0;
+            int mg_input = (masked_input >> gamma) + (reservoir_feedback >> eta);
+            int mg_output = mackey_glass(mg_input);
 
-        // calculate the next reservoir value and store in the first reservoir node
-        int mg_input = GAMMA * inputs[k] + ETA * reservoir[VIRTUAL_NODES - 1];
-        int mg_output = ( MAX_INPUT * mackey_glass(mg_input) ) / MAX_MG_OUTPUT;
+            // for each node, copy the current data to the next node
+            RESERVOIR_INIT_UPDATE_LOOP:
+            for (int node_idx = num_virtual_nodes - 1; node_idx >= 1; node_idx--)
+                reservoir[node_idx] = reservoir[node_idx - 1];
 
-        // for each node, copy the current data to the next node
-        for (node_idx = VIRTUAL_NODES - 1; node_idx >= 1; node_idx--)
-        {
-            reservoir[node_idx] = reservoir[node_idx - 1];
+            // store mg output in the first reservoir node
+            reservoir[0] = mg_output;
+
+            if(node_idx == num_virtual_nodes - 1) reservoir_filled = true;
         }
-
-        reservoir[0] = mg_output;
     }
+
 
     // for each input sample
-    for (int k = 0; k < TEST_LEN * TP; k++)
-    {
+    long output_sum = 0;
+    RESERVOIR_TEST_INPUT_LOOP:
+    for (int input_idx = init_len; input_idx < test_len; input_idx++){
+        RESERVOIR_TEST_NODE_LOOP:
+        for (int node_idx = 0; node_idx < num_virtual_nodes; node_idx++){
+            int output_idx = input_idx - init_len;
+            // apply input mask to current sample
+            int masked_input = inputs[input_idx] * input_mask[node_idx];
+            
+            // calculate the next reservoir value and store in the first reservoir node
+            int mg_input = (masked_input >> gamma) + (reservoir[num_virtual_nodes - 1] >> eta);
+            int mg_output = mackey_glass(mg_input);
 
-        int node_idx = 0;
+            // for each node, copy the current data to the next node
+            RESERVOIR_TEST_UPDATE_LOOP:
+            for (int node_idx = num_virtual_nodes - 1; node_idx >= 1; node_idx--)
+                reservoir[node_idx] = reservoir[node_idx - 1];
 
-        int t = INIT_LEN * TP + k;
+            // store mg output in the first reservoir node
+            reservoir[0] = mg_output;
 
-        
+            // record output in reservoir history array for matrix multiplication
+            output_sum = output_sum + ((long) weights[node_idx]) * ((long) mg_output);
 
-        // calculate the next reservoir value and store in the first reservoir node
-        int mg_input = GAMMA * inputs[t] + ETA * reservoir[VIRTUAL_NODES - 1];
-        int mg_output = ( MAX_INPUT * mackey_glass(mg_input) ) / MAX_MG_OUTPUT;
-
-        // for each node, copy the current data to the next node
-        for (node_idx = VIRTUAL_NODES - 1; node_idx >= 1; node_idx--)
-        {
-            reservoir[node_idx] = reservoir[node_idx - 1];
+            if (node_idx == num_virtual_nodes - 1){
+                outputs[output_idx] = output_sum;
+                output_sum = 0;
+            } 
         }
-
-        reservoir[0] = mg_output;
-
-        // after every 100 samples, store the complete reservoir state for the matrix multiplication
-        if ((k + 1) % VIRTUAL_NODES == 0)
-        {
-            int reservoir_node_idx = 0;
-
-            // store all 100 reservoir nodes in reservoir history array
-            for (reservoir_node_idx = 0; reservoir_node_idx < VIRTUAL_NODES; reservoir_node_idx++)
-            {
-                
-                reservoir_history[reservoir_history_idx][reservoir_node_idx] = reservoir[(VIRTUAL_NODES - 1) - reservoir_node_idx];
-            }
-
-            reservoir_history_idx++;
-        }
-    }
-
-    // matrix multiplication with weights
-    int output_idx = 0;
-    int weight_idx = 0;
-
-    for (output_idx = 0; output_idx < TEST_LEN; output_idx++){
-      long output_sum = 0;
-      for (weight_idx = 0; weight_idx < VIRTUAL_NODES; weight_idx++){
-        output_sum = output_sum + ((long) weights[weight_idx]) * ((long) reservoir_history[output_idx][(VIRTUAL_NODES - 1) - weight_idx]);
-      }
-      outputs[output_idx] = output_sum;
-
     }
 
 }
-*/

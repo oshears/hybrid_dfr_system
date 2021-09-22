@@ -18,4 +18,6 @@
 
 int mackey_glass(int x);
 
+int* generate_lfsr_input_mask(int mask_length,int mask_scale);
+
 void dfr_core(float *inputs, int *weights, long *outputs, unsigned int num_virtual_nodes, unsigned int num_samples, unsigned int init_len, unsigned int train_len, unsigned int test_len, unsigned int gamma, unsigned int eta, unsigned int max_input);

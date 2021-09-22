@@ -19,6 +19,7 @@ open_project -reset proj_dfr_core
 # Add design files
 add_files dfr_core.cpp
 add_files mackey_glass.cpp
+add_files lfsr.cpp
 # Add test bench & files
 add_files -tb dfr_core_test.cpp
 
