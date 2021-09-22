@@ -49,6 +49,21 @@ for i in range(MG_FUNCTION_RESOLUTION):
         mg_deriv_vector[i] = np.average(mg_vector[1,i:i+avg_samples]) - np.average(mg_vector[1,i-avg_samples:i])
 
 
-plt.plot(mg_vector[1,:])
-plt.plot(mg_deriv_vector[:])
+# plt.plot(mg_vector[1,:])
+# plt.plot(mg_deriv_vector[:])
+# plt.show()
+
+delay = 10
+samples = 100
+
+mg_model = np.zeros(samples)
+
+for i in range(delay):
+    mg_model[i] = np.random.random()
+
+
+for i in range(delay,samples):
+    mg_model[i] = 0.5 * mg_model[i - delay] / ( 1 * np.power((1 + mg_model[i - delay]),4) )
+
+plt.plot(mg_model)
 plt.show()
