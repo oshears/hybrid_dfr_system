@@ -38,6 +38,7 @@ int* generate_lfsr_input_mask(int mask_length,int mask_scale){
 #endif
 	int lfsr = lfsr_start_state;
 	int bit = 0;
+    LFSR_INIT_LOOP:
 	for(int i = 0; i < mask_length; i++){
 		bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5));
 		lfsr = ((lfsr >> 1) | (bit << 15)) & 0xFFFF;
@@ -64,8 +65,6 @@ void dfr_core(float* inputs, int* weights, long* outputs, unsigned int num_virtu
 #pragma HLS INTERFACE m_axi port=outputs depth=8192 bundle=OUTPUT_DATA_BUS
 
 
-    int i = 0;
-
 #ifndef __SYNTHESIS__
     int*  const reservoir = new int[MAX_VIRTUAL_NODES]();
     int** const reservoir_history = new int*[test_len]();
@@ -77,19 +76,15 @@ void dfr_core(float* inputs, int* weights, long* outputs, unsigned int num_virtu
 	int reservoir_history[MAX_TEST_LEN][MAX_VIRTUAL_NODES];
 #endif
 
-    int sample_idx = 0;
-    int input_idx = 0;
 
-    bool reservoir_filled = false;
-
-    // int const INIT_SAMPLES = init_len * num_virtual_nodes;
-    // int const TEST_SAMPLES = test_len * num_virtual_nodes;
 
     int* input_mask = generate_lfsr_input_mask(num_virtual_nodes,max_input);
     
     // reservoir initialization
-    for (int input_idx = 0; input_idx < init_len; input_idx++)
-    {
+    bool reservoir_filled = false;
+    RESERVOIR_INIT_INPUT_LOOP:
+    for (int input_idx = 0; input_idx < init_len; input_idx++){
+        RESERVOIR_INIT_NODE_LOOP:
         for (int node_idx = 0; node_idx < num_virtual_nodes; node_idx++){
             // apply input mask to current sample
             int masked_input = inputs[input_idx] * input_mask[node_idx];
@@ -100,23 +95,25 @@ void dfr_core(float* inputs, int* weights, long* outputs, unsigned int num_virtu
             int mg_output = mackey_glass(mg_input);
 
             // for each node, copy the current data to the next node
+            RESERVOIR_INIT_UPDATE_LOOP:
             for (int node_idx = num_virtual_nodes - 1; node_idx >= 1; node_idx--)
                 reservoir[node_idx] = reservoir[node_idx - 1];
 
             // store mg output in the first reservoir node
             reservoir[0] = mg_output;
+
+            if(node_idx == num_virtual_nodes - 1) reservoir_filled = true;
         }
-        reservoir_filled = true;
     }
 
 
     // for each input sample
-    for (int input_idx = init_len; input_idx < test_len; input_idx++)
-    {
-        int output_idx = input_idx - init_len;
-        long output_sum = 0;
-        for (int node_idx = 0; node_idx < num_virtual_nodes; node_idx++)
-        {
+    long output_sum = 0;
+    RESERVOIR_TEST_INPUT_LOOP:
+    for (int input_idx = init_len; input_idx < test_len; input_idx++){
+        RESERVOIR_TEST_NODE_LOOP:
+        for (int node_idx = 0; node_idx < num_virtual_nodes; node_idx++){
+            int output_idx = input_idx - init_len;
             // apply input mask to current sample
             int masked_input = inputs[input_idx] * input_mask[node_idx];
             
@@ -125,6 +122,7 @@ void dfr_core(float* inputs, int* weights, long* outputs, unsigned int num_virtu
             int mg_output = mackey_glass(mg_input);
 
             // for each node, copy the current data to the next node
+            RESERVOIR_TEST_UPDATE_LOOP:
             for (int node_idx = num_virtual_nodes - 1; node_idx >= 1; node_idx--)
                 reservoir[node_idx] = reservoir[node_idx - 1];
 
@@ -133,8 +131,12 @@ void dfr_core(float* inputs, int* weights, long* outputs, unsigned int num_virtu
 
             // record output in reservoir history array for matrix multiplication
             output_sum = output_sum + ((long) weights[node_idx]) * ((long) mg_output);
+
+            if (node_idx == num_virtual_nodes - 1){
+                outputs[output_idx] = output_sum;
+                output_sum = 0;
+            } 
         }
-        outputs[output_idx] = output_sum;
     }
 
 }
