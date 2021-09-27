@@ -1,0 +1,277 @@
+############################################################
+#
+#   Delay-feedback Reservoir (DFR)
+#   NARMA-10 (Float)
+#
+############################################################
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# NARMA10
+def narma10_create(inLen):
+
+    # Compute the random uniform input matrix
+    inp = 0.5*np.random.rand(1, inLen)
+
+    # Compute the target matrix
+    tar = np.zeros(shape=(1, inLen))
+
+    for k in range(10,(inLen - 1)):
+        tar[0,k+1] = 0.3 * tar[0,k] + 0.05 * tar[0,k] * np.sum(tar[0,k-9:k]) + 1.5 * inp[0,k] * inp[0,k - 9] + 0.1
+    
+    return (inp, tar)
+
+def mackey_glass(x):
+    xi = 10
+    return x / (1 + np.power(x,xi))
+
+def mackey_glass_deriv(x):
+    return -1 * (9 * np.power(x,10) - 1) / np.power(np.power(x,10) + 1, 2)
+
+
+##	Import dataset
+
+# 10th order nonlinear auto-regressive moving average (NARMA10)
+# seed = 0
+# np.random.seed(seed)
+data, target = narma10_create(10100)
+
+
+##	Reservoir Parameters
+
+# Tp        = sample/hold time frame for input (length of input mask)
+# N         = number of virtual nodes in the reservoir (must equal to Tp)
+# theta     = distance between virtual nodes
+# gamma     = input gain
+# eta       = feedback gain (leaking rate)
+# initLen	= number of samples used in initialization
+# trainLen	= number of samples used in training
+# testLen	= number of samples used in testing
+
+# Using Appeltant Parameters
+Tp          = 10
+N           = Tp
+theta       = Tp / N
+gamma       = 2 #full range of mg
+eta         = 1.25 # full range of mg
+alpha       = 1
+initLen     = 100 
+trainLen	= 5900
+testLen     = 4000
+
+##  Define the masking (input weight, choose one of the followings)
+
+# Random Uniform [0, 1]
+M = np.random.rand(Tp, 1)
+
+##  (Training) Initialization of reservoir dynamics
+
+# nodeC     = reservoir dynamic at the current cycle
+# nodeN     = reservoir dynamic at the next cycle
+# nodeE     = reservoir dynamic at every timestep during training
+# nodeTR    = a snapshot of all node states at each full rotation through 
+#             the reservoir during training
+
+nodeC   = np.zeros(shape=(N, 1))
+nodeN   = np.zeros(shape=(N, 1))
+nodeE	= np.zeros(shape=(N , trainLen * Tp))
+nodeTR	= np.zeros(shape=(N , trainLen))
+
+mg_inputs = np.zeros(shape=(N,trainLen))
+Wout = np.random.random((1,Tp))
+
+
+##  (Training) Apply masking to training data
+inputTR = np.ndarray(shape=((initLen + trainLen) * Tp,1))
+
+for k in range(0,(initLen + trainLen)):
+    uTR = data[0,k]
+    # multiply input by mask and convert to int
+    masked_input = (M * uTR)
+    inputTR[k*Tp:(k+1)*Tp] = masked_input.copy()
+
+##  (Training) Initialize the reservoir layer
+# No need to store these values since they won't be used in training
+for k in range(0,(initLen * Tp)):
+
+    # Compute the new input data for initialization
+    initJTR = gamma * (inputTR[k,0]) + eta * (nodeC[N-1,0])
+    
+    # Activation
+    nodeN[0,0]	= (mackey_glass(initJTR))
+    nodeN[1:N]  = nodeC[0:(N - 1)]
+    
+    # Update the current node state
+    nodeC       = nodeN.copy()
+
+##	(Training) Run data through the reservoir
+for k in range(0,trainLen):
+    for j in range(0,Tp):
+
+        # Define the time step that starts storing node states
+        t = initLen * Tp + k * Tp + j
+        
+        # Compute the new input data for training
+        trainJ = gamma * (inputTR[t,0]) + eta * (nodeC[N-1,0])
+
+
+        # Save MG Function Input for Backprop
+        mg_inputs[(Tp - 1) - j,k] = trainJ
+
+
+        # Activation
+        nodeN[0,0]	= (mackey_glass(trainJ))
+        nodeN[1:N]  = nodeC[0:(N - 1)]
+        
+        # Update the current node state
+        nodeC       = nodeN.copy()
+        
+        # Updete all node states
+        nodeE[:, k * Tp + j] = nodeC[:,0]
+
+
+# Consider the data just once everytime it loops around
+nodeTR[:,0:trainLen] = nodeE[:, N*np.arange(1,trainLen + 1)-1]
+
+errors = np.zeros(trainLen)
+for output_idx in range(trainLen):
+
+    predicted_output = np.dot(Wout,nodeTR[:,output_idx])
+    expected_output = target[0,initLen + output_idx]
+    mse = 0.5 * np.power(expected_output - predicted_output,2)
+
+    error_terms = (expected_output - predicted_output) * mackey_glass_deriv(mg_inputs[:,0])
+
+    Wout = Wout - 0.01 * error_terms
+
+
+    predicted_output = np.dot(Wout,nodeTR[:,output_idx])
+    expected_output = target[0,initLen + output_idx]
+    mse = 0.5 * np.power(expected_output - predicted_output,2)
+    
+    # if output_idx < 100:
+    #     print("=====================================================================")
+    #     print(f"error after  @ {output_idx} = {mse}")
+    #     # print(f"weight after  {Wout[0,0]}")
+    #     # print(f"prediction after  {predicted_output} (expected {expected_output})")
+    errors[output_idx] = mse
+
+# plt.plot(errors[100:])
+# plt.show()
+
+# Consider the data just once everytime it loops around
+nodeTR[:,0:trainLen] = nodeE[:, N*np.arange(1,trainLen + 1)-1]
+
+##  Train output weights using ridge regression
+
+# Call-out the target outputs
+Yt = target[0,initLen:(initLen + trainLen)].reshape(1,trainLen)
+
+
+
+# Calculate the NMSE
+predicted_target = np.dot(Wout,nodeTR)
+mse   = np.sum(np.power(Yt - predicted_target,2)) / Yt.size
+nrmse = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
+
+print('--------------------------------------------------')
+print('Training Errors')
+print(f'training mse: {mse}')
+print(f'training nrmse: {nrmse}')
+
+## (Testing) Initialize the reservoir layer
+
+# nodeC     = reservoir dynamic at the current cycle
+# nodeN     = reservoir dynamic at the next cycle
+# nodeE     = reservoir dynamic at every timestep during training
+# nodeTS    = a snapshot of all node states at each full rotation through 
+#             the reservoir during testing
+
+nodeC   = np.zeros(shape=(N, 1))
+nodeN   = np.zeros(shape=(N, 1))
+nodeE	= np.zeros(shape=(N , testLen * Tp))
+nodeTS	= np.zeros(shape=(N , testLen))
+
+
+##  (Testing) Apply masking to input testing data
+inputTS = np.ndarray(shape=((initLen + testLen) * Tp,1))
+
+for k in range(0,(initLen + testLen)):
+    uTS = data[0,initLen + trainLen + k]
+    masked_input = (M * uTS)
+    inputTS[k*Tp:(k+1)*Tp] = masked_input.copy()
+
+
+## (Testing) Initialize the reservoir layer
+
+# No need to store these values since they won't be used in testing
+for k in range(0,(initLen * Tp)):
+
+    # Compute the new input data for initialization
+    initJTS = gamma * (inputTS[k,0]) + eta * (nodeC[N-1,0])
+    
+    # Activation
+    nodeN[0,0]	= (mackey_glass(initJTS))
+    nodeN[1:N]  = nodeC[0:(N - 1)]
+    
+    # Update the current node state
+    nodeC       = nodeN.copy()
+
+
+
+##  (Testing) Run data through the reservoir
+for k in range(0,(testLen * Tp)):
+
+    # Define the time step that starts storing node states
+    t = initLen * Tp + k
+    
+    # Compute the new input data for training
+    testJ = gamma * (inputTS[t,0]) + eta * (nodeC[N-1,0])
+    
+    # Activation
+    nodeN[0,0]	= (mackey_glass(testJ))
+    nodeN[1:N]  = nodeC[0:(N - 1)]
+    
+    # Update the current node state
+    nodeC       = nodeN.copy()
+    
+    # Updete all node states
+    nodeE[:, k] = nodeC[:,0]
+
+
+
+# Consider the data just once everytime it loops around
+nodeTS[:,0:testLen] = nodeE[:, N*np.arange(1,testLen + 1)-1]
+
+
+##  Compute testing errors
+
+# Call-out the target outputs
+Yt = target[0,initLen + trainLen + initLen : initLen + trainLen + initLen + testLen].reshape(1,testLen)
+
+
+# Calculate the NMSE
+predicted_target = np.dot(Wout,nodeTS)
+mse   = np.sum(np.power(Yt - predicted_target,2)) / Yt.size
+nrmse = (np.linalg.norm(Yt - predicted_target) / np.linalg.norm(Yt))
+
+print('--------------------------------------------------')
+print('Testing Errors')
+print(f'testing mse: {mse}')
+print(f'testing nrmse: {nrmse}')
+
+plt.plot(Yt[0,0:100],"b-")
+plt.plot(predicted_target[0,0:100],"r--")
+# plt.plot(np.linspace(0,100,100))
+plt.show()
+
+
+# DFR: An Energy-efficient Analog Delay Feedback Reservoir Computing System
+# Table 2. Performance Comparison in Different Models
+#                           Model   Training Error (NRMSE)  Testing Error(NRMSE)    Error Rate Reduction
+# (Rodan and Tino2011)      ESN     /                       0.1075                  36.5%
+# (Appeltant et al.2011)    DFR     /                       0.15                    54.5%
+# (Goudarzi et al.2014)     DFR     0.065                   0.464                   85.3%
+# (Ortín and Pesquera2017)  DFR     /                       0.17                    59.8%
+# This Work                 DFR     0.0849                  0.0683                  /
