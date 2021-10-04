@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 from numpy.core.fromnumeric import shape
 from numpy.core.function_base import linspace
 
+
+# https://www.nature.com/articles/ncomms1476
+
 def mg(x):
 
     a = 2
@@ -56,9 +59,11 @@ y_relu_deriv = relu_deriv(x)
 
 ###############################################
 
-num_samples = 6000
+# num_samples = 6000
+num_samples = 10100
 init_samples = 100
-train_samples = 5900
+# train_samples = 5900
+train_samples = 10000
 
 rng = np.random.default_rng(0)
 
@@ -175,37 +180,31 @@ for i in range(train_samples):
 
     loss = np.sum(np.power(y_hat - y_train,2)) / train_samples
 
-    if (i % 100 == 0):
+    if (i % 1000 == 0):
         print(f"[{i}]BPTT MSE: {loss}")
-
-
 
     output_error = (y_hat[i] - y_train[i])
     for k in range(N):
         W[k] = W[k] - alpha * output_error * reservoir_history[i][k]
 
 print(f"BPTT MSE: {loss}")
-# print(y_train)
-# print(y_hat)
 
 
 # regression approach
-# reg = 1e-8
-reg = 0
+reg = 1e-8
+# reg = 0
 # y_train_2d = y_train.reshape(1,train_samples)
 W = np.dot(np.dot(y_train,reservoir_history),np.linalg.inv((np.dot(reservoir_history.T,reservoir_history)) + reg * np.eye(N)))
 y_hat_reg = reservoir_history.dot(W)
 loss = np.sum(np.power(y_hat_reg - y_train,2)) / train_samples
 print(f"Ridge Regression MSE: {loss}")
-# print(y_train)
-# print(y_hat)
 
 
 
 
-plt.plot(y_train[0:100],label="Y")
-plt.plot(y_hat[0:100],label="Y_hat BPTT")
-# plt.plot(y_hat_reg[0:100],label="Y_hat Regression")
+plt.plot(y_train[train_samples - 100:train_samples],label="Y")
+plt.plot(y_hat[train_samples - 100:train_samples],label="Y_hat BPTT")
+plt.plot(y_hat_reg[train_samples - 100:train_samples],label="Y_hat Regression")
 plt.legend()
 plt.show()
 
