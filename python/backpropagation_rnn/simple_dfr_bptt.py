@@ -108,105 +108,87 @@ y_train = y[init_samples:init_samples+train_samples]
 # mask [uniform,]
 # learning rate (alpha) [1,0.1,0.01,0.001,0.0001]
 
-N = 100
-gamma = 1
-eta = 1
-W = rng.random(N)
-
 
 ########### dfr
+for N in [10,20,30,40,50,60,70,80,90,100,200,300,400]:
+    for gamma in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]:
+        for eta in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]:
+            
+            # weight generation
+            W = rng.random(N)
 
-# mask = np.random.random(N)
-mask = rng.uniform(size=N)
-# mask = np.ones(N)
+            # mask = np.random.random(N)
+            mask = rng.uniform(size=N)
+            # mask = np.ones(N)
 
+            # mask generation
+            masked_samples = np.empty((num_samples,N))
+            for i in range(num_samples):
+                masked_samples[i] = mask * x_norm[i]
+            
+            reservoir = np.zeros(N)
+            reservoir_history = np.zeros((train_samples,N))
 
-masked_samples = np.empty((num_samples,N))
-for i in range(num_samples):
-    masked_samples[i] = mask * x_norm[i]
+            # initialization
+            for i in range(init_samples):
+                for j in range(N):
+                    a_i = gamma * masked_samples[i][j] + eta * reservoir[N - 1]
+                    g_i = mg(a_i)
+                    reservoir[1:N] = reservoir[0:N - 1]
+                    reservoir[0] = g_i
+                reservoir_history[i] = reservoir
 
+            reservoir_init = reservoir.copy()
 
-reservoir = np.zeros(N)
-reservoir_history = np.zeros((train_samples,N))
-
-for i in range(init_samples):
-    for j in range(N):
-        a_i = gamma * masked_samples[i][j] + eta * reservoir[N - 1]
-        g_i = mg(a_i)
-        # g_i = relu(np.array([a_i]))
-        g_i = np.tanh(a_i)
-        reservoir[1:N] = reservoir[0:N - 1]
-        reservoir[0] = g_i
-    reservoir_history[i] = reservoir
-
-for i in range(train_samples):
-    for j in range(N):
-        a_i = gamma * masked_samples[i][j] + eta * reservoir[N - 1]
-        g_i = mg(a_i)
-        # g_i = relu(np.array([a_i]))
-        g_i = np.tanh(a_i)
-        reservoir[1:N] = reservoir[0:N - 1]
-        reservoir[0] = g_i
-    reservoir_history[i] = reservoir
-
-
-
-# perform backprop
-# epochs = 1000 # training loops
-# alpha = 0.0001 # learning rate
-# for epoch in range(epochs):
-    
-#     y_hat = reservoir_history.dot(W)
-
-#     loss = np.sum(np.power(y_hat - y_train,2)) / train_samples
-    
-#     if (epoch % 100 == 0):
-#         print(f"[{epoch}] BPTT MSE: {loss}")
-
-    
-
-#     output_error = (y_hat - y_train)
-#     for k in range(N):
-#         partial_deriv_readout = 0
-#         for i in range(train_samples):
-#             partial_deriv_readout += output_error[i] * reservoir_history[i][k]
-#         W[k] = W[k] - alpha * partial_deriv_readout
-
-# perform stochastic backprop
-alpha = 0.0001 # learning rate
-
-for i in range(train_samples):
-    y_hat = reservoir_history.dot(W)
-
-    loss = np.sum(np.power(y_hat - y_train,2)) / train_samples
-
-    if (i % 1000 == 0):
-        print(f"[{i}]BPTT MSE: {loss}")
-
-    output_error = (y_hat[i] - y_train[i])
-    for k in range(N):
-        W[k] = W[k] - alpha * output_error * reservoir_history[i][k]
-
-print(f"BPTT MSE: {loss}")
+            # dfr stage
+            for i in range(train_samples):
+                for j in range(N):
+                    a_i = gamma * masked_samples[i][j] + eta * reservoir[N - 1]
+                    g_i = mg(a_i)
+                    reservoir[1:N] = reservoir[0:N - 1]
+                    reservoir[0] = g_i
+                reservoir_history[i] = reservoir
 
 
-# regression approach
-reg = 1e-8
-# reg = 0
-# y_train_2d = y_train.reshape(1,train_samples)
-W = np.dot(np.dot(y_train,reservoir_history),np.linalg.inv((np.dot(reservoir_history.T,reservoir_history)) + reg * np.eye(N)))
-y_hat_reg = reservoir_history.dot(W)
-loss = np.sum(np.power(y_hat_reg - y_train,2)) / train_samples
-print(f"Ridge Regression MSE: {loss}")
+
+            # perform stochastic backprop
+            alpha = 0.0001 # learning rate
+            for i in range(train_samples):
+                y_hat = reservoir_history.dot(W)
+
+                # loss = np.sum(np.power(y_hat - y_train,2)) / train_samples
+
+                # nrmse
+                loss = (np.linalg.norm(y_train - y_hat) / np.linalg.norm(y_train))
+
+                # if (i % 1000 == 0):
+                #     print(f"[{i}]BPTT NRMSE: {loss}")
+
+                output_error = (y_hat[i] - y_train[i])
+                for k in range(N):
+                    W[k] = W[k] - alpha * output_error * reservoir_history[i][k]
+                
+
+            print(f"BPTT NRMSE: {loss}\tN = {N}\tgamma = {gamma}\teta = {eta}")
+
+
+            # regression approach
+            reg = 1e-8
+            # reg = 0
+            W = np.dot(np.dot(y_train,reservoir_history),np.linalg.inv((np.dot(reservoir_history.T,reservoir_history)) + reg * np.eye(N)))
+            y_hat_reg = reservoir_history.dot(W)
+            # loss = np.sum(np.power(y_hat_reg - y_train,2)) / train_samples
+            loss = (np.linalg.norm(y_train - y_hat_reg) / np.linalg.norm(y_train))
+            print(f"Ridge Regression NRMSE: {loss}")
 
 
 
 
-plt.plot(y_train[train_samples - 100:train_samples],label="Y")
-plt.plot(y_hat[train_samples - 100:train_samples],label="Y_hat BPTT")
-plt.plot(y_hat_reg[train_samples - 100:train_samples],label="Y_hat Regression")
-plt.legend()
-plt.show()
+# plt.plot(y_train[train_samples - 100:train_samples],label="Y")
+# plt.plot(y_hat[train_samples - 100:train_samples],label="Y_hat BPTT")
+# plt.plot(y_hat_reg[train_samples - 100:train_samples],label="Y_hat Regression")
+# plt.legend()
+# plt.show()
 
 
 
