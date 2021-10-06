@@ -5,7 +5,8 @@ set_param general.maxThreads 8
 # Create Project
 create_project dfr_core_system_project ./dfr_core_system_project -part xc7z020clg484-1 -force
 
-set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
+# set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
+set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
 
 # Add Custom IP
 set_property  ip_repo_paths  /home/oshears/Documents/vt/research/code/verilog/hybrid_dfr_system/ [current_project]

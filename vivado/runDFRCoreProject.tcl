@@ -8,7 +8,8 @@ set_param general.maxThreads 8
 
 create_project dfr_core_project ./dfr_core_project -part xc7z020clg484-1 -force
 
-set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
+# set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
+set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
 
 add_files {
     ../rtl/src/register.sv 
