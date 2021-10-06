@@ -19,7 +19,7 @@ gamma = 0.1
 eta = 0.5
 tau = 80
 N = 400
-theta = tau / N
+theta = tau / N # node separation: more delay = higher separation; more nodes = lower separation
 
 # def mg(X,J):
 def mg(x):
@@ -94,8 +94,9 @@ print(f"Ridge Regression NRMSE (Kian): {loss}")
 
 
 plt_samples = 200
-plt.plot(y_train[m - plt_samples:m],label="Y")
+plt.plot(y_train[:plt_samples],label="Y")
 # plt.plot(y_hat[train_samples - 100:train_samples],label="Y_hat BPTT")
-plt.plot(y_hat_reg[m - plt_samples:m],label="Y_hat Regression")
+plt.plot(y_hat_reg[:plt_samples],label="Y_hat Regression")
 plt.legend()
 plt.show()
+
