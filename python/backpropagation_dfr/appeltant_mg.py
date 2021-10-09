@@ -18,7 +18,7 @@ init_samples = 200
 # m = 5900
 m = 4000
 
-gamma = 0.1
+gamma = 0.05
 eta = 0.5
 
 if len(sys.argv) > 2:
@@ -34,7 +34,8 @@ theta = tau / N # node separation: more delay = higher separation; more nodes = 
 def mg(x):
     C = 1.33
     # p = 6.88
-    p = 7
+    # p = 7
+    p = 1
     b = 0.4
 
     return C * x / (1 + np.power(b * x,p)) 
