@@ -89,6 +89,9 @@ int main(){
     int tau = 80;
     int N = 400;
 
+    // learning rate for backpropagation
+    float alpha = 0.0001;
+
 
     // inputs & outputs
     float* u = narma10_inputs(num_samples);
@@ -100,9 +103,12 @@ int main(){
     // weights
     float* W = generate_weights(N);
 
-    // reservoir initialization
+    
+    // reservoir state
     float X[N];
+    float X_prev[N];
 
+    // reservoir initialization
     for(int k = 0; k < init_samples; k++){
         for(int node_idx = 0; node_idx < N; node_idx++){
             
@@ -126,8 +132,19 @@ int main(){
 
     // reservoir evaluation
 
+    float output_error = 0;
+
     for(int k = 0; k < m; k++){
+
+        // reset output result
+        float y_hat = 0;
+
         for(int node_idx = 0; node_idx < N; node_idx++){
+
+            // update weights for prev sample
+            if (k > 0){
+                W[node_idx] = W[node_idx] - alpha * output_error * X[N - 1];
+            }
             
             float J = M[node_idx] * u[init_samples + k];
 
@@ -144,7 +161,19 @@ int main(){
             }
             X[0] = mg_out;
 
+            // update output calculation
+            y_hat = y_hat + W[node_idx] * mg_out;
+
         }
+
+        // calculate error MSE
+        output_error = y_hat - y[k];
+        float mse = (output_error * output_error) / 2;
+
+        if (k % 1000 == 0){
+            printf("MSE[%d] = %f\n",k,mse);
+        }
+        
     }
 
 
