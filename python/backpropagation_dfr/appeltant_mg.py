@@ -8,14 +8,11 @@ import sys
 # https://core.ac.uk/download/pdf/33010007.pdf
 
 
-# rng = np.random.default_rng()
 rng = np.random.default_rng(0)
 
 
 num_samples = 6000
-# init_samples = 100
 init_samples = 200
-# m = 5900
 m = 4000
 
 gamma = 0.05
@@ -50,8 +47,9 @@ def narma10_create(inLen):
     # Compute the target matrix
     tar = np.zeros(inLen)
 
-    for k in range(10,(inLen - 1)):
+    for k in range(9,(inLen - 1)):
         tar[k+1] = 0.3 * tar[k] + 0.05 * tar[k] * np.sum(tar[k-9:k]) + 1.5 * inp[k] * inp[k - 9] + 0.1
+    
     
     return (inp, tar)
 
