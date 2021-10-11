@@ -62,13 +62,13 @@ float* generate_mask(int size){
     return mask;
 }
 
-// generate random weight matrix
+// generate random weight matrix in range [-1,1]
 float* generate_weights(int size){
 
     float* weights = (float*) malloc(sizeof(float)*size);
 
     for(int i = 0; i < size; i++){
-        weights[i] = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        weights[i] = 2 * ( static_cast<float>(rand()) / static_cast<float>(RAND_MAX) ) - 1;
     }
     return weights;
 }
@@ -112,9 +112,10 @@ int main(){
     for(int k = 0; k < init_samples; k++){
         for(int node_idx = 0; node_idx < N; node_idx++){
             
+            // calculated masked input
             float J = M[node_idx] * u[k];
 
-            // if reservoir has processed the first sample
+            // if reservoir has processed the first sample, adjust the mg function input
             float mg_out = 0;
             if(k > 0)
                 mg_out = mackey_glass(gamma * J + eta * X[N - 1]);
@@ -134,6 +135,8 @@ int main(){
 
     float output_error = 0;
 
+    float total_error = 0;
+
     for(int k = 0; k < m; k++){
 
         // reset output result
@@ -146,14 +149,11 @@ int main(){
                 W[node_idx] = W[node_idx] - alpha * output_error * X[N - 1];
             }
             
+            // calculated masked input
             float J = M[node_idx] * u[init_samples + k];
 
-            // if reservoir has processed the first sample
-            float mg_out = 0;
-            if(k > 0)
-                mg_out = mackey_glass(gamma * J + eta * X[N - 1]);
-            else
-                mg_out = mackey_glass(gamma * J);
+            // calculate next node value
+            float mg_out = mackey_glass(gamma * J + eta * X[N - 1]);
             
             // update node states
             for(int i = N - 1; i > 0; i--){
@@ -168,9 +168,12 @@ int main(){
 
         // calculate error MSE
         output_error = y_hat - y[k];
-        float mse = (output_error * output_error) / 2;
 
-        if (k % 1000 == 0){
+        // report MSE over time
+        total_error += (output_error * output_error);
+        if (k % 100 == 0){
+            // float mse = (output_error * output_error);
+            float mse = total_error / (k + 1);
             printf("MSE[%d] = %f\n",k,mse);
         }
         
