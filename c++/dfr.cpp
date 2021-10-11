@@ -13,10 +13,11 @@ float mackey_glass(float x){
 
 // narma10 inputs
 float* narma10_inputs(int size){
-    float inputs[size];
+
+    float* inputs = (float*) malloc(sizeof(float)*size);
 
     for (int i = 0; i < size; i++){
-        float u = 0.2 * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) - 0.1;
+        float u = 0.5 * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
         inputs[i] = u;
     }
 
@@ -26,7 +27,7 @@ float* narma10_inputs(int size){
 // narma10 outputs
 float* narma10_outputs(float* inputs, int size){
 
-    float outputs[size];
+    float* outputs = (float*) malloc(sizeof(float)*size);
 
     for (int i = 0; i < 10; i++){
         outputs[i] = 0;
@@ -41,7 +42,6 @@ float* narma10_outputs(float* inputs, int size){
             sum = sum + outputs[i - j];
         }
 
-
         outputs[i + 1] = 0.3 * outputs[i] + 0.05 * outputs[i] * sum + 1.5 * inputs[i] * inputs[i - 9] + 0.1;
     }
 
@@ -51,7 +51,8 @@ float* narma10_outputs(float* inputs, int size){
 // generate mask of random values of -0.1 or 0.1
 float* generate_mask(int size){
 	
-	float mask[size];
+    float* mask = (float*) malloc(sizeof(float)*size);
+
 
     for(int i = 0; i < size; i++){
         int random = rand();
@@ -63,7 +64,9 @@ float* generate_mask(int size){
 
 // generate random weight matrix
 float* generate_weights(int size){
-    float weights[size];
+
+    float* weights = (float*) malloc(sizeof(float)*size);
+
     for(int i = 0; i < size; i++){
         weights[i] = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     }
@@ -72,6 +75,9 @@ float* generate_weights(int size){
 
 
 int main(){
+
+    // set random number generator seed
+    srand(0);
     
     int num_samples = 6000;
     int init_samples = 200;
@@ -141,7 +147,5 @@ int main(){
         }
     }
 
-
-    // ridge regression
 
 }
