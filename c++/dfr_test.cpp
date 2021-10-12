@@ -3,9 +3,7 @@
 
 #include "dfr.h"
 
-int main(){
-
-    dfr_test();
+void dfr_test(){
 
     // set random number generator seed
     srand(0);
@@ -98,18 +96,15 @@ int main(){
     // keep track of the output index
     int output_idx = 0;
 
+    // reservoir history
+    float X_history[m][N];
+
     // loop from the end of the initialization samples to the end of the training data
     for(int k = init_samples; k < train_data_end_idx; k++){
-
-        // reset output result
-        float dfr_out = 0;
 
         // process each masked input sample (each theta in tau == each node in N)
         for(int node_idx = 0; node_idx < N; node_idx++){
 
-            // if the first training sample was processed, update the current node's weights based on the error of the previous sample
-            if (output_idx > 0) W[node_idx] = W[node_idx] - alpha * output_error * X[LAST_NODE];
-            
             // calculated masked input
             float J = M[node_idx] * u[k];
 
@@ -123,28 +118,64 @@ int main(){
             X[0] = mg_out;
 
             // update dfr output calculation (matrix-vector multiplication)
-            dfr_out += W[node_idx] * mg_out;
+            X_history[output_idx][node_idx] = mg_out;
 
         }
-
-        // store dfr output after the sample has been fully processed
-        y_hat[output_idx++] = dfr_out;
-
-        // calculate the difference between the predicted output and expected output
-        output_error = dfr_out - y[output_idx];
-
-        // DEBUG: report MSE over time
-        total_error += (output_error * output_error);
-        if (output_idx % 1000 == 0){
-            float mse = total_error / (k + 1);
-            printf("MSE[%d] = %f\n",k,mse);
-        }
-
+        output_idx++;
     }
 
-    // calculate the NRMSE of the predicted output
-    float nrmse = get_nrmse(y_hat,y,m);
-    printf("Train NRMSE = %f\n",nrmse);
+    float output_errors[m];
+
+    float nrmse;
+
+    // standard gradient descent w/ epochs
+
+    int epochs = 1000;
+    for(int iter = 0; iter < epochs; iter++){
+
+        // calculate output
+        for(int sample = 0; sample < m; sample++){
+            float output = 0;
+            for (int node = 0; node < N; node++){
+                output += W[LAST_NODE - node] * X[node];
+            }
+
+            // calculate error
+            output_errors[sample] = output - y[sample];
+            y_hat[sample] = output;
+        }
+
+        // calculate the NRMSE of the predicted output
+        if (iter % 100 == 0){
+            nrmse = get_nrmse(y_hat,y,m);
+            printf("[%d] Train NRMSE = %f\n",iter,nrmse);
+        }
+            
+        // adjust weights
+        float delta_W_sum = 0;
+        for(int sample = 0; sample < m; sample++){
+            for(int node = 0; node < N; node++){
+                //adjust weights
+                float delta_W = alpha * output_errors[sample] * X[node];
+                
+                if (node == 0)
+                    delta_W_sum += delta_W;
+                
+                W[LAST_NODE - node] = W[LAST_NODE - node] - delta_W;
+
+                if (iter % 100 == 0 && sample == 0 && node == 0){
+                    printf("\tdelta_W: %f\n",delta_W);
+                }
+            }
+            
+        }
+        if (iter % 100 == 0){
+            printf("\tdelta_W Sum = %f\n",delta_W_sum);
+        }
+        
+    }
+
+    
 
 
     // testing phase

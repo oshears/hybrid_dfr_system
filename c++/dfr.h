@@ -21,3 +21,6 @@ float norm(float* x, int size);
 
 // calculate kian's nrmse
 float get_nrmse(float* y_hat, float* y, int size);
+
+// test area
+void dfr_test();

@@ -19,8 +19,7 @@ float* generate_mask(int size){
 
 
     for(int i = 0; i < size; i++){
-        int random = rand();
-        mask[i] = (random & 1 == 0) ? 0.1 : -0.1;
+        mask[i] = (rand() & 0x1) ? 0.1 : -0.1;
     }
 
     return mask;

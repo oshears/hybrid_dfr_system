@@ -65,17 +65,6 @@ train_samples = 4000
 
 rng = np.random.default_rng(0)
 
-# x = linspace(1,num_samples,num_samples)
-
-# # expected output
-# y = np.empty(num_samples)
-# for i in range(num_samples):
-#     if i < 2:
-#         y[i] = 0
-#     else:
-#         y[i] = np.sum(x[i - 2:i+1])
-
-
 # NARMA10
 def narma10_create(inLen):
 
@@ -91,8 +80,6 @@ def narma10_create(inLen):
     return (inp, tar)
 
 x, y = narma10_create(num_samples)
-
-# x_norm = x / np.max(x)
 
 y_train = y[init_samples:init_samples+train_samples]
 
@@ -115,8 +102,6 @@ alpha = 0.001  # learning rate
 # weight generation
 W = (2*rng.random(N) - 1) * 1e-3
 
-# mask = np.random.random(N)
-# mask = rng.uniform(size=N)
 mask = rng.choice([-0.1,0.1],N)
 
 # mask generation
@@ -130,12 +115,9 @@ reservoir_history = np.zeros((train_samples,N))
 # initialization
 for i in range(init_samples):
     for j in range(N):
-        a_i = gamma * masked_samples[i][j] + eta * reservoir[N - 1]
-        g_i = mg(a_i)
+        g_i = mg(gamma * masked_samples[i][j] + eta * reservoir[N - 1])
         reservoir[1:N] = reservoir[0:N - 1]
         reservoir[0] = g_i
-
-reservoir_init = reservoir.copy()
 
 # dfr stage
 output_error = 0
@@ -146,11 +128,9 @@ y_hat = np.zeros(train_samples)
 for i in range(train_samples):
     for j in range(N):
 
-        if(i > 0):
-            W[j] = W[j] - alpha * output_error * reservoir[N - 1]
+        W[j] = (W[j] - alpha * output_error * reservoir[N - 1]) if (i > 0) else W[j]
 
-        a_i = gamma * masked_samples[i + init_samples][j] + eta * reservoir[N - 1]
-        g_i = mg(a_i)
+        g_i = mg(gamma * masked_samples[i + init_samples][j] + eta * reservoir[N - 1])
         reservoir[1:N] = reservoir[0:N - 1]
         reservoir[0] = g_i
 
