@@ -5,7 +5,8 @@
 
 int main(){
 
-    dfr_test();
+    dfr_batch_gd_test();
+    dfr_batch_sgd_test();
 
     // set random number generator seed
     srand(0);
