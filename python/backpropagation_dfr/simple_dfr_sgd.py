@@ -110,7 +110,7 @@ N = 400
 gamma = 0.05
 eta = 0.5
 
-alpha = 0.001 # learning rate
+alpha = 0.001  # learning rate
 
 # weight generation
 W = (2*rng.random(N) - 1) * 1e-3
@@ -162,7 +162,7 @@ for i in range(train_samples):
         running_mse = total_error / (i + 1)
         print(f"MSE[{i}]: {running_mse}")
 
-        print(f"Error Before: {}; Error After: {}")
+        # print(f"Error Before: {}; Error After: {}")
 
     reservoir_history[i] = reservoir
 
@@ -194,5 +194,3 @@ W = np.dot(np.dot(y_train,reservoir_history),np.linalg.inv((np.dot(reservoir_his
 y_hat_reg = reservoir_history.dot(W)
 loss = (np.linalg.norm(y_train - y_hat_reg) / np.linalg.norm(y_train))
 print(f"Ridge Regression NRMSE: {loss}")
-
-print(W)

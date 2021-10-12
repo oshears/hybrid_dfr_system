@@ -44,3 +44,8 @@ dfr_core_system_test_app_system
 /embedded_linux/demo_petalinux
 embedded_linux/avnet-digilent-zedboard-v2020.2-final.bsp
 misc/.~lock.xadc_timings.ods#
+
+# VS Code
+tasks.json
+c_cpp_properties.json
+launch.json
