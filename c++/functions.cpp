@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #include "dfr.h"
 
@@ -33,7 +32,7 @@ float* generate_weights(int size){
     float* weights = (float*) malloc(sizeof(float)*size);
 
     for(int i = 0; i < size; i++){
-        weights[i] = 2 * ( static_cast<float>(rand()) / static_cast<float>(RAND_MAX) ) - 1;
+        weights[i] = (2 * ( static_cast<float>(rand()) / static_cast<float>(RAND_MAX) ) - 1 ) * 0.001;
     }
     return weights;
 }

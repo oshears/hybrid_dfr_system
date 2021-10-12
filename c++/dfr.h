@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 //mackey glass function
 float mackey_glass(float x);

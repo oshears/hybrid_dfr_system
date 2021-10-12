@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #include "dfr.h"
 
@@ -125,7 +124,7 @@ int main(){
             X[0] = mg_out;
 
             // update dfr output calculation (matrix-vector multiplication)
-            dfr_out = dfr_out + W[node_idx] * mg_out;
+            dfr_out += W[node_idx] * mg_out;
 
         }
 
@@ -206,7 +205,7 @@ int main(){
             X[0] = mg_out;
 
             // update output calculation
-            dfr_out = dfr_out + W[node_idx] * mg_out;
+            dfr_out += W[node_idx] * mg_out;
 
         }
 
