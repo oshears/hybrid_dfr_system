@@ -22,6 +22,7 @@ int main(){
 
     // number of virtual nodes
     int N = 400;
+    int LAST_NODE = N - 1;
 
     // learning rate for sgd
     float alpha = 0.0001;
@@ -71,12 +72,11 @@ int main(){
             float J = M[node_idx] * u[k];
 
             // perform nonlinear transformation on the input data and reservoir feedback
-            float mg_out  = mackey_glass(gamma * J + eta * X[N - 1]);
+            float mg_out  = mackey_glass(gamma * J + eta * X[LAST_NODE]);
             
             // update node states by shifting each value to the next virtual node
-            for(int i = N - 1; i > 0; i--){
+            for(int i = LAST_NODE; i > 0; i--)
                 X[i] = X[i - 1];
-            }
 
             // store the current output in the first virtual node
             X[0] = mg_out;
@@ -108,20 +108,18 @@ int main(){
         for(int node_idx = 0; node_idx < N; node_idx++){
 
             // if the first training sample was processed, update the current node's weights based on the error of the previous sample
-            if (output_idx > 0){
-                W[node_idx] = W[node_idx] - alpha * output_error * X[N - 1];
-            }
+            if (output_idx > 0)
+                W[node_idx] = W[node_idx] - alpha * output_error * X[LAST_NODE];
             
             // calculated masked input
             float J = M[node_idx] * u[k];
 
             // perform nonlinear transformation on the input data and reservoir feedback
-            float mg_out = mackey_glass(gamma * J + eta * X[N - 1]);
+            float mg_out = mackey_glass(gamma * J + eta * X[LAST_NODE]);
             
             // update node states by shifting each value to the next virtual node
-            for(int i = N - 1; i > 0; i--){
+            for(int i = LAST_NODE; i > 0; i--)
                 X[i] = X[i - 1];
-            }
 
             // store the current output in the first virtual node
             X[0] = mg_out;
@@ -132,7 +130,7 @@ int main(){
         }
 
         // store dfr output after the sample has been fully processed
-        y_hat[output_idx] = dfr_out;
+        y_hat[output_idx++] = dfr_out;
 
         // calculate the difference between the predicted output and expected output
         output_error = dfr_out - y[output_idx];
@@ -143,7 +141,7 @@ int main(){
             float mse = total_error / (k + 1);
             printf("MSE[%d] = %f\n",k,mse);
         }
-        
+
     }
 
     // calculate the NRMSE of the predicted output
@@ -173,12 +171,11 @@ int main(){
             float J = M[node_idx] * u[k];
 
             // if reservoir has processed the first sample, adjust the mg function input
-            float mg_out = mackey_glass(gamma * J + eta * X[N - 1]);
+            float mg_out = mackey_glass(gamma * J + eta * X[LAST_NODE]);
             
             // update node states
-            for(int i = N - 1; i > 0; i--){
+            for(int i = LAST_NODE; i > 0; i--)
                 X[i] = X[i - 1];
-            }
             X[0] = mg_out;
 
         }
@@ -201,12 +198,11 @@ int main(){
             float J = M[node_idx] * u[k];
 
             // calculate next node value
-            float mg_out = mackey_glass(gamma * J + eta * X[N - 1]);
+            float mg_out = mackey_glass(gamma * J + eta * X[LAST_NODE]);
             
             // update node states
-            for(int i = N - 1; i > 0; i--){
+            for(int i = LAST_NODE; i > 0; i--)
                 X[i] = X[i - 1];
-            }
             X[0] = mg_out;
 
             // update output calculation
@@ -215,11 +211,11 @@ int main(){
         }
 
         // store dfr output
-        y_hat_test[output_idx] = dfr_out;
+        y_hat_test[output_idx++] = dfr_out;
 
     }
 
-    nrmse = get_nrmse(y_hat,y,m);
+    nrmse = get_nrmse(y_hat_test,y,m);
     printf("Test NRMSE = %f\n",nrmse);
 
 
