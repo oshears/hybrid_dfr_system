@@ -127,6 +127,7 @@ void dfr_batch_gd_test(){
     float output_errors[m];
 
     float nrmse;
+    float mse;
 
     // standard gradient descent w/ epochs
 
@@ -149,6 +150,9 @@ void dfr_batch_gd_test(){
         if (iter % (epochs/4) == 0){
             nrmse = get_nrmse(y_hat,y,m);
             printf("[%d] Train NRMSE = %f\n",iter,nrmse);
+
+            mse = get_mse(y_hat,y,m);
+            printf("Train MSE = %f\n",mse);
         }
             
         // adjust weights
@@ -240,6 +244,9 @@ void dfr_batch_gd_test(){
 
     nrmse = get_nrmse(y_hat_test,y,m);
     printf("Test NRMSE = %f\n",nrmse);
+
+    mse = get_mse(y_hat_test,y,m);
+    printf("Test MSE = %f\n",mse);
 
 
 }
@@ -397,6 +404,9 @@ void dfr_batch_sgd_test(){
     float nrmse = get_nrmse(y_hat,y,m);
     printf("Train NRMSE = %f\n",nrmse);
 
+    float mse = get_mse(y_hat,y,m);
+    printf("Train MSE = %f\n",mse);
+
 
     // testing phase
 
@@ -464,6 +474,9 @@ void dfr_batch_sgd_test(){
 
     nrmse = get_nrmse(y_hat_test,y,m);
     printf("Test NRMSE = %f\n",nrmse);
+
+    mse = get_mse(y_hat_test,y,m);
+    printf("Test MSE = %f\n",mse);
 
 
 }

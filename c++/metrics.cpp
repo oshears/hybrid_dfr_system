@@ -30,3 +30,17 @@ float get_nrmse(float* y_hat, float* y, int size){
     return norm(y_error,size) / norm(y,size);
 }
 
+float get_mse(float* y_hat, float* y, int size){
+    float mse = 0;
+
+
+    for (int i = 0; i < size; i++){
+        float y_error = y_hat[i] - y[i];
+        mse += (y_error * y_error);
+    }
+    mse /= size;
+
+    return mse;
+
+}
+

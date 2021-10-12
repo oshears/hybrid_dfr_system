@@ -146,6 +146,9 @@ int main(){
     // calculate the NRMSE of the predicted output
     float nrmse = get_nrmse(y_hat,y,m);
     printf("Train NRMSE = %f\n",nrmse);
+    
+    float mse = get_mse(y_hat,y,m);
+    printf("Train MSE = %f\n",mse);
 
 
     // testing phase
@@ -214,6 +217,9 @@ int main(){
 
     nrmse = get_nrmse(y_hat_test,y,m);
     printf("Test NRMSE = %f\n",nrmse);
+
+    mse = get_mse(y_hat_test,y,m);
+    printf("Test MSE = %f\n",mse);
 
 
 }

@@ -22,6 +22,9 @@ float norm(float* x, int size);
 // calculate kian's nrmse
 float get_nrmse(float* y_hat, float* y, int size);
 
+// calculate mean squared error
+float get_mse(float* y_hat, float* y, int size);
+
 // test area
 void dfr_batch_gd_test();
 void dfr_batch_sgd_test();
