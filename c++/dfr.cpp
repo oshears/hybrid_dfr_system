@@ -137,17 +137,19 @@ int main(){
         // DEBUG: report NRMSE over time
         if (output_idx % 1000 == 0){
             float nrmse = get_nrmse(y_hat,y,k);
-            printf("Train NRMSE[%d] = %f\n",k,nrmse);
+            printf("Train NRMSE[%d]\t= %f\n",k,nrmse);
         }
 
     }
 
+    printf("=====================\n");
+
     // calculate the NRMSE of the predicted output
     float nrmse = get_nrmse(y_hat,y,m);
-    printf("Train NRMSE = %f\n",nrmse);
+    printf("Train NRMSE\t= %f\n",nrmse);
     
     float mse = get_mse(y_hat,y,m);
-    printf("Train MSE = %f\n",mse);
+    printf("Train MSE\t= %f\n",mse);
 
 
     // testing phase
@@ -214,11 +216,14 @@ int main(){
 
     }
 
+    printf("=====================\n");
+
+
     nrmse = get_nrmse(y_hat_test,y,m);
-    printf("Test NRMSE = %f\n",nrmse);
+    printf("Test NRMSE\t= %f\n",nrmse);
 
     mse = get_mse(y_hat_test,y,m);
-    printf("Test MSE = %f\n",mse);
+    printf("Test MSE\t= %f\n",mse);
 
 
 }
