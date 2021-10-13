@@ -102,10 +102,10 @@ int main(){
     // keep track of the output error for each sample
     float output_error = 0;
 
-    // keep track of the output predictions
+    // keep track of the output predictions (y_hat)
     float* y_hat = new float[m_train]();
 
-    // keep track of the output index
+    // keep track of output index, start from 0
     int output_idx = 0;
 
     // loop from the end of the initialization samples to the end of the training data
@@ -178,20 +178,22 @@ int main(){
 
     // reservoir initialization
     
-    // process each input sample
+    // loop for init_samples
     for(int k = test_init_start_data_idx; k < test_data_start_idx; k++){
 
-        // process the masked samples from the current input sample
+        // process each masked input sample (each theta in tau == each node in N)
         for(int node_idx = 0; node_idx < N; node_idx++){
             
-            // calculated masked input
+            // calculate current masked input
             float J = M[node_idx] * u[k];
 
-            // if reservoir has processed the first sample, adjust the mg function input
+            // perform nonlinear transformation on the input data and reservoir feedback
             float mg_out = mackey_glass(gamma * J + eta * X[LAST_NODE]);
             
-            // update node states
+            // update node states by shifting each value to the next virtual node
             for(int i = LAST_NODE; i > 0; i--) X[i] = X[i - 1];
+
+            // store the current output in the first virtual node
             X[0] = mg_out;
 
         }
@@ -199,37 +201,39 @@ int main(){
 
     // reservoir evaluation
 
-    // keep track of output predictions (y_hat)
+    // keep track of the output predictions (y_hat)
     float* y_hat_test = new float[m_test]();
 
     // keep track of output index, start from 0
     output_idx = 0;
 
-    // process each input sample
+    // loop from the end of the initialization samples to the end of the test data
     for(int k = test_data_start_idx; k < test_data_end_idx; k++){
 
         // reset output result
         float dfr_out = 0;
 
-        // process each masked samples from the current input sample
+        // process each masked input sample (each theta in tau == each node in N)
         for(int node_idx = 0; node_idx < N; node_idx++){
 
             // calculated masked input
             float J = M[node_idx] * u[k];
 
-            // calculate next node value
+            // perform nonlinear transformation on the input data and reservoir feedback
             float mg_out = mackey_glass(gamma * J + eta * X[LAST_NODE]);
             
-            // update node states
+            // update node states by shifting each value to the next virtual node
             for(int i = LAST_NODE; i > 0; i--) X[i] = X[i - 1];
+
+            // store the current output in the first virtual node
             X[0] = mg_out;
 
-            // update output calculation
+            // update dfr output calculation (matrix-vector multiplication)
             dfr_out += W[node_idx] * mg_out;
 
         }
 
-        // store dfr output
+        // store dfr output after the sample has been fully processed
         y_hat_test[output_idx++] = dfr_out;
 
     }
