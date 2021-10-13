@@ -36,16 +36,16 @@ int main(){
     // ================== inputs & outputs ================== //
 
     // total number of samples
-    int num_samples = 30000;
+    int num_samples = 10000;
 
     // number of initialization samples
     int init_samples = 200;
 
     // number of training samples
-    int m_train = 20000;
+    int m_train = 4000;
 
     // number of testing samples
-    int m_test = 5000;
+    int m_test = 1000;
 
     // generate narma10 inputs and outputs
     float* u = narma10_inputs(num_samples);
@@ -113,9 +113,6 @@ int main(){
     // keep track of the output error for each sample
     float output_error = 0;
 
-    // keep track of the output predictions (y_hat)
-    float* y_hat = new float[m_train]();
-
     // keep track of output index, start from 0
     int output_idx = 0;
 
@@ -148,28 +145,85 @@ int main(){
 
         }
 
-        // store dfr output after the sample has been fully processed
-        y_hat[output_idx++] = dfr_out;
-
         // calculate the difference between the predicted output and expected output
         output_error = dfr_out - y_train[output_idx];
 
-        // DEBUG: report NRMSE over time
-        if (output_idx % 1000 == 0){
-            float nrmse = get_nrmse(y_hat, y_train, output_idx+1);
-            printf("Train NRMSE[%d]\t= %f\n", k, nrmse);
+    }
+
+    // =============== training evaluation phase =============== //
+
+    // reservoir initialization
+
+    // clear reservoir
+    for (int i = 0; i < N; i++) X[i] = 0;
+
+    // loop for init_samples
+    for(int k = 0; k < train_data_start_idx; k++){
+
+        // process each masked input sample (each theta in tau == each node in N)
+        for(int node_idx = 0; node_idx < N; node_idx++){
+            
+            // calculate current masked input
+            float J = M[node_idx] * u[k];
+
+            // perform nonlinear transformation on the input data and reservoir feedback
+            float mg_out  = mackey_glass(gamma * J + eta * X[LAST_NODE]);
+            
+            // update node states by shifting each value to the next virtual node
+            for(int i = LAST_NODE; i > 0; i--) X[i] = X[i - 1];
+
+            // store the current output in the first virtual node
+            X[0] = mg_out;
+
+        }
+    }
+
+    // reservoir evaluation
+
+    // keep track of the output predictions (y_hat_train)
+    float* y_hat_train = new float[m_train]();
+
+    // keep track of output index, start from 0
+    output_idx = 0;
+
+    // loop from the end of the initialization samples to the end of the training data
+    for(int k = train_data_start_idx; k < train_data_end_idx; k++){
+
+        // reset output result
+        float dfr_out = 0;
+
+        // process each masked input sample (each theta in tau == each node in N)
+        for(int node_idx = 0; node_idx < N; node_idx++){
+
+            // calculated masked input
+            float J = M[node_idx] * u[k];
+
+            // perform nonlinear transformation on the input data and reservoir feedback
+            float mg_out = mackey_glass(gamma * J + eta * X[LAST_NODE]);
+            
+            // update node states by shifting each value to the next virtual node
+            for(int i = LAST_NODE; i > 0; i--) X[i] = X[i - 1];
+
+            // store the current output in the first virtual node
+            X[0] = mg_out;
+
+            // update dfr output calculation (matrix-vector multiplication)
+            dfr_out += W[node_idx] * mg_out;
+
         }
 
+        // store dfr output after the sample has been fully processed
+        y_hat_train[output_idx++] = dfr_out;
     }
 
     printf("=====================\n");
 
     // calculate the NRMSE of the predicted output
-    float nrmse = get_nrmse(y_hat,y_train,m_train);
+    float nrmse = get_nrmse(y_hat_train,y_train,m_train);
     printf("Train NRMSE\t= %f\n",nrmse);
     
     // calculate the MSE of the predicted output
-    float mse = get_mse(y_hat,y_train,m_train);
+    float mse = get_mse(y_hat_train,y_train,m_train);
     printf("Train MSE\t= %f\n",mse);
 
 
@@ -200,7 +254,7 @@ int main(){
 
     // reservoir evaluation
 
-    // keep track of the output predictions (y_hat)
+    // keep track of the output predictions (y_hat_test)
     float* y_hat_test = new float[m_test]();
 
     // keep track of output index, start from 0
