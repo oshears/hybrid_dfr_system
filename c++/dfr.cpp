@@ -35,7 +35,6 @@ int main(){
 
     // ================== inputs & outputs ================== //
 
-
     // total number of samples
     int num_samples = 30000;
 
@@ -52,9 +51,26 @@ int main(){
     float* u = narma10_inputs(num_samples);
     float* y = narma10_outputs(u,num_samples);
 
+    // keep track of the index where the training data begins
+    int train_data_start_idx = init_samples;
+    
+    // keep track of the index where the training data ends
+    int train_data_end_idx = train_data_start_idx + m_train;
+    
+    // keep track of the index where the testing data begins
+    int test_data_start_idx = train_data_end_idx + init_samples;
+    
+    // keep track of the index where the tesing data ends
+    int test_data_end_idx = test_data_start_idx + m_test;
+
+    // make subvector containing y train outputs
+    float* y_train = get_vector_indexes(y, train_data_start_idx, train_data_end_idx);
+    
+    // make subvector containing y test outputs
+    float* y_test  = get_vector_indexes(y, test_data_start_idx, test_data_end_idx);
+
 
     // =============== mask & weights =============== //
-
 
     // generate mask for each input sample
     float* M = generate_mask(N);
@@ -64,20 +80,15 @@ int main(){
 
     // initialize an empty reservoir
     float X[N];
-    for (int i = 0; i < N; i++)
-        X[i] = 0;
+    for (int i = 0; i < N; i++) X[i] = 0;
+
 
     // =============== training phase =============== //
-
-    // configure indexes
-
-    // keep track of the index where the training data ends
-    int train_data_end_idx = init_samples + m_train;
 
     // reservoir initialization
 
     // loop for init_samples
-    for(int k = 0; k < init_samples; k++){
+    for(int k = 0; k < train_data_start_idx; k++){
 
         // process each masked input sample (each theta in tau == each node in N)
         for(int node_idx = 0; node_idx < N; node_idx++){
@@ -109,7 +120,7 @@ int main(){
     int output_idx = 0;
 
     // loop from the end of the initialization samples to the end of the training data
-    for(int k = init_samples; k < train_data_end_idx; k++){
+    for(int k = train_data_start_idx; k < train_data_end_idx; k++){
 
         // reset output result
         float dfr_out = 0;
@@ -141,12 +152,12 @@ int main(){
         y_hat[output_idx++] = dfr_out;
 
         // calculate the difference between the predicted output and expected output
-        output_error = dfr_out - y[output_idx];
+        output_error = dfr_out - y_train[output_idx];
 
         // DEBUG: report NRMSE over time
         if (output_idx % 1000 == 0){
-            float nrmse = get_nrmse(y_hat,y,k);
-            printf("Train NRMSE[%d]\t= %f\n",k,nrmse);
+            float nrmse = get_nrmse(y_hat, y_train, output_idx+1);
+            printf("Train NRMSE[%d]\t= %f\n", k, nrmse);
         }
 
     }
@@ -154,32 +165,20 @@ int main(){
     printf("=====================\n");
 
     // calculate the NRMSE of the predicted output
-    float nrmse = get_nrmse(y_hat,y,m_train);
+    float nrmse = get_nrmse(y_hat,y_train,m_train);
     printf("Train NRMSE\t= %f\n",nrmse);
     
     // calculate the MSE of the predicted output
-    float mse = get_mse(y_hat,y,m_train);
+    float mse = get_mse(y_hat,y_train,m_train);
     printf("Train MSE\t= %f\n",mse);
 
 
     // =============== testing phase =============== //
 
-
-    // configure indexes
-
-    // keep track of the index where the testing initialization data begins
-    int test_init_start_data_idx = init_samples + m_train;
-
-    // keep track of the index where the testing data begins
-    int test_data_start_idx = test_init_start_data_idx + init_samples;
-
-    // keep track of the index where the tesing data ends
-    int test_data_end_idx = test_data_start_idx + m_test;
-
     // reservoir initialization
     
     // loop for init_samples
-    for(int k = test_init_start_data_idx; k < test_data_start_idx; k++){
+    for(int k = train_data_end_idx; k < test_data_start_idx; k++){
 
         // process each masked input sample (each theta in tau == each node in N)
         for(int node_idx = 0; node_idx < N; node_idx++){
@@ -241,11 +240,11 @@ int main(){
     printf("=====================\n");
 
     // calculate the NRMSE of the predicted output
-    nrmse = get_nrmse(y_hat_test,y,m_test);
+    nrmse = get_nrmse(y_hat_test,y_test,m_test);
     printf("Test NRMSE\t= %f\n",nrmse);
 
     // calculate the MSE of the predicted output
-    mse = get_mse(y_hat_test,y,m_test);
+    mse = get_mse(y_hat_test,y_test,m_test);
     printf("Test MSE\t= %f\n",mse);
 
 

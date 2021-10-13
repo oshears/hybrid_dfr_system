@@ -16,6 +16,9 @@ float* generate_mask(int size);
 // generate random weight matrix in range [-1,1]
 float* generate_weights(int size);
 
+// get sub-vector from specified indexes
+float* get_vector_indexes(float* vector, int idx_0, int idx_1);
+
 // Frobenius norm
 float norm(float* x, int size);
 
