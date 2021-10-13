@@ -8,6 +8,8 @@ int main(){
     dfr_batch_gd_test();
     dfr_batch_sgd_test();
 
+    printf("========== Stochastic Gradient Descent ==========\n");
+
     // set random number generator seed
     srand(0);
     

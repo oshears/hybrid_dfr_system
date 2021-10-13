@@ -5,6 +5,8 @@
 
 void dfr_batch_gd_test(){
 
+    printf("========== Batch Gradient Descent ==========\n");
+
     // set random number generator seed
     srand(0);
     
@@ -252,6 +254,9 @@ void dfr_batch_gd_test(){
 }
 
 void dfr_batch_sgd_test(){
+
+    printf("========== Batch Stochastic Gradient Descent ==========\n");
+
 
     // set random number generator seed
     srand(0);
