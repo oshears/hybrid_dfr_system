@@ -13,8 +13,17 @@ def mg(x):
     c = 0.2
     d = 2.1
 
-
     return (a * x) / (b + c * np.power( (d * x), 10) )
+
+# def mg(x):
+#     C = 1.33
+#     # p = 6.88
+#     # p = 7
+#     p = 1
+#     b = 0.4
+
+#     return C * x / (1 + np.power(b * x,p)) 
+
 
 def mg_deriv(x):
 

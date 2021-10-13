@@ -5,8 +5,8 @@
 
 int main(){
 
-    dfr_batch_gd_test();
-    dfr_batch_sgd_test();
+    // dfr_batch_gd_test();
+    // dfr_batch_sgd_test();
 
     printf("========== Stochastic Gradient Descent ==========\n");
 
@@ -34,13 +34,14 @@ int main(){
     // inputs & outputs
 
     // total number of samples
-    int num_samples = 10000;
+    int num_samples = 20000;
 
     // number of initialization samples
     int init_samples = 200;
 
     // number of training/testing samples
-    int m = 4000;
+    // int m = 4000;
+    int m = 10000;
 
     // generate narma10 inputs and outputs
     float* u = narma10_inputs(num_samples);
@@ -92,9 +93,6 @@ int main(){
     // keep track of the output error for each sample
     float output_error = 0;
 
-    // DEBUG: keep track of the total error
-    float total_error = 0;
-
     // keep track of the output predictions
     float* y_hat = new float[m]();
 
@@ -136,11 +134,10 @@ int main(){
         // calculate the difference between the predicted output and expected output
         output_error = dfr_out - y[output_idx];
 
-        // DEBUG: report MSE over time
-        total_error += (output_error * output_error);
+        // DEBUG: report NRMSE over time
         if (output_idx % 1000 == 0){
-            float mse = total_error / (k + 1);
-            printf("MSE[%d] = %f\n",k,mse);
+            float nrmse = get_nrmse(y_hat,y,k);
+            printf("Train NRMSE[%d] = %f\n",k,nrmse);
         }
 
     }
