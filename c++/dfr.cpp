@@ -8,12 +8,13 @@ int main(){
     // dfr_batch_gd_test();
     // dfr_batch_sgd_test();
 
-    printf("========== Stochastic Gradient Descent ==========\n");
+    printf("========== DFR Stochastic Gradient Descent ==========\n");
 
     // set random number generator seed
     srand(0);
+
     
-    // dfr parameters
+    // ================== dfr parameters ================== //
 
     // input gain
     float gamma = 0.05;
@@ -31,21 +32,29 @@ int main(){
     // learning rate for sgd
     float alpha = 0.001;
 
-    // inputs & outputs
+
+    // ================== inputs & outputs ================== //
+
 
     // total number of samples
-    int num_samples = 20000;
+    int num_samples = 30000;
 
     // number of initialization samples
     int init_samples = 200;
 
-    // number of training/testing samples
-    // int m = 4000;
-    int m = 10000;
+    // number of training samples
+    int m_train = 20000;
+
+    // number of testing samples
+    int m_test = 5000;
 
     // generate narma10 inputs and outputs
     float* u = narma10_inputs(num_samples);
     float* y = narma10_outputs(u,num_samples);
+
+
+    // =============== mask & weights =============== //
+
 
     // generate mask for each input sample
     float* M = generate_mask(N);
@@ -58,12 +67,12 @@ int main(){
     for (int i = 0; i < N; i++)
         X[i] = 0;
 
-    // training phase
+    // =============== training phase =============== //
 
     // configure indexes
 
     // keep track of the index where the training data ends
-    int train_data_end_idx = init_samples + m;
+    int train_data_end_idx = init_samples + m_train;
 
     // reservoir initialization
 
@@ -94,7 +103,7 @@ int main(){
     float output_error = 0;
 
     // keep track of the output predictions
-    float* y_hat = new float[m]();
+    float* y_hat = new float[m_train]();
 
     // keep track of the output index
     int output_idx = 0;
@@ -145,29 +154,34 @@ int main(){
     printf("=====================\n");
 
     // calculate the NRMSE of the predicted output
-    float nrmse = get_nrmse(y_hat,y,m);
+    float nrmse = get_nrmse(y_hat,y,m_train);
     printf("Train NRMSE\t= %f\n",nrmse);
     
-    float mse = get_mse(y_hat,y,m);
+    // calculate the MSE of the predicted output
+    float mse = get_mse(y_hat,y,m_train);
     printf("Train MSE\t= %f\n",mse);
 
 
-    // testing phase
+    // =============== testing phase =============== //
+
 
     // configure indexes
 
     // keep track of the index where the testing initialization data begins
-    int test_init_start_data_idx = init_samples + m;
+    int test_init_start_data_idx = init_samples + m_train;
 
     // keep track of the index where the testing data begins
     int test_data_start_idx = test_init_start_data_idx + init_samples;
 
     // keep track of the index where the tesing data ends
-    int test_data_end_idx = test_data_start_idx + m;
+    int test_data_end_idx = test_data_start_idx + m_test;
 
     // reservoir initialization
     
+    // process each input sample
     for(int k = test_init_start_data_idx; k < test_data_start_idx; k++){
+
+        // process the masked samples from the current input sample
         for(int node_idx = 0; node_idx < N; node_idx++){
             
             // calculated masked input
@@ -185,15 +199,19 @@ int main(){
 
     // reservoir evaluation
 
-    float* y_hat_test = new float[m]();
+    // keep track of output predictions (y_hat)
+    float* y_hat_test = new float[m_test]();
 
+    // keep track of output index, start from 0
     output_idx = 0;
 
+    // process each input sample
     for(int k = test_data_start_idx; k < test_data_end_idx; k++){
 
         // reset output result
         float dfr_out = 0;
 
+        // process each masked samples from the current input sample
         for(int node_idx = 0; node_idx < N; node_idx++){
 
             // calculated masked input
@@ -218,11 +236,12 @@ int main(){
 
     printf("=====================\n");
 
-
-    nrmse = get_nrmse(y_hat_test,y,m);
+    // calculate the NRMSE of the predicted output
+    nrmse = get_nrmse(y_hat_test,y,m_test);
     printf("Test NRMSE\t= %f\n",nrmse);
 
-    mse = get_mse(y_hat_test,y,m);
+    // calculate the MSE of the predicted output
+    mse = get_mse(y_hat_test,y,m_test);
     printf("Test MSE\t= %f\n",mse);
 
 
