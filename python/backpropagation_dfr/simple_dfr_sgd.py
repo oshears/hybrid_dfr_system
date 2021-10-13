@@ -12,8 +12,9 @@ def mg(x):
     b = 0.8
     c = 0.2
     d = 2.1
+    p = 10
 
-    return (a * x) / (b + c * np.power( (d * x), 10) )
+    return (a * x) / (b + c * np.power( (d * x), p) )
 
 # def mg(x):
 #     C = 1.33
@@ -31,9 +32,10 @@ def mg_deriv(x):
     b = 0.8
     c = 0.2
     d = 2.1
+    p = 10
 
 
-    return (a * (b - 9 * c * np.power(d * x, 10))) / np.power((b + c * np.power( (d * x), 10) ),2)
+    return (a * (b - (p - 1) * c * np.power(d * x, p))) / np.power((b + c * np.power( (d * x), p) ),2)
 
 def relu(x):
     return np.array([np.max(xi,0) for xi in x])
@@ -68,9 +70,9 @@ y_relu_deriv = relu_deriv(x)
 
 ###############################################
 
-num_samples = 6000
+num_samples = 20000
 init_samples = 200
-train_samples = 4000
+train_samples = 10000
 
 rng = np.random.default_rng(0)
 
