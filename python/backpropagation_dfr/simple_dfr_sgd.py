@@ -111,6 +111,7 @@ y_train = y[init_samples:init_samples+train_samples]
 N = 400
 gamma = 0.05
 eta = 0.5
+LAST_NODE = N - 1
 
 alpha = 0.1  # learning rate
 
@@ -130,8 +131,8 @@ reservoir_history = np.zeros((train_samples,N))
 # initialization
 for i in range(init_samples):
     for j in range(N):
-        g_i = mg(gamma * masked_samples[i][j] + eta * reservoir[N - 1])
-        reservoir[1:N] = reservoir[0:N - 1]
+        g_i = mg(gamma * masked_samples[i][j] + eta * reservoir[LAST_NODE])
+        reservoir[1:N] = reservoir[0:LAST_NODE]
         reservoir[0] = g_i
 
 # dfr stage
@@ -145,10 +146,10 @@ for i in range(train_samples):
 
     for j in range(N):
 
-        W[j] = (W[j] - alpha * output_error * reservoir[N - 1]) if (i > 0) else W[j]
+        W[j] = (W[j] - alpha * output_error * reservoir[LAST_NODE]) if (i > 0) else W[j]
 
-        g_i = mg(gamma * masked_samples[i + init_samples][j] + eta * reservoir[N - 1])
-        reservoir[1:N] = reservoir[0:N - 1]
+        g_i = mg(gamma * masked_samples[i + init_samples][j] + eta * reservoir[LAST_NODE])
+        reservoir[1:N] = reservoir[0:LAST_NODE]
         reservoir[0] = g_i
 
         dfr_output += W[j] * g_i
@@ -160,8 +161,8 @@ for i in range(train_samples):
 # initialization
 for i in range(init_samples):
     for j in range(N):
-        g_i = mg(gamma * masked_samples[i][j] + eta * reservoir[N - 1])
-        reservoir[1:N] = reservoir[0:N - 1]
+        g_i = mg(gamma * masked_samples[i][j] + eta * reservoir[LAST_NODE])
+        reservoir[1:N] = reservoir[0:LAST_NODE]
         reservoir[0] = g_i
 
 # training data evaluation
@@ -169,14 +170,16 @@ y_hat = np.zeros(train_samples)
 for i in range(train_samples):
     for j in range(N):
 
-        g_i = mg(gamma * masked_samples[i + init_samples][j] + eta * reservoir[N - 1])
-        reservoir[1:N] = reservoir[0:N - 1]
+        g_i = mg(gamma * masked_samples[i + init_samples][j] + eta * reservoir[LAST_NODE])
+        reservoir[1:N] = reservoir[0:LAST_NODE]
         reservoir[0] = g_i
 
         y_hat[i] += W[j] * g_i
         
     reservoir_history[i] = reservoir
 
+for i in range(N):
+    print(W[i])
 
 loss = (np.linalg.norm(y_train - y_hat) / np.linalg.norm(y_train))
 print(f"SGD NRMSE: {loss}")

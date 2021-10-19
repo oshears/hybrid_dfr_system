@@ -8,7 +8,7 @@
 
 int main(){
 
-    // dfr_batch_gd_test();
+    dfr_batch_gd_test();
     // dfr_batch_sgd_test();
 
     printf("========== DFR Stochastic Gradient Descent ==========\n");
@@ -265,7 +265,7 @@ int main(){
 
     std::ofstream outFile;
     outFile.open ("dfr_outputs.csv");
-    outFile << "actual,expected" << std::endl;
+    outFile << "inputs,actual,expected" << std::endl;
 
     // loop from the end of the initialization samples to the end of the test data
     for(int k = test_data_start_idx; k < test_data_end_idx; k++){
@@ -275,6 +275,10 @@ int main(){
 
         // process each masked input sample (each theta in tau == each node in N)
         for(int node_idx = 0; node_idx < N; node_idx++){
+
+            if(output_idx < 1){
+                // printf("W[%d] = %f\n",node_idx,W[node_idx]);
+            }
 
             // calculated masked input
             float J = M[node_idx] * u[k];
@@ -297,7 +301,7 @@ int main(){
         y_hat_test[output_idx++] = dfr_out;
 
         // printf("[%d] Actual: %f; Expected: %f\n",dfr_out,y_test[output_idx - 1]);
-        outFile << std::fixed << dfr_out << "," << std::fixed << y_test[output_idx - 1] << std::endl;
+        outFile << std::fixed << u[k] << "," << std::fixed << dfr_out << "," << std::fixed << y_test[output_idx - 1] << std::endl;
 
     }
 

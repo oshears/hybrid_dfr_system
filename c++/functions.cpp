@@ -43,7 +43,7 @@ float* generate_weights(int size){
     for(int i = 0; i < size; i++){
         weights[i] = (2 * ( static_cast<float>(rand()) / static_cast<float>(RAND_MAX) ) - 1 ) * 16;
     
-        printf("W[%d] = %f\n",i,weights[i]);
+        // printf("W[%d] = %f\n",i,weights[i]);
     }
     return weights;
 }
