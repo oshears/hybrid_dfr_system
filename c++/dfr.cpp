@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <iostream>
+#include <fstream>
+
 #include "dfr.h"
 
 int main(){
@@ -30,7 +33,7 @@ int main(){
     int LAST_NODE = N - 1;
 
     // learning rate for sgd
-    float alpha = 0.001;
+    float alpha = 0.1;
 
 
     // ================== inputs & outputs ================== //
@@ -260,6 +263,10 @@ int main(){
     // keep track of output index, start from 0
     output_idx = 0;
 
+    std::ofstream outFile;
+    outFile.open ("dfr_outputs.csv");
+    outFile << "actual,expected" << std::endl;
+
     // loop from the end of the initialization samples to the end of the test data
     for(int k = test_data_start_idx; k < test_data_end_idx; k++){
 
@@ -289,7 +296,12 @@ int main(){
         // store dfr output after the sample has been fully processed
         y_hat_test[output_idx++] = dfr_out;
 
+        // printf("[%d] Actual: %f; Expected: %f\n",dfr_out,y_test[output_idx - 1]);
+        outFile << std::fixed << dfr_out << "," << std::fixed << y_test[output_idx - 1] << std::endl;
+
     }
+
+    outFile.close();
 
     printf("=====================\n");
 

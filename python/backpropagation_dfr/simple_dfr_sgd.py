@@ -6,24 +6,24 @@ from numpy.core.function_base import linspace
 
 # https://www.nature.com/articles/ncomms1476
 
-def mg(x):
-
-    a = 2
-    b = 0.8
-    c = 0.2
-    d = 2.1
-    p = 10
-
-    return (a * x) / (b + c * np.power( (d * x), p) )
-
 # def mg(x):
-#     C = 1.33
-#     # p = 6.88
-#     # p = 7
-#     p = 1
-#     b = 0.4
 
-#     return C * x / (1 + np.power(b * x,p)) 
+#     a = 2
+#     b = 0.8
+#     c = 0.2
+#     d = 2.1
+#     p = 10
+
+#     return (a * x) / (b + c * np.power( (d * x), p) )
+
+def mg(x):
+    C = 1.33
+    # p = 6.88
+    # p = 7
+    p = 1
+    b = 0.4
+
+    return C * x / (1 + np.power(b * x,p)) 
 
 
 def mg_deriv(x):
@@ -70,9 +70,10 @@ y_relu_deriv = relu_deriv(x)
 
 ###############################################
 
-num_samples = 20000
+num_samples = 10000
 init_samples = 200
-train_samples = 10000
+# train_samples = 4000
+train_samples = 8000
 
 rng = np.random.default_rng(0)
 
@@ -92,6 +93,9 @@ def narma10_create(inLen):
 
 x, y = narma10_create(num_samples)
 
+# normalize input data
+# x = x / np.max(x)
+
 y_train = y[init_samples:init_samples+train_samples]
 
 ## dfr parameters
@@ -108,10 +112,10 @@ N = 400
 gamma = 0.05
 eta = 0.5
 
-alpha = 0.001  # learning rate
+alpha = 0.1  # learning rate
 
 # weight generation
-W = (2*rng.random(N) - 1) * 1e-3
+W = (2*rng.random(N) - 1)*16
 
 mask = rng.choice([-0.1,0.1],N)
 
@@ -132,11 +136,13 @@ for i in range(init_samples):
 
 # dfr stage
 output_error = 0
-total_error = 0
 reservoir_old = 0
 
-y_hat = np.zeros(train_samples)
+# training data configuration
 for i in range(train_samples):
+
+    dfr_output = 0
+
     for j in range(N):
 
         W[j] = (W[j] - alpha * output_error * reservoir[N - 1]) if (i > 0) else W[j]
@@ -145,18 +151,32 @@ for i in range(train_samples):
         reservoir[1:N] = reservoir[0:N - 1]
         reservoir[0] = g_i
 
-        y_hat[i] += W[j] * g_i
+        dfr_output += W[j] * g_i
 
-    output_error = y_hat[i] - y_train[i]
-    total_error += np.square(output_error)
-
-    reservoir_old = reservoir.copy()
-
-    if i % 1000 == 0:
-        running_mse = total_error / (i + 1)
-        print(f"MSE[{i}]: {running_mse}")
+    output_error = dfr_output - y_train[i]
 
     reservoir_history[i] = reservoir
+
+# initialization
+for i in range(init_samples):
+    for j in range(N):
+        g_i = mg(gamma * masked_samples[i][j] + eta * reservoir[N - 1])
+        reservoir[1:N] = reservoir[0:N - 1]
+        reservoir[0] = g_i
+
+# training data evaluation
+y_hat = np.zeros(train_samples)
+for i in range(train_samples):
+    for j in range(N):
+
+        g_i = mg(gamma * masked_samples[i + init_samples][j] + eta * reservoir[N - 1])
+        reservoir[1:N] = reservoir[0:N - 1]
+        reservoir[0] = g_i
+
+        y_hat[i] += W[j] * g_i
+        
+    reservoir_history[i] = reservoir
+
 
 loss = (np.linalg.norm(y_train - y_hat) / np.linalg.norm(y_train))
 print(f"SGD NRMSE: {loss}")
@@ -167,3 +187,11 @@ W = np.dot(np.dot(y_train,reservoir_history),np.linalg.inv((np.dot(reservoir_his
 y_hat_reg = reservoir_history.dot(W)
 loss = (np.linalg.norm(y_train - y_hat_reg) / np.linalg.norm(y_train))
 print(f"Ridge Regression NRMSE: {loss}")
+
+
+
+plt.plot(y_train[0:100],label="actual")
+plt.plot(y_hat[0:100],'--',label="sgd")
+plt.plot(y_hat_reg[0:100],'--',label="regression")
+plt.legend()
+plt.show()

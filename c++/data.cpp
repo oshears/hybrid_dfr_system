@@ -11,6 +11,8 @@ float* narma10_inputs(int size){
     for (int i = 0; i < size; i++){
         float u = 0.5 * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
         inputs[i] = u;
+
+        // printf("u[%d] = %f\n",i,u);
     }
 
     return inputs;
@@ -35,6 +37,8 @@ float* narma10_outputs(float* inputs, int size){
         }
 
         outputs[i + 1] = 0.3 * outputs[i] + 0.05 * outputs[i] * sum + 1.5 * inputs[i] * inputs[i - 9] + 0.1;
+
+        // printf("outputs[%d] = %f\n",i+1,outputs[i + 1]);
     }
 
     return outputs;
