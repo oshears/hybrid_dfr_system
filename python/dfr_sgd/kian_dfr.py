@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy.core.fromnumeric import shape
 from numpy.core.function_base import linspace
-import sys
-
 
 
 # https://www.nature.com/articles/ncomms1476
@@ -73,9 +71,9 @@ y_relu_deriv = relu_deriv(x)
 ###############################################
 
 num_samples = 10000
-init_samples = 200
+init_samples = 500
 # train_samples = 4000
-train_samples = 8000
+train_samples = 5500
 
 rng = np.random.default_rng(0)
 
@@ -110,19 +108,10 @@ y_train = y[init_samples:init_samples+train_samples]
 # mask [uniform,]
 # learning rate (alpha) [1,0.1,0.01,0.001,0.0001]
 
-N = 400
-gamma = 2
-eta = 1
+N = 100
+gamma = 0.9
+eta = 0.1
 LAST_NODE = N - 1
-
-if len(sys.argv) > 3:
-    gamma = float(sys.argv[1])
-    eta = float(sys.argv[2])
-    N = int(sys.argv[3])
-    LAST_NODE = N - 1
-
-    print(f"N = {N}; gamma = {gamma}; eta = {eta}")
-
 
 alpha = 0.001  # learning rate
 
@@ -131,6 +120,7 @@ W = (2*rng.random(N) - 1)*16
 
 # mask = rng.choice([-0.1,0.1],N)
 mask = rng.uniform(-0.5,0.5,N)
+# mask = np.ones(N) * 0.5
 
 # mask generation
 masked_samples = np.empty((num_samples,N))
@@ -198,37 +188,37 @@ for i in range(train_samples):
     reservoir_history[i] = reservoir
 
 loss = (np.linalg.norm(y_train - y_hat) / np.linalg.norm(y_train))
-print(f"SGD NRMSE:\t{loss}")
+print(f"SGD NRMSE: {loss}")
 
 # regression approach
 reg = 1e-8
 W = np.dot(np.dot(y_train,reservoir_history),np.linalg.inv((np.dot(reservoir_history.T,reservoir_history)) + reg * np.eye(N)))
 y_hat_reg = reservoir_history.dot(W)
 loss = (np.linalg.norm(y_train - y_hat_reg) / np.linalg.norm(y_train))
-print(f"Regress. NRMSE:\t{loss}")
-
-# standard gradient descent
-
-# plt.plot(y_train[0:100],label="actual")
-# plt.plot(y_hat[0:100],'--',label="sgd")
-# plt.plot(y_hat_reg[0:100],'--',label="regression")
-# plt.legend()
-# plt.show()
+print(f"Ridge Regression NRMSE: {loss}")
 
 
-# # write narma10 data
-# train_data = open("train_data.txt","w")
-# train_label = open("train_label.txt","w")
-# test_data = open("test_data.txt","w")
-# test_label = open("test_label.txt","w")
 
-# for i in range(200):
-#     train_data.write(f"{x[i]}\n")
-#     train_label.write(f"{y[i]}\n")
-#     test_data.write(f"{x[i+200]}\n")
-#     test_label.write(f"{y[i+200]}\n")
+plt.plot(y_train[0:100],label="actual")
+plt.plot(y_hat[0:100],'--',label="sgd")
+plt.plot(y_hat_reg[0:100],'--',label="regression")
+plt.legend()
+plt.show()
 
-# train_data.close()
-# train_label.close()
-# test_data.close()
-# test_label.close()
+
+# write narma10 data
+train_data = open("train_data.txt","w")
+train_label = open("train_label.txt","w")
+test_data = open("test_data.txt","w")
+test_label = open("test_label.txt","w")
+
+for i in range(200):
+    train_data.write(f"{x[i]}\n")
+    train_label.write(f"{y[i]}\n")
+    test_data.write(f"{x[i+200]}\n")
+    test_label.write(f"{y[i+200]}\n")
+
+train_data.close()
+train_label.close()
+test_data.close()
+test_label.close()
