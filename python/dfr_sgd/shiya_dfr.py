@@ -94,7 +94,7 @@ def narma10_create(inLen):
 x, y = narma10_create(num_samples)
 
 # normalize input data
-# x = x / np.max(x)
+x = x / np.max(x)
 
 y_train = y[init_samples:init_samples+train_samples]
 
@@ -108,17 +108,18 @@ y_train = y[init_samples:init_samples+train_samples]
 # mask [uniform,]
 # learning rate (alpha) [1,0.1,0.01,0.001,0.0001]
 
-N = 400
+N = 10
 gamma = 1
 eta = 0.8
 LAST_NODE = N - 1
 
-alpha = 0.1  # learning rate
+alpha = 0.001  # learning rate
 
 # weight generation
-W = (2*rng.random(N) - 1)*32
+W = (2*rng.random(N) - 1)*16
 
-mask = rng.choice([-0.1,0.1],N)
+# mask = rng.choice([-0.1,0.1],N)
+mask = rng.uniform(-0.5,0.5,N)
 
 # mask generation
 masked_samples = np.empty((num_samples,N))
@@ -140,13 +141,20 @@ output_error = 0
 reservoir_old = 0
 
 # training data configuration
+
+batch_size = 1
+W_new = W.copy()
+
 for i in range(train_samples):
 
     dfr_output = 0
 
     for j in range(N):
 
-        W[j] = (W[j] - alpha * output_error * reservoir[LAST_NODE]) if (i > 0) else W[j]
+        if (i % batch_size == 0):
+            W[j] = W_new[j]
+            
+        W_new[j] = (W_new[j] - alpha * output_error * reservoir[LAST_NODE]) if (i > 0) else W_new[j]
 
         g_i = np.tanh(gamma * masked_samples[i + init_samples][j] + eta * reservoir[LAST_NODE])
         reservoir[1:N] = reservoir[0:LAST_NODE]
@@ -178,9 +186,6 @@ for i in range(train_samples):
         
     reservoir_history[i] = reservoir
 
-for i in range(N):
-    print(W[i])
-
 loss = (np.linalg.norm(y_train - y_hat) / np.linalg.norm(y_train))
 print(f"SGD NRMSE: {loss}")
 
@@ -198,3 +203,21 @@ plt.plot(y_hat[0:100],'--',label="sgd")
 plt.plot(y_hat_reg[0:100],'--',label="regression")
 plt.legend()
 plt.show()
+
+
+# write narma10 data
+train_data = open("train_data.txt","w")
+train_label = open("train_label.txt","w")
+test_data = open("test_data.txt","w")
+test_label = open("test_label.txt","w")
+
+for i in range(200):
+    train_data.write(f"{x[i]}\n")
+    train_label.write(f"{y[i]}\n")
+    test_data.write(f"{x[i+200]}\n")
+    test_label.write(f"{y[i+200]}\n")
+
+train_data.close()
+train_label.close()
+test_data.close()
+test_label.close()
