@@ -10,8 +10,14 @@ float* narma10_inputs(int size);
 // narma10 outputs
 float* narma10_outputs(float* inputs, int size);
 
+// generate random floating point number
+float get_random_float();
+
 // generate mask of random values of -0.1 or 0.1
 float* generate_mask(int size);
+
+// generate mask of random values from low to high with a given size
+float* generate_mask_range(float low, float high, int size);
 
 // generate random weight matrix in range [-1,1]
 float* generate_weights(int size);

@@ -57,3 +57,4 @@ python/dfr_sgd/simple_dfr_sgd_p10.sh
 python/dfr_sgd/simple_dfr_sgd_p10.py
 python/dfr_sgd/simple_dfr_sgd_mg.txt
 python/dfr_sgd/simple_dfr_sgd_mg_p10.txt
+c++/dfr_train_progress.csv

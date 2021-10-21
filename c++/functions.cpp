@@ -22,6 +22,11 @@ float mackey_glass(float x){
 
 }
 
+// generate random floating point number
+float get_random_float(){
+    return ( static_cast<float>(rand()) / static_cast<float>(RAND_MAX) );
+}
+
 // generate mask of random values of -0.1 or 0.1
 float* generate_mask(int size){
 	
@@ -35,13 +40,28 @@ float* generate_mask(int size){
     return mask;
 }
 
+// generate mask of random values from low to high with a given size
+float* generate_mask_range(float low, float high, int size){
+	
+    float* mask = (float*) malloc(sizeof(float)*size);
+
+
+    for(int i = 0; i < size; i++){
+        mask[i] = (get_random_float() * (high - low)) + low;
+
+        // printf("M[%d] = %f\n",i,mask[i]);
+    }
+
+    return mask;
+}
+
 // generate random weight matrix in range [-1,1]
 float* generate_weights(int size){
 
     float* weights = (float*) malloc(sizeof(float)*size);
 
     for(int i = 0; i < size; i++){
-        weights[i] = (2 * ( static_cast<float>(rand()) / static_cast<float>(RAND_MAX) ) - 1 ) * 16;
+        weights[i] = (2 * get_random_float() - 1 );
     
         // printf("W[%d] = %f\n",i,weights[i]);
     }

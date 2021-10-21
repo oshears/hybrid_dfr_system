@@ -8,7 +8,7 @@
 
 int main(){
 
-    dfr_batch_gd_test();
+    // dfr_batch_gd_test();
     // dfr_batch_sgd_test();
 
     printf("========== DFR Stochastic Gradient Descent ==========\n");
@@ -20,20 +20,20 @@ int main(){
     // ================== dfr parameters ================== //
 
     // input gain
-    float gamma = 0.05;
+    float gamma = 0.5;
     
     // feedback scale
-    float eta = 0.5;
+    float eta = 0.4;
 
     // delay
     int tau = 80;
 
     // number of virtual nodes
-    int N = 400;
+    int N = 50;
     int LAST_NODE = N - 1;
 
     // learning rate for sgd
-    float alpha = 0.1;
+    float alpha = 0.01;
 
 
     // ================== inputs & outputs ================== //
@@ -45,7 +45,7 @@ int main(){
     int init_samples = 200;
 
     // number of training samples
-    int m_train = 4000;
+    int m_train = 8000;
 
     // number of testing samples
     int m_test = 1000;
@@ -76,7 +76,7 @@ int main(){
     // =============== mask & weights =============== //
 
     // generate mask for each input sample
-    float* M = generate_mask(N);
+    float* M = generate_mask_range(-0.5,0.5,N);
 
     // generate weights for each virtual node
     float* W = generate_weights(N);
@@ -119,18 +119,38 @@ int main(){
     // keep track of output index, start from 0
     int output_idx = 0;
 
+    std::ofstream trainFile;
+    trainFile.open ("dfr_train_progress.csv");
+    trainFile << "weight change,output error" << std::endl;
+
+    int batch_size = 16;
+    float new_W[N];
+    for (int i = 0; i < N; i++) new_W[i] = W[i];
+
     // loop from the end of the initialization samples to the end of the training data
     for(int k = train_data_start_idx; k < train_data_end_idx; k++){
 
         // reset output result
         float dfr_out = 0;
 
+        float weight_change[m_train / batch_size];
+
         // process each masked input sample (each theta in tau == each node in N)
         for(int node_idx = 0; node_idx < N; node_idx++){
-
-            // if the first training sample was processed, update the current node's weights based on the error of the previous sample
-            if (output_idx > 0) W[node_idx] = W[node_idx] - alpha * output_error * X[LAST_NODE];
             
+            // if the end of the batch is reached
+            if (output_idx % batch_size == 0){
+                // DEBUG: monitor weight changes
+                float weight_difference = W[node_idx] - new_W[node_idx];
+                weight_change[node_idx] = (weight_difference > 0) ? weight_difference : -1 * weight_difference;
+                
+                // update the weights according to the batch changes
+                W[node_idx] = new_W[node_idx];
+            } 
+            
+            // if the first training sample was processed, update the current node's weights based on the error of the previous sample
+            if (output_idx > 0) new_W[node_idx] = new_W[node_idx] - alpha * output_error * X[LAST_NODE];
+
             // calculated masked input
             float J = M[node_idx] * u[k];
 
@@ -149,7 +169,19 @@ int main(){
         }
 
         // calculate the difference between the predicted output and expected output
-        output_error = dfr_out - y_train[output_idx];
+        output_error = dfr_out - y_train[output_idx++];
+
+        // calc avg weight change
+        float avg_weight_change = 0;
+        for (int i = 0; i < N; i++) if (weight_change >= 0) avg_weight_change += weight_change[i]; else avg_weight_change -= weight_change[i];
+        avg_weight_change / N;
+
+        // if(output_idx % static_cast<int>(m_train / 100) == 0){
+        //     printf("%d\n",static_cast<int>(m_train / 1000));
+        // printf("[%d] output error: %f\n",k,output_error);
+        float reported_error = (output_error > 0) ? output_error : -1 * output_error;
+        trainFile << std::fixed << avg_weight_change << "," << std::fixed << reported_error << std::endl;
+        // }
 
     }
 
