@@ -3,27 +3,29 @@ import matplotlib.pyplot as plt
 from numpy.core.fromnumeric import shape
 from numpy.core.function_base import linspace
 
+import sys
+
 
 # https://www.nature.com/articles/ncomms1476
 
-# def mg(x):
-
-#     a = 2
-#     b = 0.8
-#     c = 0.2
-#     d = 2.1
-#     p = 10
-
-#     return (a * x) / (b + c * np.power( (d * x), p) )
-
 def mg(x):
-    C = 1.33
-    # p = 6.88
-    # p = 7
-    p = 1
-    b = 0.4
 
-    return C * x / (1 + np.power(b * x,p)) 
+    a = 2
+    b = 0.8
+    c = 0.2
+    d = 2.1
+    p = 10
+
+    return (a * x) / (b + c * np.power( (d * x), p) )
+
+# def mg(x):
+#     C = 1.33
+#     # p = 6.88
+#     # p = 7
+#     p = 1
+#     b = 0.4
+
+#     return C * x / (1 + np.power(b * x,p)) 
 
 
 def mg_deriv(x):
@@ -70,10 +72,12 @@ y_relu_deriv = relu_deriv(x)
 
 ###############################################
 
-num_samples = 10000
 init_samples = 200
 # train_samples = 4000
-train_samples = 8000
+train_samples = 15000
+
+num_samples = train_samples + init_samples
+
 
 rng = np.random.default_rng(0)
 
@@ -94,7 +98,7 @@ def narma10_create(inLen):
 x, y = narma10_create(num_samples)
 
 # normalize input data
-# x = x / np.max(x)
+x = x / np.max(x)
 
 y_train = y[init_samples:init_samples+train_samples]
 
@@ -108,17 +112,28 @@ y_train = y[init_samples:init_samples+train_samples]
 # mask [uniform,]
 # learning rate (alpha) [1,0.1,0.01,0.001,0.0001]
 
-N = 400
-gamma = 0.05
-eta = 0.5
+N = 50
+gamma = 0.5
+eta = 0.4
 LAST_NODE = N - 1
 
-alpha = 0.1  # learning rate
+if len(sys.argv) > 3:
+    gamma = float(sys.argv[1])
+    eta = float(sys.argv[2])
+    N = int(sys.argv[3])
+    LAST_NODE = N - 1
+
+    print(f"N = {N}; gamma = {gamma}; eta = {eta}")
+
+
+alpha = 0.01  # learning rate
 
 # weight generation
-W = (2*rng.random(N) - 1)*16
+W = (2*rng.random(N) - 1)
 
-mask = rng.choice([-0.1,0.1],N)
+# mask = rng.choice([-0.1,0.1],N)
+mask = rng.uniform(-0.5,0.5,N)
+# mask = rng.uniform(-1,1,N)
 
 # mask generation
 masked_samples = np.empty((num_samples,N))
@@ -178,18 +193,15 @@ for i in range(train_samples):
         
     reservoir_history[i] = reservoir
 
-for i in range(N):
-    print(W[i])
-
 loss = (np.linalg.norm(y_train - y_hat) / np.linalg.norm(y_train))
-print(f"SGD NRMSE: {loss}")
+print(f"SGD NRMSE:\t{loss}")
 
 # regression approach
 reg = 1e-8
 W = np.dot(np.dot(y_train,reservoir_history),np.linalg.inv((np.dot(reservoir_history.T,reservoir_history)) + reg * np.eye(N)))
 y_hat_reg = reservoir_history.dot(W)
 loss = (np.linalg.norm(y_train - y_hat_reg) / np.linalg.norm(y_train))
-print(f"Ridge Regression NRMSE: {loss}")
+print(f"Ridge Regression NRMSE:\t{loss}")
 
 
 

@@ -1,8 +1,11 @@
+import textwrap
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.core.fromnumeric import shape
 from numpy.core.function_base import linspace
 import sys
+
+from numpy.lib.function_base import average
 
 
 
@@ -72,10 +75,11 @@ y_relu_deriv = relu_deriv(x)
 
 ###############################################
 
-num_samples = 10000
 init_samples = 200
 # train_samples = 4000
-train_samples = 8000
+train_samples = 20000
+
+num_samples = init_samples + train_samples
 
 rng = np.random.default_rng(0)
 
@@ -110,7 +114,7 @@ y_train = y[init_samples:init_samples+train_samples]
 # mask [uniform,]
 # learning rate (alpha) [1,0.1,0.01,0.001,0.0001]
 
-N = 400
+N = 10
 gamma = 2
 eta = 1
 LAST_NODE = N - 1
@@ -124,10 +128,12 @@ if len(sys.argv) > 3:
     print(f"N = {N}; gamma = {gamma}; eta = {eta}")
 
 
-alpha = 0.001  # learning rate
+alpha = 0.0001  # learning rate
+momentum = 0.0
 
 # weight generation
-W = (2*rng.random(N) - 1)*16
+# W = (2*rng.random(N) - 1)*16
+W = (2*rng.random(N) - 1)
 
 # mask = rng.choice([-0.1,0.1],N)
 mask = rng.uniform(-0.5,0.5,N)
@@ -153,9 +159,11 @@ reservoir_old = 0
 
 # training data configuration
 
-batch_size = 1
+batch_size = 256
 W_new = W.copy()
 
+error_over_time = np.zeros(train_samples)
+weight_change_over_time = np.zeros((N,int(train_samples / batch_size)+1))
 for i in range(train_samples):
 
     dfr_output = 0
@@ -163,9 +171,17 @@ for i in range(train_samples):
     for j in range(N):
 
         if (i % batch_size == 0):
-            W[j] = W_new[j]
-            
+            # factor in momentum
+            momentum_term = momentum * (weight_change_over_time[j,int((i - 1) / batch_size)]) if i > batch_size else 0
+            W_new[j] = W_new[j] - momentum_term
+            weight_change_over_time[j,int(i / batch_size)] = np.abs(W[j] - W_new[j])
+            W[j] = W_new[j] 
+        
+        # if i > 0 and j == 0:
+        #     print(f"[{j}] weight change: {W_new[j]}; error: {output_error}")
+
         W_new[j] = (W_new[j] - alpha * output_error * reservoir[LAST_NODE]) if (i > 0) else W_new[j]
+        
 
         g_i = np.tanh(gamma * masked_samples[i + init_samples][j] + eta * reservoir[LAST_NODE])
         reservoir[1:N] = reservoir[0:LAST_NODE]
@@ -175,7 +191,21 @@ for i in range(train_samples):
 
     output_error = dfr_output - y_train[i]
 
+    error_over_time[i] = np.abs(output_error)
+    # weight_change_over_time[:,i] = np.abs(W_new)
+
+    if i % (train_samples / 10) == 0:
+        # print(f"[{i}] average weight change = {np.average(weight_change_over_time[:,i])}") 
+        # print(f"[{i}] weight change for 0 = {weight_change_over_time[0,i]}") 
+        print(f"[{i}] output error = {error_over_time[i]}") 
+
     reservoir_history[i] = reservoir
+
+# plt.figure(0)
+# plt.plot(np.abs(error_over_time))
+# plt.figure(1)
+# plt.plot(np.average(weight_change_over_time,axis=0))
+# plt.draw()
 
 # initialization
 for i in range(init_samples):
@@ -200,20 +230,29 @@ for i in range(train_samples):
 loss = (np.linalg.norm(y_train - y_hat) / np.linalg.norm(y_train))
 print(f"SGD NRMSE:\t{loss}")
 
+# for i in range(N):
+#     print(f"[{i}]: {W[i]}")
+
 # regression approach
 reg = 1e-8
+print(W)
 W = np.dot(np.dot(y_train,reservoir_history),np.linalg.inv((np.dot(reservoir_history.T,reservoir_history)) + reg * np.eye(N)))
+print(W)
 y_hat_reg = reservoir_history.dot(W)
 loss = (np.linalg.norm(y_train - y_hat_reg) / np.linalg.norm(y_train))
 print(f"Regress. NRMSE:\t{loss}")
 
+# for i in range(N):
+#     print(f"[{i}]: {W[i]}")
+
+
 # standard gradient descent
 
-# plt.plot(y_train[0:100],label="actual")
-# plt.plot(y_hat[0:100],'--',label="sgd")
-# plt.plot(y_hat_reg[0:100],'--',label="regression")
-# plt.legend()
-# plt.show()
+plt.plot(y_train[0:100],label="actual")
+plt.plot(y_hat[0:100],'--',label="sgd")
+plt.plot(y_hat_reg[0:100],'--',label="regression")
+plt.legend()
+plt.show()
 
 
 # # write narma10 data
