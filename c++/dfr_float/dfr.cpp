@@ -26,26 +26,26 @@ int main(){
     float eta = 0.4;
 
     // delay
-    int tau = 80;
+    // int tau = 80;
 
     // number of virtual nodes
     int N = 50;
     int LAST_NODE = N - 1;
 
     // learning rate for sgd
-    float alpha = 0.01;
+    float alpha = 0.001;
 
 
     // ================== inputs & outputs ================== //
 
     // total number of samples
-    int num_samples = 10000;
+    int num_samples = 20000;
 
     // number of initialization samples
     int init_samples = 200;
 
     // number of training samples
-    int m_train = 8000;
+    int m_train = 15000;
 
     // number of testing samples
     int m_test = 1000;
