@@ -30,22 +30,22 @@ void spectrum_dfr(int antennas, int snr){
     int LAST_NODE = N - 1;
 
     // learning rate for sgd
-    float alpha = 0.00001;
+    float alpha = 0.01;
 
 
     // ================== inputs & outputs ================== //
 
     // total number of samples
-    int num_samples = 20000;
+    int num_samples = 6102;
 
     // number of initialization samples
-    int init_samples = 200;
+    int init_samples = 20;
 
     // number of training samples
-    int m_train = 15000;
+    int m_train = 49 * init_samples;
 
     // number of testing samples
-    int m_test = 1000;
+    int m_test = num_samples - m_train - init_samples - init_samples;
 
     // generate narma10 inputs and outputs
     float* u = read_spectrum_inputs(antennas,snr);
@@ -165,6 +165,8 @@ void spectrum_dfr(int antennas, int snr){
 
         }
 
+        // printf("step[%d] dfr_out = %f\n",output_idx,dfr_out);
+
         // calculate the difference between the predicted output and expected output
         output_error = dfr_out - y_train[output_idx++];
 
@@ -259,6 +261,11 @@ void spectrum_dfr(int antennas, int snr){
     float mse = get_mse(y_hat_train,y_train,m_train);
     printf("Train MSE\t= %f\n",mse);
 
+    float accuracy = 0;
+    for(int i = 0; i < m_train; i++) if (y_hat_train[i] == y_train[i]) accuracy += 1;
+    accuracy /= m_train;
+    printf("Accuracy = %f\n",accuracy);
+
 
     // =============== testing phase =============== //
 
@@ -347,6 +354,11 @@ void spectrum_dfr(int antennas, int snr){
     // calculate the MSE of the predicted output
     mse = get_mse(y_hat_test,y_test,m_test);
     printf("Test MSE\t= %f\n",mse);
+
+    accuracy = 0;
+    for(int i = 0; i < m_test; i++) if (y_hat_test[i] == y_test[i]) accuracy += 1;
+    accuracy /= m_test;
+    printf("Accuracy = %f\n",accuracy);
 
 
 }
