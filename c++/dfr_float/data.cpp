@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+#include <iostream>
+#include <fstream>
+
 #include "dfr.h"
 
 // narma10 inputs
@@ -42,6 +46,70 @@ float* narma10_outputs(float* inputs, int size){
     }
 
     return outputs;
+}
+
+float* read_spectrum_inputs(int antenna_count, int snr){
+
+    int num_samples = 6102;
+
+    float* inputs = (float*)  malloc(sizeof(float)*num_samples);
+
+    std::string spectrumFileName = "./spectrum_data/spectrum_-" + std::to_string(snr) + "_db_" + std::to_string(antenna_count) + "_ant.csv";
+    
+    printf("Reading from: ");
+    printf(spectrumFileName.c_str());
+    printf("\n");
+
+    std::ifstream spectrumFile;
+    spectrumFile.open(spectrumFileName.c_str());
+
+    std::string line;
+    int i = 0;
+    if (spectrumFile.is_open()){
+        while ( getline (spectrumFile,line) && i < num_samples){
+            std::string input_str = line.substr(0,line.find(","));
+            
+            inputs[i++] = std::stof(input_str);
+            // printf("inputs[%d] = %f\n",i - 1,inputs[i - 1]);            
+        }
+        spectrumFile.close();
+    }
+
+
+    return inputs;
+
+}
+
+float* read_spectrum_outputs(int antenna_count, int snr){
+
+    int num_samples = 6102;
+
+    float* outputs = (float*)  malloc(sizeof(float)*num_samples);
+
+    std::string spectrumFileName = "./spectrum_data/spectrum_-" + std::to_string(snr) + "_db_" + std::to_string(antenna_count) + "_ant.csv";
+    
+    printf("Reading from: ");
+    printf(spectrumFileName.c_str());
+    printf("\n");
+
+    std::ifstream spectrumFile;
+    spectrumFile.open(spectrumFileName.c_str());
+
+    std::string line;
+    int i = 0;
+    if (spectrumFile.is_open()){
+        while ( getline (spectrumFile,line) && i < num_samples){
+            std::string output_str = line.substr(line.find(",")+1);
+
+            outputs[i++] = std::stof(output_str);
+            // printf("outputs[%d] = %f\n",i - 1,outputs[i - 1]);            
+        }
+        spectrumFile.close();
+    }
+
+
+    return outputs;
+
 }
 
 

@@ -10,6 +10,12 @@ float* narma10_inputs(int size);
 // narma10 outputs
 float* narma10_outputs(float* inputs, int size);
 
+// spectrum inputs
+float* read_spectrum_inputs(int antenna_count, int snr);
+
+// spectrum outputs
+float* read_spectrum_outputs(int antenna_count, int snr);
+
 // generate random floating point number
 float get_random_float();
 
@@ -33,6 +39,9 @@ float get_nrmse(float* y_hat, float* y, int size);
 
 // calculate mean squared error
 float get_mse(float* y_hat, float* y, int size);
+
+void narma10_dfr();
+void spectrum_dfr(int antennas, int snr);
 
 // test area
 void dfr_batch_gd_test();
