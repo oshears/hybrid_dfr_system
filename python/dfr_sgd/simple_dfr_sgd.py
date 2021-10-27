@@ -98,7 +98,7 @@ def narma10_create(inLen):
 x, y = narma10_create(num_samples)
 
 # normalize input data
-x = x / np.max(x)
+# x = x / np.max(x)
 
 y_train = y[init_samples:init_samples+train_samples]
 
@@ -212,6 +212,20 @@ plt.legend()
 plt.show()
 
 # write dfr config data
+
+# input data
+fh = open("./dfr_config/float_input_data.txt","w")
+for i in range(num_samples):
+    # fh.write(str(int(mask[i] * (2**16))) + "\n")
+    fh.write(str(x[i]) + "\n")
+fh.close()
+
+# output data
+fh = open("./dfr_config/float_output_data.txt","w")
+for i in range(num_samples):
+    # fh.write(str(int(mask[i] * (2**16))) + "\n")
+    fh.write(str(y[i]) + "\n")
+fh.close()
 
 # mask
 fh = open("./dfr_config/float_mask_data.txt","w")
