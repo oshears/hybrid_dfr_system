@@ -5,21 +5,16 @@
 #include "dfr.h"
 
 //mackey glass function
-float mackey_glass(float x){
+int mackey_glass(int x){
 
-    float C = 1.33;
-    float b = 0.4;
-    return (C * x) / (1 + b * x);
+    int C = 1.33;
+    int b = 0.4;
 
-    // float C = 2;
-    // float b = 2.1;
-    // float p = 10;
+    float x_scaled = x / __INT16_MAX__;
+    float result = (C * x) / (1 + b * x);
+    int int_result = result * __INT16_MAX__;
 
-    // float a = 0.8;
-    // float c = 0.2;
-
-    // return (C * x) / (a + c * pow(b * x, p) );
-
+    return int_result;
 }
 
 // generate random floating point number
@@ -75,6 +70,52 @@ float* get_vector_indexes(float* vector, int idx_0, int idx_1){
 
     int j = 0;
     for(int i = idx_0; i < idx_1; i++) new_vector[j++] = vector[i];
+
+    return new_vector;
+}
+
+// generate mask of random values of -0.1 or 0.1
+int16_t* generate_mask_int(int size){
+	
+    int16_t* mask = (int16_t*) malloc(sizeof(int16_t)*size);
+
+
+    for(int i = 0; i < size; i++){
+        mask[i] = (rand() & 0x1) ? 10 : -10;
+    }
+
+    return mask;
+}
+
+// generate random weight matrix in range [-1,1]
+int16_t* generate_weights_int(int size){
+
+    int16_t* weights = (int16_t*) malloc(sizeof(int16_t)*size);
+
+    for(int i = 0; i < size; i++){
+        weights[i] = (2 * get_random_float() - 1 ) * __INT16_MAX__;
+    
+        // printf("W[%d] = %f\n",i,weights[i]);
+    }
+    return weights;
+}
+
+// get sub-vector from specified indexes
+int16_t* get_vector_indexes(int16_t* vector, int idx_0, int idx_1){
+
+    int16_t* new_vector = (int16_t*) malloc(sizeof(int) * (idx_1 - idx_0));
+
+    int j = 0;
+    for(int i = idx_0; i < idx_1; i++) new_vector[j++] = vector[i];
+
+    return new_vector;
+}
+
+// float vector to int vector
+int16_t* float_to_int_vector(float* vector, int size){
+    int16_t* new_vector = (int16_t*) malloc(sizeof(int16_t));
+
+    for(int i = 0; i < size; i++) new_vector[i] = vector[i] * __INT16_MAX__;
 
     return new_vector;
 }

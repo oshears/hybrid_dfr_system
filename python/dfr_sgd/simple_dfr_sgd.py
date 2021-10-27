@@ -210,3 +210,17 @@ plt.plot(y_hat[0:100],'--',label="sgd")
 plt.plot(y_hat_reg[0:100],'--',label="regression")
 plt.legend()
 plt.show()
+
+# write dfr config data
+
+# mask
+fh = open("./dfr_config/int_mask_data.txt","w")
+for i in range(N):
+    fh.write(str(int(mask[i] * (2**16))) + "\n")
+fh.close()
+
+# weights
+fh = open("./dfr_config/int_weight_data.txt","w")
+for i in range(N):
+    fh.write(str(int(W[i] * (2**16))) + "\n")
+fh.close()

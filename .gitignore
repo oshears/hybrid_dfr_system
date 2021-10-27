@@ -60,3 +60,4 @@ python/dfr_sgd/simple_dfr_sgd_mg_p10.txt
 dfr
 dfr_outputs.csv
 dfr_train_progress.csv
+c++/intel_hls/test-x86-64

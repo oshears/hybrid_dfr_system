@@ -8,7 +8,7 @@
 
 int main(){
 
-    // narma10_dfr();
-    spectrum_dfr(6,10);
+    narma10_dfr();
+    // spectrum_dfr(6,10);
 }
 
