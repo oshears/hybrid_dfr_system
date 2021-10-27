@@ -2,9 +2,10 @@
 //  SPDX-License-Identifier: MIT                                          
 
 #include "HLS/hls.h"
+#include "HLS/math.h"
 #include <stdio.h>
 
-#include <cmath>
+// #include <cmath>
 
 #include "dfr.h"
 

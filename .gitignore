@@ -61,3 +61,8 @@ dfr
 dfr_outputs.csv
 dfr_train_progress.csv
 c++/intel_hls/test-x86-64
+
+#Intel HLS Compiler
+test-fpga.prj
+test-x86-64
+test-fpga
