@@ -5,6 +5,11 @@
 #include "dfr.h"
 
 // Frobenius norm
+float norm(float x){
+    return sqrt(x * x);
+}
+
+// Frobenius norm for an array
 float norm(float* x, int size){
 
     float sum = 0;

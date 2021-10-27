@@ -30,18 +30,7 @@ component float dfr(float sample) {
   constexpr float gamma = 0.5;
   constexpr float eta = 0.4;
 
-  static float reservoir[N];
-
-  // mask definition
-  float mask[N];
-  for(int mask_idx = 0; mask_idx < N; mask_idx++) mask[mask_idx] = 1;
-
-  // weight definition
-  float W[N];
-  for(int weight_idx = 0; weight_idx < N; weight_idx++) W[weight_idx] = 1;
-
-  // initialize reservoir
-  for(int node_idx = 0; node_idx < N; node_idx++) reservoir[node_idx] = 0;
+  static float reservoir[N] = {};
 
   // process sample through reservoir
 
@@ -52,19 +41,17 @@ component float dfr(float sample) {
   for(int node_idx = 0; node_idx < N; node_idx++){
     
     // calculate next node value based on current subsample
-    float masked_sample_i = mask[node_idx] * sample;
+    float masked_sample_i = MASK[node_idx] * sample;
     float mg_in = gamma * masked_sample_i + eta * reservoir[LAST_NODE];
     float mg_out = mackey_glass(mg_in);
-
 
     // update reservoir  
     for(int i = LAST_NODE; i > 0; i--) reservoir[i] = reservoir[i - 1];
     reservoir[0] = mg_out;
 
     // calculate output
-    dfr_out += W[node_idx] * mg_out;
+    dfr_out += W[LAST_NODE - node_idx] * mg_out;
   }
-
 
   return dfr_out;
 }
@@ -72,15 +59,22 @@ component float dfr(float sample) {
 int main() {
 
   // define sample counts
-  constexpr int NUM_INIT_SAMPLES = 1;
-  constexpr int NUM_TEST_SAMPLES = 1;
+  constexpr int NUM_INIT_SAMPLES = 200;
+  constexpr int NUM_TEST_SAMPLES = 15000;
   constexpr int NUM_TOTAL_SAMPLES = NUM_INIT_SAMPLES + NUM_TEST_SAMPLES;
 
   // generate narma10 inputs and outputs
+  printf("Creating input and output data vectors...\n");
   float* u = narma10_inputs(NUM_TOTAL_SAMPLES);
   float* y = narma10_outputs(u,NUM_TOTAL_SAMPLES);
+  // char const* narma10_input_file = "./data/float_input_data.txt";
+  // float* u = read_float_vector_from_file(narma10_input_file,NUM_TOTAL_SAMPLES);
+  // char const* narma10_output_file = "./data/float_output_data.txt";
+  // float* y = read_float_vector_from_file(narma10_output_file,NUM_TOTAL_SAMPLES);
+
 
   // get test data vectors
+  printf("Parsing test input and output vectors...\n");
   float* u_test = get_vector_indexes(u,NUM_INIT_SAMPLES,NUM_TOTAL_SAMPLES);
   float* y_test = get_vector_indexes(y,NUM_INIT_SAMPLES,NUM_TOTAL_SAMPLES);
 
@@ -88,11 +82,14 @@ int main() {
   float y_hat_test[NUM_TEST_SAMPLES];
 
   // reservoir initialization
+  printf("Initializing Reservoir...\n");
   for(unsigned int i = 0; i < NUM_INIT_SAMPLES; i++) ihc_hls_enqueue_noret(&dfr,u[i]);
   ihc_hls_component_run_all(dfr);
 
   // reservoir test
-  for(unsigned int i = 0; i < NUM_TEST_SAMPLES; i++) ihc_hls_enqueue(&y_hat_test[i], &dfr,u_test[i]);
+  printf("Testing DFR...\n");
+  // for(unsigned int i = 0; i < NUM_TEST_SAMPLES; i++) ihc_hls_enqueue(&y_hat_test[i], &dfr,u_test[i]);
+  for(unsigned int i = 0; i < NUM_TEST_SAMPLES; i++) ihc_hls_enqueue(&y_hat_test[i], &dfr,0.1598408181413325);
   ihc_hls_component_run_all(dfr);
 
   // calculate the NRMSE of the predicted output

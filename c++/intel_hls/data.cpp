@@ -47,3 +47,23 @@ float* narma10_outputs(float* inputs, int size){
 
     return outputs;
 }
+
+float* read_float_vector_from_file(char const* fileName, int size){
+    float* outputs = (float*)  malloc(sizeof(float)*size);
+
+    std::ifstream inFile;
+    inFile.open(fileName);
+
+    std::string line;
+    int i = 0;
+    if (inFile.is_open()){
+        while ( getline (inFile,line) && i < size){
+            outputs[i++] = std::stof(line);
+            // printf("W[%d] = %d\n",i - 1,W[i - 1]);            
+        }
+        inFile.close();
+    }
+
+
+    return outputs;
+}
