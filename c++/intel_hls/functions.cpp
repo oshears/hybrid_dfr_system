@@ -4,20 +4,13 @@
 
 #include "dfr.h"
 
-//mackey glass function
-float mackey_glass(float x){
+// get sub-vector from specified indexes
+float* get_vector_indexes(float* vector, int idx_0, int idx_1){
 
-    // float C = 1.33;
-    // float b = 0.4;
-    // return (C * x) / (1 + b * x);
+    float* new_vector = (float*) malloc(sizeof(float) * (idx_1 - idx_0));
 
-    float C = 2;
-    float b = 2.1;
-    float p = 10;
+    int j = 0;
+    for(int i = idx_0; i < idx_1; i++) new_vector[j++] = vector[i];
 
-    float a = 0.8;
-    float c = 0.2;
-
-    return (C * x) / (a + c * pow(b * x, p) );
-
+    return new_vector;
 }

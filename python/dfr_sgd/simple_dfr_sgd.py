@@ -214,13 +214,15 @@ plt.show()
 # write dfr config data
 
 # mask
-fh = open("./dfr_config/int_mask_data.txt","w")
+fh = open("./dfr_config/float_mask_data.txt","w")
 for i in range(N):
-    fh.write(str(int(mask[i] * (2**16))) + "\n")
+    # fh.write(str(int(mask[i] * (2**16))) + "\n")
+    fh.write(str(mask[i]) + "\n")
 fh.close()
 
 # weights
-fh = open("./dfr_config/int_weight_data.txt","w")
+fh = open("./dfr_config/float_weight_data.txt","w")
 for i in range(N):
-    fh.write(str(int(W[i] * (2**16))) + "\n")
+    # fh.write(str(int(W[i] * (2**16))) + "\n")
+    fh.write(str(W[i]) + "\n")
 fh.close()

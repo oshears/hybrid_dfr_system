@@ -1,4 +1,4 @@
-SOURCE_FILES  := dfr.cpp
+SOURCE_FILES  := dfr.cpp data.cpp functions.cpp metrics.cpp
 override HLS_CXX_FLAGS := $(HLS_CXX_FLAGS) 
 CXX := i++
 DEVICE := 5CEBA4F23C8
