@@ -1,32 +1,38 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+
+#include "HLS/hls.h"
+#include "HLS/math.h"
+#include "HLS/hls_float.h"
+#include "HLS/hls_float_math.h"
 
 #include "dfr.h"
 
+using namespace ihc;
+
 // Frobenius norm
-float norm(float x){
-    return sqrt(x * x);
+FPhalf norm(FPhalf x){
+    return ihc_sqrt(x * x);
 }
 
 // Frobenius norm for an array
-float norm(float* x, int size){
+FPhalf norm(FPhalf* x, int size){
 
-    float sum = 0;
+    FPhalf sum = 0;
     for (int i = 0; i < size; i++){
-        float x_i = x[i];
+        FPhalf x_i = x[i];
         sum = sum + (x_i * x_i);
     }
 
-    return sqrt(sum);
+    return ihc_sqrt(sum);
 }
 
 // calculate kian's nrmse
-float get_nrmse(float* y_hat, float* y, int size){
+FPhalf get_nrmse(FPhalf* y_hat, FPhalf* y, int size){
     
-    float nrmse = 0;
+    FPhalf nrmse = 0;
 
-    float* y_error = new float[size]();
+    FPhalf* y_error = new FPhalf[size]();
 
     for (int i = 0; i < size; i++){
         y_error[i] = y_hat[i] - y[i];
@@ -35,12 +41,12 @@ float get_nrmse(float* y_hat, float* y, int size){
     return norm(y_error,size) / norm(y,size);
 }
 
-float get_mse(float* y_hat, float* y, int size){
-    float mse = 0;
+FPhalf get_mse(FPhalf* y_hat, FPhalf* y, int size){
+    FPhalf mse = 0;
 
 
     for (int i = 0; i < size; i++){
-        float y_error = y_hat[i] - y[i];
+        FPhalf y_error = y_hat[i] - y[i];
         mse += (y_error * y_error);
     }
     mse /= size;

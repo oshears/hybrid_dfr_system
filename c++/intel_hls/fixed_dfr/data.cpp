@@ -1,19 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 #include <iostream>
 #include <fstream>
+
+#include "HLS/hls.h"
+#include "HLS/math.h"
+#include "HLS/hls_float.h"
+#include "HLS/hls_float_math.h"
 
 #include "dfr.h"
 
 // narma10 inputs
-float* narma10_inputs(int size){
+FPhalf* narma10_inputs(int size){
 
-    float* inputs = (float*) malloc(sizeof(float)*size);
+    FPhalf* inputs = (FPhalf*) malloc(sizeof(FPhalf)*size);
 
     for (int i = 0; i < size; i++){
-        float u = 0.5 * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
+        FPhalf u = 0.5 * FPhalf(static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
         inputs[i] = u;
 
         // printf("u[%d] = %f\n",i,u);
@@ -23,9 +27,9 @@ float* narma10_inputs(int size){
 }
 
 // narma10 outputs
-float* narma10_outputs(float* inputs, int size){
+FPhalf* narma10_outputs(FPhalf* inputs, int size){
 
-    float* outputs = (float*) malloc(sizeof(float)*size);
+    FPhalf* outputs = (FPhalf*) malloc(sizeof(FPhalf)*size);
 
     for (int i = 0; i < 10; i++){
         outputs[i] = 0;
@@ -35,7 +39,7 @@ float* narma10_outputs(float* inputs, int size){
     for (int i = 9; i < size - 1; i++){
 
         // calculate sum of last 10 outputs
-        float sum = 0;
+        FPhalf sum = 0;
         for (int j = 0; j < 10; j++){
             sum = sum + outputs[i - j];
         }
@@ -48,8 +52,8 @@ float* narma10_outputs(float* inputs, int size){
     return outputs;
 }
 
-float* read_float_vector_from_file(char const* fileName, int size){
-    float* outputs = (float*)  malloc(sizeof(float)*size);
+FPhalf* read_FPhalf_vector_from_file(char const* fileName, int size){
+    FPhalf* outputs = (FPhalf*)  malloc(sizeof(FPhalf)*size);
 
     std::ifstream inFile;
     inFile.open(fileName);

@@ -1,13 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <cmath>
+
+#include "HLS/hls.h"
+#include "HLS/math.h"
+#include "HLS/hls_float.h"
+#include "HLS/hls_float_math.h"
 
 #include "dfr.h"
 
-// get sub-vector from specified indexes
-float* get_vector_indexes(float* vector, int idx_0, int idx_1){
+using namespace ihc;
 
-    float* new_vector = (float*) malloc(sizeof(float) * (idx_1 - idx_0));
+// get sub-vector from specified indexes
+FPhalf* get_vector_indexes(FPhalf* vector, int idx_0, int idx_1){
+
+    FPhalf* new_vector = (FPhalf*) malloc(sizeof(FPhalf) * (idx_1 - idx_0));
 
     int j = 0;
     for(int i = idx_0; i < idx_1; i++) new_vector[j++] = vector[i];
