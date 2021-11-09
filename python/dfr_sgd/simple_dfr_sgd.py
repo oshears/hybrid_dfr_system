@@ -171,9 +171,9 @@ for i in range(train_samples):
 
     output_error = dfr_output - y_train[i]
 
-    reservoir_history[i] = reservoir
 
 # initialization
+reservoir = np.zeros(N)
 for i in range(init_samples):
     for j in range(N):
         g_i = mg(gamma * masked_samples[i][j] + eta * reservoir[LAST_NODE])

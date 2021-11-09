@@ -60,8 +60,8 @@ component float dfr(float sample) {
 int main() {
 
   // define sample counts
-  constexpr int NUM_INIT_SAMPLES = 10;
-  constexpr int NUM_TEST_SAMPLES = 1;
+  constexpr int NUM_INIT_SAMPLES = 200;
+  constexpr int NUM_TEST_SAMPLES = 15000;
   constexpr int NUM_TOTAL_SAMPLES = NUM_INIT_SAMPLES + NUM_TEST_SAMPLES;
 
   // generate narma10 inputs and outputs
@@ -89,8 +89,7 @@ int main() {
 
   // reservoir test
   printf("Testing DFR...\n");
-  // for(unsigned int i = 0; i < NUM_TEST_SAMPLES; i++) ihc_hls_enqueue(&y_hat_test[i], &dfr,u_test[i]);
-  for(unsigned int i = 0; i < NUM_TEST_SAMPLES; i++) ihc_hls_enqueue(&y_hat_test[i], &dfr,0.1598408181413325);
+  for(unsigned int i = 0; i < NUM_TEST_SAMPLES; i++) ihc_hls_enqueue(&y_hat_test[i], &dfr,u_test[i]);
   ihc_hls_component_run_all(dfr);
 
   // calculate the NRMSE of the predicted output
