@@ -3,24 +3,24 @@
 
 #include "HLS/hls.h"
 #include "HLS/math.h"
-#include "HLS/hls_float.h"
-#include "HLS/hls_float_math.h"
+#include "HLS/ac_fixed.h"
+#include "HLS/ac_fixed_math.h"
 
 #include "dfr.h"
 
 using namespace ihc;
 
 // Frobenius norm
-FPhalf norm(FPhalf x){
+FixedPoint norm(FixedPoint x){
     return ihc_sqrt(x * x);
 }
 
 // Frobenius norm for an array
-FPhalf norm(FPhalf* x, int size){
+FixedPoint norm(FixedPoint* x, int size){
 
-    FPhalf sum = 0;
+    FixedPoint sum = 0;
     for (int i = 0; i < size; i++){
-        FPhalf x_i = x[i];
+        FixedPoint x_i = x[i];
         sum = sum + (x_i * x_i);
     }
 
@@ -28,11 +28,11 @@ FPhalf norm(FPhalf* x, int size){
 }
 
 // calculate kian's nrmse
-FPhalf get_nrmse(FPhalf* y_hat, FPhalf* y, int size){
+FixedPoint get_nrmse(FixedPoint* y_hat, FixedPoint* y, int size){
     
-    FPhalf nrmse = 0;
+    FixedPoint nrmse = 0;
 
-    FPhalf* y_error = new FPhalf[size]();
+    FixedPoint* y_error = new FixedPoint[size]();
 
     for (int i = 0; i < size; i++){
         y_error[i] = y_hat[i] - y[i];
@@ -41,12 +41,12 @@ FPhalf get_nrmse(FPhalf* y_hat, FPhalf* y, int size){
     return norm(y_error,size) / norm(y,size);
 }
 
-FPhalf get_mse(FPhalf* y_hat, FPhalf* y, int size){
-    FPhalf mse = 0;
+FixedPoint get_mse(FixedPoint* y_hat, FixedPoint* y, int size){
+    FixedPoint mse = 0;
 
 
     for (int i = 0; i < size; i++){
-        FPhalf y_error = y_hat[i] - y[i];
+        FixedPoint y_error = y_hat[i] - y[i];
         mse += (y_error * y_error);
     }
     mse /= size;

@@ -23,6 +23,8 @@ float mackey_glass(float x){
 
 }
 
+int iteration = 0;
+
 component float dfr(float sample) {
 
   // dfr parameters
@@ -50,9 +52,19 @@ component float dfr(float sample) {
     for(int i = LAST_NODE; i > 0; i--) reservoir[i] = reservoir[i - 1];
     reservoir[0] = mg_out;
 
+    // if(iteration == 10000)
+      // printf("node_idx[%d] = %f = %f * %f + %f * %f\n",LAST_NODE - node_idx, mg_out,gamma,masked_sample_i,eta,reservoir[LAST_NODE]);
+    // if(iteration == 10000){
+    //   printf("node_idx[%d] = %f = %f * %f + %f * %f\n",LAST_NODE - node_idx, mg_out,gamma,masked_sample_i,eta,reservoir[LAST_NODE]);
+    // // printf("reservoir[%d][%d] = %s\n",iteration,LAST_NODE - node_idx,reservoir[0]);
+    //   printf("dfr_out[%d] = %f + %f = %f * %f\n",iteration,dfr_out,(W[LAST_NODE - node_idx] * mg_out),W[LAST_NODE - node_idx],mg_out);
+    // }
+
     // calculate output
     dfr_out += W[LAST_NODE - node_idx] * mg_out;
   }
+  // if(iteration == 10000) printf("dfr_out[%d] = %f\n",iteration,dfr_out);
+  iteration++;
 
   return dfr_out;
 }
@@ -91,6 +103,9 @@ int main() {
   printf("Testing DFR...\n");
   for(unsigned int i = 0; i < NUM_TEST_SAMPLES; i++) ihc_hls_enqueue(&y_hat_test[i], &dfr,u_test[i]);
   ihc_hls_component_run_all(dfr);
+
+  // for(int i = 0; i < NUM_TEST_SAMPLES; i++)
+    // printf("%f,%f\n",y_hat_test[i],y_test[i]);
 
   // calculate the NRMSE of the predicted output
   float nrmse = get_nrmse(y_hat_test,y_test,NUM_TEST_SAMPLES);

@@ -3,34 +3,36 @@
 
 #include "HLS/hls.h"
 #include "HLS/math.h"
-#include "HLS/hls_float.h"
-#include "HLS/hls_float_math.h"
+#include "HLS/ac_fixed.h"
+#include "HLS/ac_fixed_math.h"
 
 using namespace ihc;
 
+using FixedPoint = ac_fixed<20, 10, true, AC_RND, AC_SAT>;
+
 //mackey glass function
-FPhalf mackey_glass(FPhalf x);
+FixedPoint mackey_glass(FixedPoint x);
 
 // narma10 inputs
-FPhalf* narma10_inputs(int size);
+FixedPoint* narma10_inputs(int size);
 
 // narma10 outputs
-FPhalf* narma10_outputs(FPhalf* inputs, int size);
+FixedPoint* narma10_outputs(FixedPoint* inputs, int size);
 
 // Frobenius norm
-FPhalf norm(FPhalf x);
-FPhalf norm(FPhalf* x, int size);
+FixedPoint norm(FixedPoint x);
+FixedPoint norm(FixedPoint* x, int size);
 
 // calculate kian's nrmse
-FPhalf get_nrmse(FPhalf* y_hat, FPhalf* y, int size);
+FixedPoint get_nrmse(FixedPoint* y_hat, FixedPoint* y, int size);
 
 // calculate mean squared error
-FPhalf get_mse(FPhalf* y_hat, FPhalf* y, int size);
+FixedPoint get_mse(FixedPoint* y_hat, FixedPoint* y, int size);
 
 // get sub-vector from specified indexes
-FPhalf* get_vector_indexes(FPhalf* vector, int idx_0, int idx_1);
+FixedPoint* get_vector_indexes(FixedPoint* vector, int idx_0, int idx_1);
 
 // read data from file
-FPhalf* read_FPhalf_vector_from_file(char const* fileName, int size);
+FixedPoint* read_FixedPoint_vector_from_file(char const* fileName, int size);
 
 

@@ -59,30 +59,3 @@ make test-fpga DEVICE=CycloneV
 ; Total DLLs                      ; 0 / 4 ( 0 % )                               ;
 +---------------------------------+---------------------------------------------+
 ```
-
-# Optimized DFR Core Design Utilization
-```
-+-------------------------------------------------------------------------------+
-; Flow Summary                                                                  ;
-+---------------------------------+---------------------------------------------+
-; Flow Status                     ; Successful - Tue Nov  9 12:35:42 2021       ;
-; Quartus Prime Version           ; 20.1.1 Build 720 11/11/2020 SJ Lite Edition ;
-; Revision Name                   ; quartus_compile                             ;
-; Top-level Entity Name           ; quartus_compile                             ;
-; Family                          ; Cyclone V                                   ;
-; Device                          ; 5CEBA4F23C8                                 ;
-; Timing Models                   ; Final                                       ;
-; Logic utilization (in ALMs)     ; 5,511 / 18,480 ( 30 % )                     ;
-; Total registers                 ; 15199                                       ;
-; Total pins                      ; 0 / 224 ( 0 % )                             ;
-; Total virtual pins              ; 453                                         ;
-; Total block memory bits         ; 122,722 / 3,153,920 ( 4 % )                 ;
-; Total DSP Blocks                ; 27 / 66 ( 41 % )                            ;
-; Total HSSI RX PCSs              ; 0                                           ;
-; Total HSSI PMA RX Deserializers ; 0                                           ;
-; Total HSSI TX PCSs              ; 0                                           ;
-; Total HSSI PMA TX Serializers   ; 0                                           ;
-; Total PLLs                      ; 0 / 4 ( 0 % )                               ;
-; Total DLLs                      ; 0 / 4 ( 0 % )                               ;
-+---------------------------------+---------------------------------------------+
-```
