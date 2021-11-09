@@ -118,11 +118,6 @@ DFR_FP(-695.9745664596558),
 DFR_FP(-1074.1348266601562)
 };
 
-int iteration = 0;
-// constexpr auto Rnd = ihc::fp_config::FP_Round::RZERO;
-// using double_type  = ihc::hls_float<11, 52, Rnd>;
-#include <cmath>
-
 DFR_FP mackey_glass(DFR_FP x){
 
     DFR_FP C = 2;
@@ -161,17 +156,9 @@ component DFR_FP dfr(DFR_FP sample) {
     for(int i = LAST_NODE; i > 0; i--) reservoir[i] = reservoir[i - 1];
     reservoir[0] = mg_out;
 
-    // if(iteration == 10000){
-    //   printf("node_idx[%d] = %s = %s * %s + %s * %s\n",LAST_NODE - node_idx, mg_out.get_str().c_str(),gamma.get_str().c_str(),masked_sample_i.get_str().c_str(),eta.get_str().c_str(),reservoir[LAST_NODE].get_str().c_str());
-    // // printf("reservoir[%d][%d] = %s\n",iteration,LAST_NODE - node_idx,reservoir[0].get_str().c_str());
-    //   printf("dfr_out[%d] = %s + %s = %s * %s\n",iteration,dfr_out.get_str().c_str(),(W[LAST_NODE - node_idx] * mg_out).get_str().c_str(),W[LAST_NODE - node_idx].get_str().c_str(),mg_out.get_str().c_str());
-    // }
-
     // calculate output
     dfr_out += W[LAST_NODE - node_idx] * mg_out;
   }
-  // if(iteration == 10000) printf("dfr_out[%d] = %s\n",iteration,dfr_out.get_str().c_str());
-  iteration++;
 
   return dfr_out;
 }
@@ -206,9 +193,6 @@ int main() {
   printf("Testing DFR...\n");
   for(unsigned int i = 0; i < NUM_TEST_SAMPLES; i++) ihc_hls_enqueue(&y_hat_test[i], &dfr,u_test[i]);
   ihc_hls_component_run_all(dfr);
-
-  // for(int i = 0; i < NUM_TEST_SAMPLES; i++)
-  //   printf("%s,%s\n",y_hat_test[i].get_str().c_str(),y_test[i].get_str().c_str());
 
   // calculate the NRMSE of the predicted output
   DFR_FP nrmse = get_nrmse(y_hat_test,y_test,NUM_TEST_SAMPLES);
